@@ -41,22 +41,21 @@ class StartWindow(QMainWindow):
 
         self.img = None
 
+        self.detectedImage = None
+
         self.initUI()
 
     def initUI(self):
         self.central_widget = QWidget()
-        self.buttonPictureSelector = QPushButton(
-            "Select Picture", self.central_widget)
+        self.buttonPictureSelector = QPushButton("Select Picture", self.central_widget)
         self.buttonPictureSelector.clicked.connect(self.changePicture)
 
         self.lowerTLabel = QLabel("Lower Threshold")
         self.upperTLabel = QLabel("Upper Threshold")
         self.alphaLabel = QLabel("Alpha")
 
-        self.vSpacer1 = QSpacerItem(
-            20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.vSpacer2 = QSpacerItem(
-            20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.vSpacer1 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.vSpacer2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 
         self.SBoxUpperT = QSpinBox()
         self.SBoxUpperT.setValue(self.edge_detector.getUpperThresh())
@@ -70,30 +69,43 @@ class StartWindow(QMainWindow):
         self.SBoxAlpha.setValue(self.edge_detector.getAlpha())
         self.SBoxAlpha.valueChanged.connect(self.changeAlpha)
 
-        self.lableIterations = QLabel("Iterations")
+        self.lableIterations = QLabel("Edge Morph Iterations")
         self.SBoxIterations = QSpinBox()
         self.SBoxIterations.setValue(self.edge_detector.getIterations())
         self.SBoxIterations.valueChanged.connect(self.changeIterations)
 
-        self.labelFilterSize = QLabel("FilterSize")
+        self.labelFilterSize = QLabel("Edge Morph FilterSize")
         self.SBoxFilterSize = QSpinBox()
         self.SBoxFilterSize.setValue(self.edge_detector.getFilterSize())
         self.SBoxFilterSize.valueChanged.connect(self.changeFilterSize)
 
         self.morphCheckbox = QCheckBox()
         self.morphCheckbox.setChecked(True)
-        self.morphCheckbox.setText("Fill Edges")
+        self.morphCheckbox.setText("Fill Regions")
         self.morphCheckbox.stateChanged.connect(self.updateImage)
+
+        self.labelEntropyThreshold = QLabel("Entropy Treshold")
+        self.SBoxEntropyThreshold = QSpinBox()
+        self.SBoxEntropyThreshold.setValue(self.edge_detector.getEntropyThreshold())
+        self.SBoxEntropyThreshold.valueChanged.connect(self.changeEntropyThreshold)
 
         self.entropyCheckbox = QCheckBox()
         self.entropyCheckbox.setChecked(False)
-        self.entropyCheckbox.setText("Show Entropy")
+        self.entropyCheckbox.setText("Use Entropy")
         self.entropyCheckbox.stateChanged.connect(self.updateImage)
 
         self.overlayCheckbox = QCheckBox()
         self.overlayCheckbox.setChecked(True)
         self.overlayCheckbox.setText("Show Overlay")
         self.overlayCheckbox.stateChanged.connect(self.updateImage)
+
+        self.outlineCheckbox = QCheckBox()
+        self.outlineCheckbox.setChecked(True)
+        self.outlineCheckbox.setText("Show Outline")
+        self.outlineCheckbox.stateChanged.connect(self.updateImage)
+
+        self.buttonSaveImage = QPushButton("Save Image", self.central_widget)
+        self.buttonSaveImage.clicked.connect(self.saveImage)
 
         self.image_label = QLabel(self)
         self.pixmap = QPixmap()
@@ -112,19 +124,32 @@ class StartWindow(QMainWindow):
 
         self.verticalLayout.addItem(self.vSpacer1)
         self.verticalLayout.addWidget(self.buttonPictureSelector)
+        self.verticalLayout.addWidget(self.buttonSaveImage)
+
+        self.verticalLayout.addWidget(self.overlayCheckbox)
+
         self.verticalLayout.addWidget(self.upperTLabel)
         self.verticalLayout.addWidget(self.SBoxUpperT)
         self.verticalLayout.addWidget(self.lowerTLabel)
         self.verticalLayout.addWidget(self.SBoxLowerT)
         self.verticalLayout.addWidget(self.alphaLabel)
         self.verticalLayout.addWidget(self.SBoxAlpha)
-        self.verticalLayout.addWidget(self.overlayCheckbox)
-        self.verticalLayout.addWidget(self.morphCheckbox)
+
+        # Edge Morph Stuff
         self.verticalLayout.addWidget(self.lableIterations)
         self.verticalLayout.addWidget(self.SBoxIterations)
         self.verticalLayout.addWidget(self.labelFilterSize)
         self.verticalLayout.addWidget(self.SBoxFilterSize)
+
+        # Fill the Edges?
+        self.verticalLayout.addWidget(self.morphCheckbox)
+        self.verticalLayout.addItem(self.vSpacer2)
+
+        # Entropy Stuff
         self.verticalLayout.addWidget(self.entropyCheckbox)
+        self.verticalLayout.addWidget(self.labelEntropyThreshold)
+        self.verticalLayout.addWidget(self.SBoxEntropyThreshold)
+        self.verticalLayout.addWidget(self.outlineCheckbox)
         self.verticalLayout.addItem(self.vSpacer2)
 
         self.horizontalLayout.addLayout(self.verticalLayout)
@@ -139,13 +164,17 @@ class StartWindow(QMainWindow):
 
     def loadImage(self):
         self.img = self.image_loader.getImage()
+        self.detectedImage = self.img.copy()
         self.displayImage(self.img)
+
+    def saveImage(self):
+        savingImg = cv2.cvtColor(self.detectedImage.copy(), cv2.COLOR_BGR2RGB)
+        cv2.imwrite("NewImage.png", savingImg)
 
     def displayImage(self, img):
         height, width, channel = img.shape
         bytesPerLine = 3 * width
-        qImg = QImage(img.data, width, height,
-                      bytesPerLine, QImage.Format_RGB888)
+        qImg = QImage(img.data, width, height, bytesPerLine, QImage.Format_RGB888)
         self.image_label.setPixmap(QPixmap(qImg).scaledToWidth(1000))
 
     def updateImage(self):
@@ -163,11 +192,13 @@ class StartWindow(QMainWindow):
                 edge_mask = self.edge_detector.entropyImage(
                     self.img.copy(),
                     regions,
-                    4,
                 )
+                if self.outlineCheckbox.isChecked():
+                    edge_mask, regions = self.edge_detector.finalOutline(edge_mask)
 
         overlay = self.edge_detector.overlayEdges(self.img.copy(), edge_mask)
         self.displayImage(overlay)
+        self.detectedImage = overlay.copy()
 
     def changeLowerThresh(self, value):
         self.edge_detector.setLowerThresh(value)
@@ -175,6 +206,10 @@ class StartWindow(QMainWindow):
 
     def changeUpperThresh(self, value):
         self.edge_detector.setUpperThresh(value)
+        self.updateImage()
+
+    def changeEntropyThreshold(self, value):
+        self.edge_detector.setEntropyThreshold(value)
         self.updateImage()
 
     def changeAlpha(self, value):

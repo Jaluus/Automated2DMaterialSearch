@@ -13,10 +13,45 @@ class edgeDetector:
     def __init__(self):
         self.upperThresh = 4
         self.lowerThresh = 0
-        self.alpha = 2
+        self.alpha = 4
 
-        self.iterations = 2
+        self.entropy_threshold = 4
+
+        self.iterations = 1
         self.filter_size = 2
+
+    def finalOutline(self, regions):
+        kernel = disk(self.filter_size)
+        # kernel = np.ones((self.filter_size, self.filter_size))
+
+        # Find the Contours
+        contours, hierarchy = cv2.findContours(
+            regions, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
+        )
+
+        contour_mask = np.zeros_like(regions)
+        contour_mask_all = []
+        # Draw The Countours
+        for i in range(len(contours)):
+            # Only draw Outer Contours
+            if hierarchy[0][i][3] != -1:
+                continue
+            blank_img = np.zeros_like(regions)
+            outlines = cv2.drawContours(blank_img, contours, i, 255, thickness=1)
+
+            fat_outlines = cv2.morphologyEx(
+                src=outlines,
+                op=cv2.MORPH_DILATE,
+                kernel=kernel,
+                iterations=1,
+            )
+
+            contour_mask_all.append(fat_outlines)
+            contour_mask[fat_outlines == 255] = 255
+
+        contour_mask_all = np.array(contour_mask_all)
+
+        return contour_mask, contour_mask_all
 
     def detectEdges(self, img):
         """Detects Edges in the Image and returns and edgeMask"""
@@ -98,14 +133,15 @@ class edgeDetector:
         img[edge_mask == 255] = [255, 0, 0]
         return img
 
-    def entropyImage(self, img, region_mask, threshold=np.Infinity):
+    def entropyImage(self, img, region_mask):
         image_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         blank_mask = np.zeros_like(region_mask[0])
         num_regions = len(region_mask)
         for idx, region in enumerate(region_mask):
+            # Mayby change the Neighborhood also?
             region_entropy = entropy(image_gray, np.ones((9, 9)), mask=region)
             print(idx / num_regions)
-            if np.max(region_entropy) > threshold:
+            if np.max(region_entropy) > self.entropy_threshold:
                 continue
             blank_mask[region == 255] = 255
 
@@ -125,6 +161,12 @@ class edgeDetector:
 
     def setFilterSize(self, val):
         self.filter_size = val
+
+    def setEntropyThreshold(self, val):
+        self.entropy_threshold = val
+
+    def getEntropyThreshold(self):
+        return self.entropy_threshold
 
     def getFilterSize(self):
         return self.filter_size
