@@ -7,6 +7,9 @@ class imageLoader:
         self.filePath = None
 
     def loadImage(self, fPath):
+        """
+        Loads an Image into Memory
+        """
         self.filePath = fPath
         self.image = cv2.cvtColor(cv2.imread(self.filePath), cv2.COLOR_BGR2RGB)
 
