@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QApplication
 
 from ImageLoaderModell import imageLoader
-from EdgeDetector import edgeDetector
+from EdgeDetectorModell import edgeDetector
 from GUI import StartWindow
 
 import os
