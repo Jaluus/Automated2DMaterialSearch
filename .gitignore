@@ -1,3 +1,13 @@
+# Universial ignores
 .vscode
 __pycache__
 Presentation
+
+# Motor Module ignores
+tango_dll_errlog.txt
+
+# Camera Module ignores
+
+# Detection Module ignores
+
+# Databank Module ignores
