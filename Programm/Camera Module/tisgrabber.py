@@ -32,9 +32,9 @@ GrabberHandle._fields_ = [('unused', C.c_int)]
 
 class TIS_GrabberDLL(object):
     if sys.maxsize > 2**32:
-        __tisgrabber = C.windll.LoadLibrary("./DLL_Files/tisgrabber_x64.dll")
+        __tisgrabber = C.windll.LoadLibrary("./tisgrabber_x64.dll")
     else:
-        __tisgrabber = C.windll.LoadLibrary("./DLL_Files/tisgrabber.dll")
+        __tisgrabber = C.windll.LoadLibrary("./tisgrabber.dll")
 
     def __init__(self, **keyargs):
         """Initialize the Albatross from the keyword arguments."""

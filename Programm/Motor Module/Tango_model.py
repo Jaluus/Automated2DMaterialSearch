@@ -1,7 +1,7 @@
 
 import sys
 from ctypes import*
-dll_path = r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\DLL Files\TangoDLL_64bit_V1399\Tango_DLL.dll"
+dll_path = r"DLL_Files\TangoDLL_64bit_V1399\Tango_DLL.dll"
 # give location of dll (current directory)
 
 
@@ -55,6 +55,34 @@ class TangoController():
         if error > 0:
             print("Error: Calibrate " + str(error))
 
+    def get_tango_object(self):
+        return self.m_Tango
+
+    def get_LSID(self):
+        return self.LSID
+
+    def _set_dimensions(self, dim: int):
+        # Get the Dimensions
+        error = self.m_Tango.LSX_SetDimensions(self.LSID, dim, dim, dim, dim)
+        if error > 0:
+            print("Error: setDim " + str(error))
+        else:
+            print("LSX_setDimensions = " + str(dim))
+
+    def get_dimensions(self):
+        dimX = c_int()
+        dimY = c_int()
+        dimZ = c_int()
+        dimA = c_int()
+        # Get the Dimensions
+        error = self.m_Tango.LSX_GetDimensions(self.LSID, byref(
+            dimX), byref(dimY), byref(dimZ), byref(dimA))
+        if error > 0:
+            print("Error: getDim " + str(error))
+        else:
+            print("LSX_GetDimensions = " + str(dimX.value) + " " + str(dimY.value) +
+                  " " + str(dimZ.value) + " " + str(dimA.value))
+
     def _range_measure(self):
         error = self.m_Tango.LSX_RMeasure(self.LSID)
         if error > 0:
@@ -77,11 +105,17 @@ class TangoController():
         """
         Calibrates the plant and sets the Software endstops
         """
+        # Setting dimensons to mm
+        # use 1 to go for mu m
+        self._set_dimensions(2)
+        self.get_dimensions()
         # calibrate all axes
+        print("Starting calibration...")
         self._calibrate()
         self._range_measure()
         self.maxX, self.maxY = self.get_pos()
         self._calibrate()
+        print("Calibration complete")
 
     def get_pos(self):
         """
@@ -161,13 +195,3 @@ class TangoController():
 
 if __name__ == "__main__":
     tc = TangoController(dll_path)
-    steps = 50
-    can_move_x = tc.can_move(steps, 0)
-    can_move_y = tc.can_move(0, steps)
-    while(can_move_x):
-        while(can_move_y):
-            can_move_y = tc.rel_move(0, steps)
-        curr_x, curr_y = tc.get_pos()
-        tc.abs_move(curr_x, 0)
-        can_move_x = tc.rel_move(steps, 0)
-        can_move_y = True

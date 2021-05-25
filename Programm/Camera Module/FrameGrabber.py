@@ -1,6 +1,7 @@
 import tisgrabber as IC
 import cv2
 import numpy as np
+import time
 
 
 def init_camera(cam_name="DFK 33UX174 38020321"):
@@ -38,6 +39,8 @@ while (True):
 
     # Apply some OpenCV function on this image
 
+    #image = cv2.morphologyEx()
+
     image = cv2.flip(image, 0)
 
     ######
@@ -47,6 +50,8 @@ while (True):
     key = cv2.waitKey(1)
     if key == ord("q"):
         break
+    elif key == ord("s"):
+        cv2.imwrite(f"Pictures/{time.time():.0f}.png", image)
 
 Camera.StopLive()
 cv2.destroyAllWindows()
