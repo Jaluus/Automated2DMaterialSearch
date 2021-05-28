@@ -1,8 +1,9 @@
 # Modules
 ## Motordriver
-Runing with the Tango DLL library
+Running with the Tango DLL library
 
 ## Cameradriver
+Grabbing pictures from the Camera
 
 ## Detection
 Rule based approch to find 2D flakes in images

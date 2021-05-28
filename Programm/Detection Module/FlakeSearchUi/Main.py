@@ -1,11 +1,11 @@
 import sys
+import os
 
-sys.path.append(
-    r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm\Detection Module\Classes"
-)
+module_path = os.path.join(os.path.dirname(__file__), "..", "Classes")
+
+sys.path.append(module_path)
 
 from GUI import StartWindow
-import os
 from EdgeDetectorModell import edgeDetector
 from ImageLoaderModell import imageLoader
 from PyQt5.QtWidgets import QApplication
