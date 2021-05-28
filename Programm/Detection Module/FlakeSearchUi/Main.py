@@ -1,10 +1,15 @@
+import sys
+
+sys.path.append(
+    r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm\Detection Module\Classes"
+)
+
+from GUI import StartWindow
+import os
+from EdgeDetectorModell import edgeDetector
+from ImageLoaderModell import imageLoader
 from PyQt5.QtWidgets import QApplication
 
-from ImageLoaderModell import imageLoader
-from EdgeDetectorModell import edgeDetector
-from GUI import StartWindow
-
-import os
 
 # Getting the path to the Testimage
 test_img_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "testImg.jpg")

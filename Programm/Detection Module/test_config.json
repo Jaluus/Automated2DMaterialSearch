@@ -1,0 +1,8 @@
+{
+    "alpha": 4,
+    "upper_thresh": 4,
+    "lower_thresh": 0,
+    "morph_iterations": 1,
+    "morph_kernel_size": 2,
+    "entropy_threshold": 0
+}

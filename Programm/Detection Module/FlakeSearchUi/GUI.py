@@ -79,10 +79,10 @@ class StartWindow(QMainWindow):
         self.SBoxFilterSize.setValue(self.edge_detector.getFilterSize())
         self.SBoxFilterSize.valueChanged.connect(self.changeFilterSize)
 
-        self.morphCheckbox = QCheckBox()
-        self.morphCheckbox.setChecked(True)
-        self.morphCheckbox.setText("Fill Regions")
-        self.morphCheckbox.stateChanged.connect(self.updateImage)
+        self.fillRegionCheckbox = QCheckBox()
+        self.fillRegionCheckbox.setChecked(True)
+        self.fillRegionCheckbox.setText("Fill Regions")
+        self.fillRegionCheckbox.stateChanged.connect(self.updateImage)
 
         self.labelEntropyThreshold = QLabel("Entropy Treshold")
         self.SBoxEntropyThreshold = QSpinBox()
@@ -142,7 +142,7 @@ class StartWindow(QMainWindow):
         self.verticalLayout.addWidget(self.SBoxFilterSize)
 
         # Fill the Edges?
-        self.verticalLayout.addWidget(self.morphCheckbox)
+        self.verticalLayout.addWidget(self.fillRegionCheckbox)
         self.verticalLayout.addItem(self.vSpacer2)
 
         # Entropy Stuff
@@ -179,13 +179,15 @@ class StartWindow(QMainWindow):
 
     def updateImage(self):
 
+        regions = []
+
         if not self.overlayCheckbox.isChecked():
             self.displayImage(self.img)
             return
 
         edge_mask = self.edge_detector.detectEdges(self.img.copy())
 
-        if self.morphCheckbox.isChecked():
+        if self.fillRegionCheckbox.isChecked():
             edge_mask, regions = self.edge_detector.fillEdges(edge_mask)
 
             if self.entropyCheckbox.isChecked():
@@ -193,10 +195,15 @@ class StartWindow(QMainWindow):
                     self.img.copy(),
                     regions,
                 )
-                if self.outlineCheckbox.isChecked():
-                    edge_mask, regions = self.edge_detector.finalOutline(edge_mask)
+            if self.outlineCheckbox.isChecked():
+                edge_mask, regions = self.edge_detector.finalOutline(edge_mask)
 
-        overlay = self.edge_detector.overlayEdges(self.img.copy(), edge_mask)
+        if len(regions) == 0:
+            overlay = self.edge_detector.overlayEdges(self.img.copy(), edge_mask)
+        else:
+            overlay = self.img.copy()
+            for region in regions:
+                overlay = self.edge_detector.overlayEdges(overlay, region)
         self.displayImage(overlay)
         self.detectedImage = overlay.copy()
 

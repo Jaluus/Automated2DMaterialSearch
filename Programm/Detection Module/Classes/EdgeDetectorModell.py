@@ -34,10 +34,12 @@ class edgeDetector:
         # Draw The Countours
         for i in range(len(contours)):
             # Only draw Outer Contours
-            if hierarchy[0][i][3] != -1:
-                continue
+            # if hierarchy[0][i][3] != -1:
+            #     continue
+
             blank_img = np.zeros_like(regions)
-            outlines = cv2.drawContours(blank_img, contours, i, 255, thickness=1)
+            outlines = cv2.drawContours(
+                blank_img, contours, i, 255, thickness=1)
 
             fat_outlines = cv2.morphologyEx(
                 src=outlines,
@@ -95,32 +97,26 @@ class edgeDetector:
         # Draw The Countours
         for i in range(len(contours)):
             # Only draw Outer Contours
-            if hierarchy[0][i][3] != -1:
+            if hierarchy[0][i][3] == -1:
                 continue
             blank_img = np.zeros_like(edge_mask)
-            filled_contour = cv2.drawContours(blank_img, contours, i, 255, thickness=-1)
+            filled_contour = cv2.drawContours(
+                blank_img, contours, i, 255, thickness=-1)
 
-            # get rid of the Dilation we did to expand the Contours -> Makes the area bigger than it is, als gets rid of single lines
-            eroded_contour = cv2.morphologyEx(
-                src=filled_contour,
-                op=cv2.MORPH_ERODE,
-                kernel=kernel,
-                iterations=self.iterations + 3,
-            )
             # Puff it up to original size
-            eroded_contour = cv2.morphologyEx(
-                src=eroded_contour,
+            filled_contour = cv2.morphologyEx(
+                src=filled_contour,
                 op=cv2.MORPH_DILATE,
                 kernel=kernel,
-                iterations=3,
+                iterations=1,
             )
 
             # Dont append empty contours
-            if np.max(eroded_contour) == 0:
+            if np.max(filled_contour) == 0:
                 continue
 
-            contour_mask_all.append(eroded_contour)
-            contour_mask[eroded_contour == 255] = 255
+            contour_mask_all.append(filled_contour)
+            contour_mask[filled_contour == 255] = 255
 
         contour_mask_all = np.array(contour_mask_all)
 
@@ -130,7 +126,10 @@ class edgeDetector:
         """Overlays RGB Image With The Mask"""
         overlay = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
-        img[edge_mask == 255] = [255, 0, 0]
+
+        random_color = np.random.randint(255, size=3)
+
+        img[edge_mask == 255] = random_color
         return img
 
     def entropyImage(self, img, region_mask):
