@@ -1,16 +1,24 @@
 # Databank Module
 
-## The Config File
+## First Use
 
-You need to create a database.ini config file which looks like this
+
+### Database creation
+
+1. Open the psql shell and login, or use a Database manager of your choice (like Datagrep).
+2. Create a new Database with `CREATE DATABASE mydatabase`.
+3. Create 2 new Tables, I may implement this in python directly.
+
+### The Config File
+
+You need to create a database.ini config file which looks like this for connecting to it via Python
 
     [postgresql]
     host=localhost
-    database=testing
+    database=mydatabase
     user=postgres
     password=postgres
     port=5432
-
 
 ## What is being saved
 Table Image
