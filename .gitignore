@@ -3,6 +3,8 @@
 __pycache__
 Presentation
 
+database.ini
+
 # Motor Module ignores
 tango_dll_errlog.txt
 

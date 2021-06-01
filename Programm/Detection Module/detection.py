@@ -1,9 +1,10 @@
+import os
 import sys
 
-sys.path.append(
-    r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm\Detection Module\Classes"
-)
-import os
+model_path = os.path.join(os.path.dirname(__file__), "Classes")
+
+sys.path.append(model_path)
+
 from EdgeDetectorModell import edgeDetector
 from ImageLoaderModell import imageLoader
 import json
@@ -45,31 +46,31 @@ class detector:
 
         regions = []
 
-        if not self.overlayCheckbox.isChecked():
-            self.displayImage(self.img)
-            return
+        # if not self.overlayCheckbox.isChecked():
+        #     self.displayImage(self.img)
+        #     return
 
-        edge_mask = self.edge_detector.detectEdges(self.img.copy())
+        # edge_mask = self.edge_detector.detectEdges(self.img.copy())
 
-        if self.fillRegionCheckbox.isChecked():
-            edge_mask, regions = self.edge_detector.fillEdges(edge_mask)
+        # if self.fillRegionCheckbox.isChecked():
+        #     edge_mask, regions = self.edge_detector.fillEdges(edge_mask)
 
-            if self.entropyCheckbox.isChecked():
-                edge_mask = self.edge_detector.entropyImage(
-                    self.img.copy(),
-                    regions,
-                )
-            if self.outlineCheckbox.isChecked():
-                edge_mask, regions = self.edge_detector.finalOutline(edge_mask)
+        #     if self.entropyCheckbox.isChecked():
+        #         edge_mask = self.edge_detector.entropyImage(
+        #             self.img.copy(),
+        #             regions,
+        #         )
+        #     if self.outlineCheckbox.isChecked():
+        #         edge_mask, regions = self.edge_detector.finalOutline(edge_mask)
 
-        if len(regions) == 0:
-            overlay = self.edge_detector.overlayEdges(self.img.copy(), edge_mask)
-        else:
-            overlay = self.img.copy()
-            for region in regions:
-                overlay = self.edge_detector.overlayEdges(overlay, region)
-        self.displayImage(overlay)
-        self.detectedImage = overlay.copy()
+        # if len(regions) == 0:
+        #     overlay = self.edge_detector.overlayEdges(self.img.copy(), edge_mask)
+        # else:
+        #     overlay = self.img.copy()
+        #     for region in regions:
+        #         overlay = self.edge_detector.overlayEdges(overlay, region)
+        # self.displayImage(overlay)
+        # self.detectedImage = overlay.copy()
 
 
 test = detector("test_config.json")
