@@ -6,7 +6,7 @@ from config import config
 import sys
 import os
 
-picture_path = os.path.join(os.path.dirname(__file__), "pictures")
+picture_path = os.path.join(os.path.dirname(__file__), "Pictures")
 
 flake_1 = {"thickness": "mono", "size": 42}
 flake_2 = {"thickness": "few", "size": 54}

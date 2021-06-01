@@ -3,13 +3,15 @@
 __pycache__
 Presentation
 
-database.ini
-
 # Motor Module ignores
 tango_dll_errlog.txt
 
 # Camera Module ignores
 
+# Microscope Module ignores
+
 # Detection Module ignores
 
 # Databank Module ignores
+database.ini
+Programm/Databank Module/Pictures
