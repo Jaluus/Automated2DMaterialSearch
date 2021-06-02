@@ -29,12 +29,19 @@ class GrabberHandle(C.Structure):
 
 GrabberHandle._fields_ = [('unused', C.c_int)]
 
+# DLLs need to be found in order to work
+# This is a workaround
+file_path = os.path.dirname(__file__)
+os.chdir(file_path)
+
 
 class TIS_GrabberDLL(object):
     if sys.maxsize > 2**32:
-        __tisgrabber = C.windll.LoadLibrary("./tisgrabber_x64.dll")
+        dll_path = os.path.join(file_path, "tisgrabber_x64.dll")
+        __tisgrabber = C.windll.LoadLibrary(dll_path)
     else:
-        __tisgrabber = C.windll.LoadLibrary("./tisgrabber.dll")
+        dll_path = os.path.join(file_path, "tisgrabber.dll")
+        __tisgrabber = C.windll.LoadLibrary(dll_path)
 
     def __init__(self, **keyargs):
         """Initialize the Albatross from the keyword arguments."""

@@ -53,10 +53,6 @@ def set_properties(Camera):
     Camera.GetPropertySwitch("WhiteBalance", "Auto", WhiteBalanceAuto)
     print("WB auto : ", WhiteBalanceAuto[0])
 
-    Camera.SetPropertySwitch("WhiteBalance", "Auto", 0)
-    Camera.GetPropertySwitch("WhiteBalance", "Auto", WhiteBalanceAuto)
-    print("WB auto : ", WhiteBalanceAuto[0])
-
     Camera.SetPropertyValue("WhiteBalance", "White Balance Red", 64)
     Camera.SetPropertyValue("WhiteBalance", "White Balance Green", 64)
     Camera.SetPropertyValue("WhiteBalance", "White Balance Blue", 64)
