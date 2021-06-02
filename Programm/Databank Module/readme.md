@@ -2,7 +2,6 @@
 
 ## First Use
 
-
 ### Database creation
 
 1. Open the psql shell and login, or use a Database manager of your choice (like Datagrep).
@@ -37,8 +36,6 @@ Table Image
     - Current Magnification
 - Tango Module
   - Position XY
-- Detection Module
-  - Layers in the pictures
 - Camera Module
   - Date taken
   - Resolution
