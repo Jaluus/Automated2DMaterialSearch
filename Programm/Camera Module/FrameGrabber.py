@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import time
 import os
+import json
 
 
 def init_camera(cam_name="DFK 33UX174 38020321"):
@@ -102,7 +103,7 @@ while True:
     Camera.SnapImage()
     # Get the image
     image = Camera.GetImage()
-
+    prop_dict = get_properties(Camera)
     # Apply some OpenCV function on this image
 
     # image = cv2.morphologyEx()
@@ -118,9 +119,9 @@ while True:
     if key == ord("q"):
         break
     elif key == ord("s"):
-        pic_path = os.path.join(
-            os.path.dirname(__file__), "Pictures", f"{time.time():.0f}.png"
-        )
+        img_id = f"{time.time():.0f}"
+        pic_path = os.path.join(os.path.dirname(__file__), "Pictures", f"{img_id}.png")
+        # Write this data to the DB
         print("saving img... ")
         cv2.imwrite(pic_path, image)
     elif key == ord("e"):

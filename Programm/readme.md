@@ -27,3 +27,7 @@ Install PostgreSQL by downloading it from [the official website](https://www.pos
 
 ## Microscope Module
 Install the NikonLV SDK, which should be automatically installed when you install NIS-Elements
+
+# Possible errors:
+- Problem: `pywin32` is not working on your machine while controlling the microscope
+  - Fix: Download `pypiwin32` with `pip install pypiwin32`
