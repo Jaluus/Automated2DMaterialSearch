@@ -63,15 +63,10 @@ You need to create a database.ini config file which looks like this for connecti
 Table Image
 - ID
 - Image Path
-- Detection Module
-  - Number Monolayer
-  - Number Fewlayer
-  - Number Thicklayer
 - Microscope Module
   - Lights
     - Aparture
     - Voltage
-    - Light Type?
   - Nosepiece
     - Current Magnification
 - Tango Module
@@ -81,13 +76,20 @@ Table Image
   - Resolution
   - Bit Depth
   - Size
-  - RBG-composition
+  - White_balance_r
+  - White_balance_g
+  - White_balance_b
   - Gain
   - Exposure time
+- Detection Module
+  - Number Monolayer
+  - Number Fewlayer
+  - Number Thicklayer
 
 Table Flake
-- ID
-- Image_ID
-- Thickness
-- Size
-- Position on the Picture
+- ID : bigserial
+- Image_ID : bigserial
+- Thickness : "mono" , "few" , "thick"
+- Size : double
+- Used : bool
+- Position on the Picture ?

@@ -1,0 +1,20 @@
+table, th, td {
+    border: 1px solid black;
+  }
+td {
+    text-align: center;
+}
+
+
+table {
+    width: 100%;
+}
+#path_cell{
+    width: 80%;
+}
+#val_cell{
+    width: 10%;
+}
+input{
+    width: 60px;
+}

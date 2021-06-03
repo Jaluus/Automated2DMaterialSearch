@@ -5,6 +5,7 @@ import time
 import os
 import json
 import sys
+import time
 
 
 class microscope_cam:
@@ -95,8 +96,13 @@ class microscope_cam:
 
     def get_properties(self):
         """
-        returns a property_dict with the keys\n
-        'gain' , 'exposure' , 'gamma' , 'white_balance'
+        returns the current camera properties\n
+        dictkeys:\n
+        'gain' : the current gain, 0 means normal gain\n
+        'exposure' : the current exposure time in seconds\n
+        'gamma' : the gamma of the image, 120 means 1.2 etc..\n
+        'white_balance' : the rgb white balance in tuple form e.g. (64,64,64)\n
+        'time' : the current time as unix timestamp
         """
         val_dict = {}
         # get the Gain
@@ -115,12 +121,19 @@ class microscope_cam:
 
         val_dict["white_balance"] = (WBr, WBg, WBb)
 
+        val_dict["time"] = time.time()
+
         return val_dict
 
     def get_image(self):
         """
         returns an image taken by the camera with the corrosponding metadata dict\n
-        dictkeys: 'gain' , 'exposure' , 'gamma' , 'white_balance'
+        dictkeys:\n
+        'gain' : the current gain, 0 means normal gain\n
+        'exposure' : the current exposure time in seconds\n
+        'gamma' : the gamma of the image, 120 means 1.2 etc..\n
+        'white_balance' : the rgb white balance in tuple form e.g. (64,64,64)\n
+        'time' : the current time as unix timestamp
         """
 
         self.camera.SnapImage()

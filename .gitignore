@@ -2,6 +2,8 @@
 .vscode
 __pycache__
 Presentation
+node_modules
+
 
 # Motor Module ignores
 tango_dll_errlog.txt
@@ -15,4 +17,5 @@ Programm/Camera Module/Pictures
 
 # Databank Module ignores
 database.ini
-Programm/Databank Module/Pictures
+Programm/Databank Module/Python/Pictures
+

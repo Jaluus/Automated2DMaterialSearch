@@ -13,3 +13,8 @@ Adapted from [this Repo](https://github.com/TheImagingSource/IC-Imaging-Control-
 - 20x   => 0.293 μm/px @ 1920 x 1200
 - 50x   => 0.118 μm/px @ 1920 x 1200
 - 100x  => 0.058 μm/px @ 1920 x 1200
+
+## ToDo
+
+- Return Video format
+- Return bit depth
