@@ -1,4 +1,6 @@
 const Pool = require("pg").Pool;
+// THIS IS COMPLETE GARBAGE!
+// Use a kerychain nextime
 const pool = new Pool({
   user: "postgres",
   host: "localhost",

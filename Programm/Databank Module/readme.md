@@ -6,45 +6,40 @@
 
 1. Open the psql shell and login, or use a Database manager of your choice (like Datagrep).
 2. Create a new Database with `CREATE DATABASE mydatabase`.
-3. Create 2 new Tables, I may implement this in python directly.
+3. Create 3 new Tables, I may implement this in python directly.
+4. Dont forget the rights managment
 
-Image_table
+image_table
 
     create table image
     (
-      id bigserial not null
-        constraint image_pk
-          primary key,
-      path varchar(500) not null,
-      light_aparture double precision not null,
-      light_voltage double precision not null,
-      nosepiece_magnification double precision not null,
-      position_x double precision not null,
-      position_y double precision not null,
-      taken timestamp not null,
-      size_mb double precision,
-      resolution_y int default 1200,
-      resolution_x int default 1920,
-      bit_depth int default 24,
-      r_value int,
-      g_value int,
-      b_value int,
-      gain double precision,
-      exposure_time_ms double precision
+        id   bigserial not null
+            constraint image_pk
+                primary key,
+        path text      not null
     );
 
-flake table
+flake_table
 
     create table flake
+    ( 
+        id        bigserial        not null
+            constraint flake_pk
+                primary key,
+        size      double precision not null,
+        thickness integer          not null
+    );
+
+relation_table
+
+    create table relation_table
     (
-      id bigserial not null
-        constraint flake_pk
-          primary key,
-      image_id bigserial not null
-        constraint flake_image_id_fk
-          references image,
-      thickness int not null,
-      size double precision not null
+        image_id bigserial not null
+            constraint relation_table_image_id_fk
+                references image,
+        flake_id bigserial not null
+            constraint relation_table_flake_id_fk
+                references flake
     );
 
 
