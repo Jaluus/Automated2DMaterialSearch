@@ -25,6 +25,8 @@ Without Anaconda you can use venv or virtualenv, Step 3 is still the same
 ## Databank Module
 Install PostgreSQL by downloading it from [the official website](https://www.postgresql.org/)
 
+For the UI install NodeJs 
+
 ## Microscope Module
 Install the NikonLV SDK, which should be automatically installed when you install NIS-Elements
 
