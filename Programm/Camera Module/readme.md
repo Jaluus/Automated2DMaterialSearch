@@ -17,7 +17,7 @@ Adapted from [this Repo](https://github.com/TheImagingSource/IC-Imaging-Control-
 |  50x  | 0.118 μm/px | 0.2266 mm x 0.1416 mm |    ~ 0.1538 μm/px    |  0.2953 mm x 0.1846 mm   |
 | 100x  | 0.058 μm/px | 0.1114 mm x 0.0696 mm |    ~ 0.0769 μm/px    |   0.1476 mm x 0.092 mm   |
 
-## Pictures per Ocular @ Full area Scan
+## Pictures per Magnification @ Full area Scan
 
 Approx. Time per Image without Operations: ~ 1.3 s
 
