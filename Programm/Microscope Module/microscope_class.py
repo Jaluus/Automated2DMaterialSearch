@@ -1,3 +1,4 @@
+from traceback import print_tb
 import win32com.client
 
 
@@ -31,7 +32,18 @@ class microscope_control:
     def set_lamp_aperture_stop(self, aperture_stop: float):
         self.micro.EpiApertureStop.ApertureStop = aperture_stop
 
-    def get_current_properties(self):
+    def get_af_status(self):
+        """
+        Return Codes:\n
+        AfStatusUnknown     : -1\n
+        AfStatusJustFocus   : 1\n
+        AfStatusUnderFocus  : 2\n
+        AfStatusOverFocus   : 3\n
+        AfStatusOutOfRange  : 9
+        """
+        return self.micro.ZDrive.AfStatus()
+
+    def get_properties(self):
         """
         Returns the current properties of the microscope\n
         dict keys:
@@ -48,5 +60,6 @@ class microscope_control:
 
 if __name__ == "__main__":
     micro = microscope_control()
-    props = micro.get_current_properties()
+    props = micro.get_properties()
+    print(micro.get_af_status())
     print(props)

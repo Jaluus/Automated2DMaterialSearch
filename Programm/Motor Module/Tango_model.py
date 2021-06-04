@@ -1,12 +1,17 @@
-
 import sys
-from ctypes import*
+from ctypes import *
+import os
+
+file_path = os.path.dirname(__file__)
 dll_path = r"DLL_Files\TangoDLL_64bit_V1399\Tango_DLL.dll"
+
+full_dll_path = os.path.join(file_path, dll_path)
 # give location of dll (current directory)
 
 
-class TangoController():
-    def __init__(self, dll_path):
+class tango_controller:
+    def __init__(self, dll_path=full_dll_path):
+        print(dll_path)
         self.dll_path = dll_path
         self.m_Tango = cdll.LoadLibrary(self.dll_path)
         self.max_x = 100
@@ -75,13 +80,22 @@ class TangoController():
         dimZ = c_int()
         dimA = c_int()
         # Get the Dimensions
-        error = self.m_Tango.LSX_GetDimensions(self.LSID, byref(
-            dimX), byref(dimY), byref(dimZ), byref(dimA))
+        error = self.m_Tango.LSX_GetDimensions(
+            self.LSID, byref(dimX), byref(dimY), byref(dimZ), byref(dimA)
+        )
         if error > 0:
             print("Error: getDim " + str(error))
         else:
-            print("LSX_GetDimensions = " + str(dimX.value) + " " + str(dimY.value) +
-                  " " + str(dimZ.value) + " " + str(dimA.value))
+            print(
+                "LSX_GetDimensions = "
+                + str(dimX.value)
+                + " "
+                + str(dimY.value)
+                + " "
+                + str(dimZ.value)
+                + " "
+                + str(dimA.value)
+            )
 
     def _range_measure(self):
         error = self.m_Tango.LSX_RMeasure(self.LSID)
@@ -93,10 +107,10 @@ class TangoController():
         Checks if the X and Y Coords are within the Software Endstops\n
         returns clipped x and y
         """
-        if (x > self.max_x):
+        if x > self.max_x:
             x = self.max_x
             print("X bigger than Secure Stop, setting X to Max_x")
-        if (y > self.max_y):
+        if y > self.max_y:
             y = self.max_y
             print("Y bigger than Secure Stop, setting Y to Max_y")
         return x, y
@@ -109,12 +123,13 @@ class TangoController():
         # use 1 to go for mu m
         self._set_dimensions(2)
         self.get_dimensions()
+        x, y = self.get_pos()
         # calibrate all axes
         print("Starting calibration...")
         self._calibrate()
         self._range_measure()
         self.maxX, self.maxY = self.get_pos()
-        self._calibrate()
+        self.abs_move(x, y)
         print("Calibration complete")
 
     def get_pos(self):
@@ -127,7 +142,8 @@ class TangoController():
         dz = c_double()
         da = c_double()
         error = self.m_Tango.LSX_GetPos(
-            self.LSID, byref(dx), byref(dy), byref(dz), byref(da))
+            self.LSID, byref(dx), byref(dy), byref(dz), byref(da)
+        )
         if error > 0:
             print("Error: GetPos " + str(error))
 
@@ -147,8 +163,7 @@ class TangoController():
         moveA = c_double(0.0)
         vocal = c_bool(True)
 
-        error = self.m_Tango.LSX_MoveAbs(
-            self.LSID, moveX, moveY, moveZ, moveA, vocal)
+        error = self.m_Tango.LSX_MoveAbs(self.LSID, moveX, moveY, moveZ, moveA, vocal)
         if error > 0:
             print("Error: abs_move " + str(error))
             sys.exit()
@@ -162,9 +177,9 @@ class TangoController():
         return True if possible
         """
         curr_x, curr_y = self.get_pos()
-        if (curr_x + dx > self.max_x):
+        if curr_x + dx > self.max_x:
             return False
-        if (curr_y + dy > self.max_y):
+        if curr_y + dy > self.max_y:
             return False
         return True
 
@@ -184,7 +199,8 @@ class TangoController():
         vocal = c_bool(True)
 
         error = self.m_Tango.LSX_MoveRel(
-            self.LSID, move_dx, move_dy, move_dz, move_da, vocal)
+            self.LSID, move_dx, move_dy, move_dz, move_da, vocal
+        )
         if error > 0:
             print("Error: rel_move " + str(error))
             sys.exit()
@@ -194,4 +210,4 @@ class TangoController():
 
 
 if __name__ == "__main__":
-    tc = TangoController(dll_path)
+    tc = tango_controller(dll_path)

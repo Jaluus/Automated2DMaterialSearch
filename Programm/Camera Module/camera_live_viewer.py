@@ -23,7 +23,7 @@ def init_camera(cam_name="DFK 33UX174 38020321"):
     Camera.SetVideoFormat("RGB24 (1920x1200)")
 
     # Set a frame rate
-    Camera.SetFrameRate(13.5)
+    Camera.SetFrameRate(15)
 
     # Start the live video stream, but show no own live video window. We will use OpenCV for this.
     Camera.StartLive(0)
@@ -103,7 +103,7 @@ while True:
     Camera.SnapImage()
     # Get the image
     image = Camera.GetImage()
-    prop_dict = get_properties(Camera)
+    # prop_dict = get_properties(Camera)
     # Apply some OpenCV function on this image
 
     # image = cv2.morphologyEx()

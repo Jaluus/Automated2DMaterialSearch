@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import time
 import os
-import json
 import sys
 import time
 
@@ -138,9 +137,11 @@ class microscope_cam:
 
         self.camera.SnapImage()
         image = self.camera.GetImage()
-        prop_dir = self.get_properties()
 
-        return image, prop_dir
+        # flip the image to get the correct orientation
+        image = cv2.flip(image, 0)
+
+        return image
 
     def stop_camera(self):
         self.camera.StopLive()
@@ -148,3 +149,10 @@ class microscope_cam:
 
 if __name__ == "__main__":
     cam = microscope_cam()
+
+    import matplotlib.pyplot as plt
+
+    img, props = cam.get_image()
+    plt.imshow(img)
+    print(props)
+    plt.show()

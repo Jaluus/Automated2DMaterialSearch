@@ -1,6 +1,6 @@
-from Tango_model import TangoController
+from tango_model import tango_controller
 
 dll_path = r"DLL_Files\TangoDLL_64bit_V1399\Tango_DLL.dll"
 
 
-tc = TangoController(dll_path)
+tc = tango_controller(dll_path)

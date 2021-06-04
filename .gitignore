@@ -19,3 +19,6 @@ Programm/Camera Module/Pictures
 database.ini
 Programm/Databank Module/Python/Pictures
 
+# Module Test Ignores
+Programm/Module Tests/Pictures
+Programm/Module Tests/Meta
