@@ -1,13 +1,10 @@
 const Pool = require("pg").Pool;
 // THIS IS COMPLETE GARBAGE!
 // Use a kerychain nextime
-const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "testing",
-  password: "postgres",
-  port: 5432,
-});
+
+const credentials = require("./credentials.json")
+
+const pool = new Pool(credentials);
 
 
 const get_flake_data = (id) => {
@@ -16,6 +13,8 @@ const get_flake_data = (id) => {
     SELECT * FROM image
     JOIN relation_table ON image.id = relation_table.image_id
     JOIN flake on flake.id = relation_table.flake_id
+    JOIN chip on flake.chip_id = chip.id
+    JOIN scan on chip.scan_id = scan.id
     WHERE flake.id = ${id};
     `;
 
@@ -36,7 +35,9 @@ const get_image_data = (id) => {
     SELECT * FROM image
     JOIN relation_table ON image.id = relation_table.image_id
     JOIN flake on flake.id = relation_table.flake_id
-    WHERE flake.id = ${id};
+    JOIN chip on flake.chip_id = chip.id
+    JOIN scan on chip.scan_id = scan.id
+    WHERE image.id = ${id};
     `;
 
   return new Promise(function (resolve, reject) {

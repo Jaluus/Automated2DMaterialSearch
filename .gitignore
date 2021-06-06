@@ -17,7 +17,7 @@ Programm/Camera Module/Pictures
 
 # Databank Module ignores
 database.ini
-Programm/Databank Module/Python/Pictures
+Programm/Databank Module/databank_writing/Pictures
 
 # Module Test Ignores
 Programm/Module Tests/Pictures

@@ -54,6 +54,16 @@ You need to create a database.ini config file which looks like this for connecti
     password=postgres
     port=5432
 
+## Things you can search for
+
+- Get all flakes with the given SCAN_ID
+  - Get all flakes with size bigger than...
+  - Get all flakes with size Thickness
+- Get all flakes with the given CHIP_ID
+  - Get all flakes with size bigger than...
+  - Get all flakes with size Thickness
+- Get all flakes which are younger than...
+
 ## What is being saved
 Table Image
 - ID

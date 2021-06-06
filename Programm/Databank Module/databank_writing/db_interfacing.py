@@ -28,16 +28,22 @@ class dbConnection:
             print(error)
             sys.exit(0)
 
-    def insert_image(self, img_path):
+    def insert_image(self, chip_id, img_path):
         """
-        inserts an image into the database
+        inserts an image into the database, returns the generated id of the image
         """
         query = """
-        INSERT INTO image (path)
-        VALUES (%s)
+        INSERT INTO image (chip_id,path)
+        VALUES (%s,%s)
         RETURNING id
         """
-        self.cur.execute(query, (img_path,))
+        self.cur.execute(
+            query,
+            (
+                chip_id,
+                img_path,
+            ),
+        )
 
         # gets the last image_id
         image_id = self.cur.fetchone()
@@ -46,20 +52,22 @@ class dbConnection:
 
         return image_id
 
-    def insert_flake(self, thickness, size):
+    def insert_flake(self, chip_id, thickness, size, used):
         """
         inserts a flake into the database
         """
         query = """
-        INSERT INTO flake (thickness,size)
-        VALUES (%s,%s)
+        INSERT INTO flake (chip_id,thickness,size,used)
+        VALUES (%s,%s,%s,%s)
         RETURNING id
         """
         self.cur.execute(
             query,
             (
+                chip_id,
                 thickness,
                 size,
+                used,
             ),
         )
         # gets the last image_id
@@ -110,21 +118,25 @@ class dbConnection:
             print("Database connection closed.")
 
 
-def create_random_flakes():
+def create_random_flakes(chip_id):
     flake_arr = []
     for i in range(np.random.randint(6)):
         flake_dict = {}
+        flake_dict["chip_id"] = chip_id
         flake_dict["thickness"] = np.random.randint(1, 4)
         flake_dict["size"] = round(np.random.rand() * 300, 2)
+        flake_dict["used"] = np.random.randint(2) == 1
         flake_arr.append(flake_dict)
     return flake_arr
 
 
-def write_to_db_test(db):
+def write_mock_data_to_db(db):
     for pic in os.listdir(picture_path):
-        image_id = db.insert_image(os.path.join(picture_path, pic))
 
-        flake_arr = create_random_flakes()
+        chip_id = np.random.randint(2)
+        image_id = db.insert_image(chip_id, os.path.join(picture_path, pic))
+
+        flake_arr = create_random_flakes(chip_id)
 
         for flake in flake_arr:
             flake_id = db.insert_flake(**flake)
@@ -134,8 +146,4 @@ def write_to_db_test(db):
 if __name__ == "__main__":
     db = dbConnection()
 
-    # write_to_db_test(db)
-
-    flakes = db.get_image(4030)
-    for flake in flakes:
-        print(flake["id"])
+    write_mock_data_to_db(db)

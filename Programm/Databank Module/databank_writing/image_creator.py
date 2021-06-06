@@ -5,7 +5,7 @@ import os
 
 file_path = os.path.dirname(__file__)
 
-curr_id = 0
+curr_id = 1000
 
 for i in range(1000):
 

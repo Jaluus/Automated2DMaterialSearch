@@ -37,11 +37,11 @@ app.get("/image/", (req, res) => {
     });
 });
 
-app.get("/flake/:id", (req, res) => {
+app.get("/flake/", (req, res) => {
 
   console.log("Get Received");
 
-  const id = req.params.id;
+  const id = req.query.id;
 
   db
     .get_flake_data(id)

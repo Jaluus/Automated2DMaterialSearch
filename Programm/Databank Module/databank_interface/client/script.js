@@ -56,8 +56,8 @@ function clearList() {
 
 
 $("#getbut").click(() => {
-    var id = $("#img_id").val()
-    $.get(`http://127.0.0.1:3002/image/?id=${id}`, (data) => {
+    var flake_id = $("#flake_id").val()
+    $.get(`http://127.0.0.1:3002/flake/?id=${flake_id}`, (data) => {
         clearList()
 
         responseHandler(data)

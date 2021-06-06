@@ -23,7 +23,6 @@ from camera_class import microscope_cam
 from microscope_class import microscope_control
 from tango_model import tango_controller
 
-
 motor = tango_controller()
 microscope = microscope_control()
 camera = microscope_cam()
@@ -41,11 +40,14 @@ while True:
     if key == ord("q"):
         break
 
+    # Save the Image
     elif key == ord("s"):
+
         motor_pos = motor.get_pos()
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
         all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
+
         print(all_props)
         picture_path = os.path.join(file_path, f"Pictures\\{motor_pos}.png")
         cv2.imwrite(picture_path, img)
