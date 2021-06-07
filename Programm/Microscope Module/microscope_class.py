@@ -1,4 +1,3 @@
-from traceback import print_tb
 import win32com.client
 
 
@@ -8,8 +7,9 @@ class microscope_control:
     """
 
     def __init__(self):
-        # Creates an microscope object, onbly possible if NIS is closed and no other application is using the LV
+        # Creates an microscope object, only possible if NIS is closed and no other application is using the LV
         self.micro = win32com.client.Dispatch("Nikon.LvMic.nikonLV")
+        # this line is shit, took 4 hours
 
     def get_microscope_object(self):
         return self.micro

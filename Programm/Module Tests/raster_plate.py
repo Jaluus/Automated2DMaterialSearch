@@ -32,8 +32,8 @@ motor = tango_controller()
 microscope = microscope_control()
 camera = microscope_cam()
 
-x_dist = 4.5024
-y_dist = 2.8140
+x_dist = 5.9048
+y_dist = 3.6905
 
 can_move_x = motor.can_move(x_dist, 0)
 can_move_y = motor.can_move(0, y_dist)
