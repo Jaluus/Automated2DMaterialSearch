@@ -5,8 +5,8 @@ model_path = os.path.join(os.path.dirname(__file__), "Classes")
 
 sys.path.append(model_path)
 
-from EdgeDetectorModell import edgeDetector
-from ImageLoaderModell import imageLoader
+from Modules.Detection_Module.Classes.EdgeDetectorModell import edgeDetector
+from Modules.Detection_Module.Classes.ImageLoaderModell import imageLoader
 import json
 
 
@@ -22,13 +22,13 @@ class detector:
             "morph_kernel_size": 2,
         }
 
-        self._load_config(config_path)
+        self.__load_config(config_path)
 
         print("Detector loaded with the following parameters")
         for key in self.param_dict.keys():
             print(f"{key} : {self.param_dict[key]}")
 
-    def _load_config(self, config_path):
+    def __load_config(self, config_path):
         # The config has to lie in a child or directly in the dict of the detection
         path = os.path.join(os.path.dirname(__file__), config_path)
         try:

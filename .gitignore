@@ -9,7 +9,7 @@ node_modules
 tango_dll_errlog.txt
 
 # Camera Module ignores
-Programm/Camera Module/Pictures
+Programm/Modules/Camera_Module/Pictures
 
 # Microscope Module ignores
 
@@ -17,7 +17,7 @@ Programm/Camera Module/Pictures
 
 # Databank Module ignores
 database.ini
-Programm/Databank Module/databank_writing/Pictures
+Programm/Modules/Databank_Module/databank_writing/Pictures
 
 # Module Test Ignores
 Programm/Module Tests/Pictures

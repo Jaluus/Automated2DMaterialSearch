@@ -2,7 +2,6 @@ import PIL
 import numpy as np
 import matplotlib.pyplot as plt
 import psycopg2
-import psycopg2.extras
 from config import config
 import sys
 import os
@@ -13,7 +12,7 @@ picture_path = os.path.join(os.path.dirname(__file__), "Pictures")
 class dbConnection:
     def __init__(self):
         try:
-            self.params = config()
+            self.params = config(section="postgresql")
 
             # connect to the PostgreSQL server
             print("Connecting to the PostgreSQL database...")
@@ -21,10 +20,7 @@ class dbConnection:
 
             # create a cursor
             self.cur = self.conn.cursor()
-            self.return_cursor = self.conn.cursor(
-                cursor_factory=psycopg2.extras.RealDictCursor
-            )
-        except (Exception, psycopg2.DatabaseError) as error:
+        except (Exception) as error:
             print(error)
             sys.exit(0)
 
@@ -101,12 +97,12 @@ class dbConnection:
         WHERE image.id = %s;
         """
 
-        self.return_cursor.execute(
+        self.cur.execute(
             query,
             (image_id,),
         )
         # gets the last image_id
-        image_dict = self.return_cursor.fetchall()
+        image_dict = self.cur.fetchall()
         # makes sure the databank is consistent
         self.conn.commit()
 
@@ -132,8 +128,7 @@ def create_random_flakes(chip_id):
 
 def write_mock_data_to_db(db):
     for pic in os.listdir(picture_path):
-
-        chip_id = np.random.randint(2)
+        chip_id = np.random.randint(2) + 1
         image_id = db.insert_image(chip_id, os.path.join(picture_path, pic))
 
         flake_arr = create_random_flakes(chip_id)

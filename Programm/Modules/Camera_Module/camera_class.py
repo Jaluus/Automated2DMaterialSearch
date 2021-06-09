@@ -1,4 +1,4 @@
-import tisgrabber as IC
+import Modules.Camera_Module.tisgrabber.tisgrabber as IC
 import cv2
 import numpy as np
 import time

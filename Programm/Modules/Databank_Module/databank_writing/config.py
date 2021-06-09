@@ -2,7 +2,7 @@ from configparser import ConfigParser
 import os
 
 
-def config(filename="database.ini", section="postgresql"):
+def config(filename="database.ini", section="mysql"):
     # create a parser
     parser = ConfigParser()
 
@@ -11,7 +11,7 @@ def config(filename="database.ini", section="postgresql"):
     # read config file
     parser.read(file_path)
 
-    # get section, default to postgresql
+    # get section, default to mysql
     db = {}
     if parser.has_section(section):
         params = parser.items(section)

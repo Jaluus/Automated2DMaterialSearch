@@ -5,28 +5,10 @@ import cv2
 import time
 import json
 
-# Rastering the plate at 2.5 X
-
-file_path = os.path.dirname(__file__)
-
-os.chdir(os.path.dirname(__file__))
-
-# Camera_Class
-cam_path = os.path.abspath(r"..\Camera Module")
-sys.path.append(cam_path)
-
-# microscope_class
-micro_path = os.path.abspath(r"..\Microscope Module")
-sys.path.append(micro_path)
-
-# motor_class
-motor_path = os.path.abspath(r"..\Motor Module")
-sys.path.append(motor_path)
-
-from camera_class import microscope_cam
-from microscope_class import microscope_control
-from tango_model import tango_controller
-
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from Modules.Camera_Module.camera_class import microscope_cam
+from Modules.Microscope_Module.microscope_class import microscope_control
+from Modules.Motor_Module.tango_class import tango_controller
 
 motor = tango_controller()
 microscope = microscope_control()

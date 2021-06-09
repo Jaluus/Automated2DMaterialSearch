@@ -3,5 +3,5 @@ matplotlib
 pyQt5
 opencv-python
 scikit-image
-psycopg2
 pywin32
+mysql-connector-python
