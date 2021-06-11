@@ -2,13 +2,14 @@ import sys
 import os
 import matplotlib.pyplot as plt
 import cv2
+import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from Modules.Camera_Module.camera_class import microscope_cam
 from Modules.Microscope_Module.microscope_class import microscope_control
 from Modules.Motor_Module.tango_class import tango_controller
 
-motor = tango_controller()
+# motor = tango_controller()
 microscope = microscope_control()
 camera = microscope_cam()
 
@@ -17,6 +18,13 @@ while True:
     img = camera.get_image()
 
     img_small = cv2.resize(img, (960, 600))
+
+    status = microscope.get_af_status()
+
+    print(status)
+    if status == 9:
+        print("searc")
+        microscope.find_af()
 
     # print(all_props)
     cv2.imshow("test", img_small)

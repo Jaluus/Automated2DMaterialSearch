@@ -43,6 +43,15 @@ class microscope_control:
         """
         return self.micro.ZDrive.AfStatus()
 
+    def is_af_searching(self):
+        return self.micro.ZDrive.AfSearchMode()
+
+    def find_af(self, mode: int = 2):
+        """
+        There are 2 modes, 1 and 2, i dont know the difference
+        """
+        self.micro.ZDrive.SearchAF(0)
+
     def get_properties(self):
         """
         Returns the current properties of the microscope\n
@@ -59,7 +68,14 @@ class microscope_control:
 
 
 if __name__ == "__main__":
+    import time
+
     micro = microscope_control()
-    props = micro.get_properties()
-    print(micro.get_af_status())
-    print(props)
+    while True:
+        # micro.find_af()
+        time.sleep(1)
+        props = micro.get_properties()
+        print(micro.get_af_status())
+        print(props)
+        print(micro.is_af_searching())
+        micro.rotate_nosepiece_backward()

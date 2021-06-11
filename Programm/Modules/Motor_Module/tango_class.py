@@ -161,9 +161,8 @@ class tango_controller:
         moveY = c_double(y)
         moveZ = c_double(0.0)
         moveA = c_double(0.0)
-        vocal = c_bool(True)
 
-        error = self.m_Tango.LSX_MoveAbs(self.LSID, moveX, moveY, moveZ, moveA, vocal)
+        error = self.m_Tango.LSX_MoveAbs(self.LSID, moveX, moveY, moveZ, moveA, True)
         if error > 0:
             print("Error: abs_move " + str(error))
             sys.exit()
@@ -196,10 +195,9 @@ class tango_controller:
         move_dy = c_double(dy)
         move_dz = c_double(0.0)
         move_da = c_double(0.0)
-        vocal = c_bool(True)
 
         error = self.m_Tango.LSX_MoveRel(
-            self.LSID, move_dx, move_dy, move_dz, move_da, vocal
+            self.LSID, move_dx, move_dy, move_dz, move_da, True
         )
         if error > 0:
             print("Error: rel_move " + str(error))
