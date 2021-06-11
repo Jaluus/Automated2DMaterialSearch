@@ -1,4 +1,4 @@
-# Creation Query (MySQL)
+# Creation Query (MySQL) (simple)
 
         CREATE TABLE scan
         (
@@ -39,6 +39,109 @@
             FOREIGN KEY (flake_id) REFERENCES flake(id),
             FOREIGN KEY (image_id) REFERENCES image(id)
         ) ENGINE=INNODB;
+
+# Creation Query (MySQL) (Full)
+
+        create table scan
+        (
+            id   bigint unsigned auto_increment,
+            time bigint                     not null,
+            user varchar(50) default 'None' not null,
+            constraint id
+                unique (id)
+        )
+            engine = InnoDB;
+
+        alter table scan
+            add primary key (id);
+
+        create table chip
+        (
+            id                 bigint unsigned auto_increment,
+            scan_id            bigint unsigned            not null,
+            exfoliate_material varchar(50) default 'WSe2' not null,
+            chip_thickness     int         default 90     not null,
+            constraint id
+                unique (id),
+            constraint chip_ibfk_1
+                foreign key (scan_id) references scan (id)
+        )
+            engine = InnoDB;
+
+        create index scan_id
+            on chip (scan_id);
+
+        alter table chip
+            add primary key (id);
+
+        create table flake
+        (
+            id        bigint unsigned auto_increment,
+            chip_id   bigint unsigned      not null,
+            size      double               not null,
+            thickness int                  not null,
+            used      tinyint(1) default 0 not null,
+            local_x   double     default 0 not null,
+            local_y   double     default 0 not null,
+            constraint id
+                unique (id),
+            constraint flake_ibfk_1
+                foreign key (chip_id) references chip (id)
+        )
+            engine = InnoDB;
+
+        create index chip_id
+            on flake (chip_id);
+
+        alter table flake
+            add primary key (id);
+
+        create table image
+        (
+            id              bigint unsigned auto_increment,
+            chip_id         bigint unsigned not null,
+            path            text            not null,
+            aparture        double          not null,
+            light_voltage   double          not null,
+            magnification   double          not null,
+            global_x        double          not null,
+            global_y        double          not null,
+            white_balance_r int             not null,
+            white_balance_g int             not null,
+            white_balance_b int             not null,
+            gain            double          not null,
+            exposure_time   double          not null,
+            constraint id
+                unique (id),
+            constraint image_ibfk_1
+                foreign key (chip_id) references chip (id)
+        )
+            engine = InnoDB;
+
+        create index chip_id
+            on image (chip_id);
+
+        alter table image
+            add primary key (id);
+
+        create table relation_table
+        (
+            image_id bigint unsigned not null,
+            flake_id bigint unsigned not null,
+            constraint relation_table_ibfk_1
+                foreign key (flake_id) references flake (id),
+            constraint relation_table_ibfk_2
+                foreign key (image_id) references image (id)
+        )
+            engine = InnoDB;
+
+        create index flake_id
+            on relation_table (flake_id);
+
+        create index image_id
+            on relation_table (image_id);
+
+
 
 # Problems
 
