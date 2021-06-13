@@ -35,7 +35,6 @@ while True:
 
     # Save the Image
     elif key == ord("s"):
-
         motor_pos = motor.get_pos()
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()

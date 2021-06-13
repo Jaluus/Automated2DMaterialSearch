@@ -37,7 +37,7 @@ file_path = os.path.dirname(__file__)
 while can_move_x:
     while can_move_y:
         curr_idx += 1
-
+        print("{}/651 scanned".format(curr_idx))
         # # restart the AF when its off
         # if microscope.get_af_status()() == 9:
         #     microscope.find_af()

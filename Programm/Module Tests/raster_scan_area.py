@@ -20,25 +20,31 @@ area_map = cv2.imread(os.path.join(file_path, "scan_area_labeled.png"), 0)
 
 # real x view field 2.5x : 5.9048 mm
 # real y view field 2.5x : 3.6905 mm
-# Real 20x area (0.7280 x 0.4613)
-
-x_offset = 1
-y_offset = 0
-
-x_factor = 0.7280
+# Real 20x area (0.7380 mm x 0.4613 mm)
+# @ resolution 2.5x of  3.0754 μm/px
+# @ resolution 20x of ~ 0.3844 μm/px
+x_factor = 0.7380
 y_factor = 0.4613
 
-motor.abs_move(0, 0)
+# Previous wrong factor of 0.728! on x
+
+# We have an offset of about (856 px x 379 px)
+# With
+x_offset = 0.329
+y_offset = 0.1457
 
 curr_idx = 0
-file_path = os.path.dirname(__file__)
 
 for y_idx in range(area_map.shape[0]):
     for x_idx in range(area_map.shape[1]):
+        # Dont scan anything is the areamap is 0 as only 1s are beeing scanned
         if area_map[y_idx, x_idx] == 0:
             continue
+
         curr_idx += 1
         print(curr_idx)
+
+        # Calculate the new Posiiton on the plate
         x_pos = x_factor * x_idx - x_offset
         y_pos = y_factor * y_idx - y_offset
 

@@ -1,13 +1,11 @@
-Getting all flakes which are of the image with a given ID (unused)
+gets a flake with the given id and all the information for the chip and scan
 
-        SELECT * FROM image
-        JOIN relation_table ON image.id = relation_table.image_id
-        JOIN flake on flake.id = relation_table.flake_id
-        WHERE image.id = ${id};
+        SELECT * FROM flake f
+        join chip c on c.id = f.chip_id
+        join scan s on s.id = c.scan_id
+        WHERE f.id = ${id};
 
-getting all images which have a flake with the given id
+ gets all images associated with a given flake id
 
-        SELECT * FROM image
-        JOIN relation_table ON image.id = relation_table.image_id
-        JOIN flake on flake.id = relation_table.flake_id
-        WHERE flake.id = ${id};
+        SELECT * FROM image i
+        WHERE i.flake_id = ${id};

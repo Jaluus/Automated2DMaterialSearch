@@ -1,23 +1,21 @@
-const { response } = require("express");
 const express = require("express");
 const cors = require('cors')
-
-const app = express();
-const port = 3002;
-
-app.use(cors())
 const db = require("./db_conn");
 
+const port = 3002;
+const app = express();
+
+app.use(cors())
 app.use(express.json());
-app.use(function (req, res, next) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Access-Control-Allow-Headers"
-  );
-  next();
-});
+// app.use(function (req, res, next) {
+//   res.setHeader("Access-Control-Allow-Origin", "*");
+//   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+//   res.setHeader(
+//     "Access-Control-Allow-Headers",
+//     "Content-Type, Access-Control-Allow-Headers"
+//   );
+//   next();
+// });
 
 app.get("/image/", (req, res) => {
 
