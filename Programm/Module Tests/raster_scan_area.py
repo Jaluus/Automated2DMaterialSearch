@@ -17,6 +17,8 @@ camera = microscope_cam()
 file_path = os.path.dirname(__file__)
 area_map = cv2.imread(os.path.join(file_path, "scan_area_labeled.png"), 0)
 
+# go into the 20x scope
+microscope.set_mag(3)
 
 # real x view field 2.5x : 5.9048 mm
 # real y view field 2.5x : 3.6905 mm

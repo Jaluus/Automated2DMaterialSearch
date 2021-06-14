@@ -9,6 +9,8 @@ from Modules.Camera_Module.camera_class import microscope_cam
 from Modules.Microscope_Module.microscope_class import microscope_control
 from Modules.Motor_Module.tango_class import tango_controller
 
+file_path = os.path.dirname(__file__)
+
 # motor = tango_controller()
 microscope = microscope_control()
 camera = microscope_cam()
@@ -19,12 +21,12 @@ while True:
 
     img_small = cv2.resize(img, (960, 600))
 
-    status = microscope.get_af_status()
+    # status = microscope.get_af_status()
 
-    print(status)
-    if status == 9:
-        print("searc")
-        microscope.find_af()
+    # print(status)
+    # if status == 9:
+    #     print("searc")
+    #     microscope.find_af()
 
     # print(all_props)
     cv2.imshow("test", img_small)
@@ -41,7 +43,7 @@ while True:
         all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
 
         print(all_props)
-        picture_path = os.path.join(file_path, f"Pictures\\{motor_pos}.png")
+        picture_path = os.path.join(file_path, f"{motor_pos}.png")
         cv2.imwrite(picture_path, img)
         # Save image to server and write the path and the metadata to DB
 

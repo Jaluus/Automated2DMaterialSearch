@@ -5,6 +5,8 @@ import cv2
 import time
 import json
 
+file_path = os.path.dirname(__file__)
+
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from Modules.Camera_Module.camera_class import microscope_cam
 from Modules.Microscope_Module.microscope_class import microscope_control
@@ -32,7 +34,8 @@ can_move_x = motor.can_move(x_dist, 0)
 can_move_y = motor.can_move(0, y_dist)
 
 curr_idx = 0
-file_path = os.path.dirname(__file__)
+
+microscope.set_mag(1)
 
 while can_move_x:
     while can_move_y:

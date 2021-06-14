@@ -29,6 +29,12 @@ class microscope_control:
     def set_lamp_voltage(self, voltage: float):
         self.micro.EpiLamp.Voltage = voltage
 
+    def set_mag(self, mag_idx: int):
+        if 1 <= mag_idx <= 5:
+            self.micro.Nosepiece.Position = mag_idx
+        else:
+            print("Wrong Idx, need values between 1 and 5")
+
     def set_lamp_aperture_stop(self, aperture_stop: float):
         self.micro.EpiApertureStop.ApertureStop = aperture_stop
 
@@ -68,14 +74,6 @@ class microscope_control:
 
 
 if __name__ == "__main__":
-    import time
-
     micro = microscope_control()
-    while True:
-        # micro.find_af()
-        time.sleep(1)
-        props = micro.get_properties()
-        print(micro.get_af_status())
-        print(props)
-        print(micro.is_af_searching())
-        micro.rotate_nosepiece_backward()
+    props = micro.get_properties()
+    micro.set_mag(3)
