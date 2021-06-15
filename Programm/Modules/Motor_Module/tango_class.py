@@ -9,7 +9,11 @@ full_dll_path = os.path.join(file_path, dll_path)
 # give location of dll (current directory)
 
 
-class tango_controller:
+class motor_driver_class:
+    """
+    controls the Tango XY Plate
+    """
+
     def __init__(self, dll_path=full_dll_path):
         print(dll_path)
         self.dll_path = dll_path
@@ -152,7 +156,7 @@ class tango_controller:
     def get_max_xy(self):
         return self.max_x, self.max_y
 
-    def abs_move(self, x, y):
+    def abs_move(self, x, y, silent: bool = True):
         """
         moves to an absolute position, checks for max_y and max_y\n
         """
@@ -167,7 +171,8 @@ class tango_controller:
             print("Error: abs_move " + str(error))
             sys.exit()
         else:
-            print(f"Moved to {x}, {y} (Absolut)")
+            if not silent:
+                print(f"Moved to {x}, {y} (Absolut)")
 
     def can_move(self, dx, dy):
         """
@@ -182,7 +187,7 @@ class tango_controller:
             return False
         return True
 
-    def rel_move(self, dx, dy):
+    def rel_move(self, dx, dy, silent: bool = True):
         """
         moves relative to the Current position, checks for max_x and max_y\n
         returns False if the move was unsuccesful\n
@@ -203,9 +208,10 @@ class tango_controller:
             print("Error: rel_move " + str(error))
             sys.exit()
         else:
-            print(f"Moved by {dx}, {dy} (Rel)")
+            if not silent:
+                print(f"Moved by {dx}, {dy} (Rel)")
             return True
 
 
 if __name__ == "__main__":
-    tc = tango_controller(dll_path)
+    tc = motor_driver_class(dll_path)

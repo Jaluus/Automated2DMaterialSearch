@@ -7,7 +7,7 @@ import sys
 import time
 
 
-class microscope_cam:
+class camera_driver_class:
     """
     eays to use microscope cam class
     """
@@ -148,7 +148,7 @@ class microscope_cam:
 
 
 if __name__ == "__main__":
-    cam = microscope_cam()
+    cam = camera_driver_class()
 
     import matplotlib.pyplot as plt
 

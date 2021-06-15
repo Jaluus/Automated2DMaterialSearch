@@ -1,7 +1,7 @@
 import win32com.client
 
 
-class microscope_control:
+class microscope_driver_class:
     """
     an easy way to control the microscope
     """
@@ -74,6 +74,6 @@ class microscope_control:
 
 
 if __name__ == "__main__":
-    micro = microscope_control()
+    micro = microscope_driver_class()
     props = micro.get_properties()
     micro.set_mag(3)

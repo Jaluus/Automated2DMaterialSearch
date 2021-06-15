@@ -5,15 +5,15 @@ import cv2
 import time
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from Modules.Camera_Module.camera_class import microscope_cam
-from Modules.Microscope_Module.microscope_class import microscope_control
-from Modules.Motor_Module.tango_class import tango_controller
+from Modules.Camera_Module.camera_class import camera_driver_class
+from Modules.Microscope_Module.microscope_class import microscope_driver_class
+from Modules.Motor_Module.tango_class import motor_driver_class
 
 file_path = os.path.dirname(__file__)
 
-# motor = tango_controller()
-microscope = microscope_control()
-camera = microscope_cam()
+# motor = motor_driver_class()
+microscope = microscope_driver_class()
+camera = camera_driver_class()
 
 while True:
 
