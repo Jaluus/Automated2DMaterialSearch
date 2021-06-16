@@ -1,18 +1,18 @@
 # Modules
-## Motor Module
+## Motor Module (Finished)
 Running with the Tango DLL library
 
-## Camera Module
+## Camera Module (Finished)
 Grabbing pictures from the Camera
 
-## Microscope Module
+## Microscope Module (Finished)
 Manipulating the Microscope via the Computer
 
-## Detection Module
-Rule based approch to find 2D flakes in images
+## Detection Module (Unused)
+Rule based approch to find 2D flakes in Images
 
-## Databank Module
-Storing the Image metadata in a PostGreSQL Databank
+## Databank Module (Needs Tweaking)
+Storing the Image metadata in a MySQL Databank
 
 # Installation
 ## Python with Anaconda
@@ -23,9 +23,9 @@ Storing the Image metadata in a PostGreSQL Databank
 Without Anaconda you can use venv or virtualenv, Step 3 is still the same
 
 ## Databank Module
-Install PostgreSQL by downloading it from [the official website](https://www.postgresql.org/)
+Install MySQL by downloading it from [the official website](https://www.mysql.com/de/)
 
-For the UI install NodeJs 
+Current Version: 8.0.25 
 
 ## Microscope Module
 Install the NikonLV SDK, which should be automatically installed when you install NIS-Elements
@@ -33,3 +33,8 @@ Install the NikonLV SDK, which should be automatically installed when you instal
 # Possible errors:
 - Problem: `pywin32` is not working on your machine while controlling the microscope
   - Fix: Download `pypiwin32` with `pip install pypiwin32`
+
+# ToDo:
+1. Setup Apache Webserver to serve Images locally
+2. Write a Python-Flask CRUD API for the DB
+3. Write a Frontend to talk to the API
