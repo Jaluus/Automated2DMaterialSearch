@@ -146,6 +146,10 @@ def raster_scan_area(
         scan_directory, magnification
     )
 
+    # get the camera and microscope pros as these wont change
+    cam_props = camera_driver.get_properties()
+    mic_props = microscope_driver.get_properties()
+
     # go into the 20x scope
     microscope_driver.set_mag(3)
 
@@ -154,7 +158,13 @@ def raster_scan_area(
     curr_idx = 0
 
     for y_idx in range(area_map.shape[0]):
-        for x_idx in range(area_map.shape[1]):
+
+        # this implements a snake like pattern, its faster
+        row = range(area_map.shape[1])
+        if y_idx % 2 == 1:
+            row = reversed(row)
+
+        for x_idx in row:
             # Dont scan anything is the areamap is 0 as only 1s are beeing scanned
             if area_map[y_idx, x_idx] == 0:
                 continue
@@ -168,15 +178,16 @@ def raster_scan_area(
             )
 
             # Calculate the new Posiiton on the plate
-            x_pos = x_dimension * x_idx - x_offset
-            y_pos = y_dimension * y_idx - y_offset
+            # Round to get rid of floating point errors
+            # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
+            x_pos = round(x_dimension * x_idx - x_offset, 3)
+            y_pos = round(y_dimension * y_idx - y_offset, 3)
 
+            # move to the new Position
             motor_driver.abs_move(x_pos, y_pos)
 
-            # get all the proeprties
+            # get the motor props
             motor_pos = motor_driver.get_pos()
-            cam_props = camera_driver.get_properties()
-            mic_props = microscope_driver.get_properties()
             all_props = {
                 **cam_props,
                 **mic_props,
@@ -185,14 +196,16 @@ def raster_scan_area(
             }
 
             # Take image here
-            time.sleep(wait_time)
+            if wait_time > 0:
+                time.sleep(wait_time)
+
             img = camera_driver.get_image()
 
-            picture_path = os.path.join(picture_dir, f"{curr_idx}.png")
+            picture_path = os.path.join(picture_dir, f"{x_idx}_{y_idx}.png")
             cv2.imwrite(picture_path, img)
 
             # Save all the metadata in a JSON file
-            json_path = os.path.join(meta_dir, f"{curr_idx}.json")
+            json_path = os.path.join(meta_dir, f"{x_idx}_{y_idx}.json")
             with open(json_path, "w") as fp:
                 json.dump(all_props, fp, sort_keys=True, indent=4)
     return picture_dir, meta_dir

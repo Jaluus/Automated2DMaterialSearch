@@ -19,7 +19,7 @@ import Modules.Utils.stitcher_functions as stitcher
 # 5. make a scan_area_mask
 # 6. raster over the scan area
 
-scan_directory = r"D:\Mikroskop Bilder\WSe2\FullScanE"
+scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\FullScanF"
 
 stitched_image_path = os.path.join(scan_directory, "stitched_image.png")
 mask_path = os.path.join(scan_directory, "mask.png")
@@ -29,25 +29,29 @@ motor_driver = motor_driver_class()
 camera_driver = camera_driver_class()
 microscope_driver = microscope_driver_class()
 
-print("Starting to raster in 2.5x...")
-picture_dir, meta_dir = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
-)
+# print("Starting to raster in 2.5x...")
+# picture_dir, meta_dir = raster.raster_plate(
+#     scan_directory,
+#     motor_driver,
+#     microscope_driver,
+#     camera_driver,
+# )
 
-print("Compressing...")
-compressed_images_dir = stitcher.compress_images(picture_dir)
+# print("Compressing...")
+# compressed_images_dir = stitcher.compress_images(picture_dir)
 
-print("Stitching images...")
-stitcher.stitch_image(compressed_images_dir, stitched_image_path)
+# print("Stitching images...")
+# stitcher.stitch_image(compressed_images_dir, stitched_image_path)
 
-print("Creating mask...")
-stitcher.create_mask_from_stitched_image(stitched_image_path, mask_path)
+# print("Creating mask...")
+# stitcher.create_mask_from_stitched_image(stitched_image_path, mask_path)
 
 print("Creating scan area mask...")
-labeled_scan_area = stitcher.create_area_scan_map_from_mask(mask_path, scan_area_path)
+labeled_scan_area = stitcher.create_area_scan_map_from_mask(
+    mask_path, scan_area_path, erode_iter=0
+)
+
+labeled_scan_area = cv2.imread(scan_area_path, 0)
 
 print("Rastering in 20x...")
 raster.raster_scan_area(
@@ -56,4 +60,5 @@ raster.raster_scan_area(
     motor_driver,
     microscope_driver,
     camera_driver,
+    wait_time=0.12,
 )

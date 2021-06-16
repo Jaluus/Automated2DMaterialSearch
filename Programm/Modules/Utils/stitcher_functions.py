@@ -5,10 +5,12 @@ import cv2
 import numpy as np
 import os
 import shutil
-from etc_functions import *
 import matplotlib.pyplot as plt
 from skimage import measure
 import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from Modules.Utils.etc_functions import *
 
 
 def compress_images(
@@ -27,9 +29,7 @@ def compress_images(
     num_pics = len(img_paths)
     upper_dir = os.path.dirname(picture_directory)
 
-    new_compressed_directory = os.path.join(
-        os.path.dirname(picture_directory), compressed_directory_name
-    )
+    new_compressed_directory = os.path.join(upper_dir, compressed_directory_name)
     # Create the new folder, if it does not exist
     if not os.path.exists(new_compressed_directory):
         os.makedirs(new_compressed_directory)
@@ -162,11 +162,13 @@ def create_area_scan_map_from_mask(
     scan_area_map_path: str = "none",
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
+    erode_iter: int = 1,
 ):
     """
     Creates a Scan Area Map and returns it\n
     view_field_x is the x-dimension of the 20x Magnification Viewfield\n
     view_field_y is the y-dimension of the 20x Magnification Viewfield\n
+    erode is the number of time the mask is being eroded\n
     returns the labeled scna area
     """
     # Load the mask
@@ -207,6 +209,8 @@ def create_area_scan_map_from_mask(
 
             j += 1
         i += 1
+
+    scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=erode_iter)
 
     # find each chip in the image
     labeled_scan_area = measure.label(scan_area.copy())

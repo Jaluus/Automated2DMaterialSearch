@@ -11,6 +11,13 @@ class microscope_driver_class:
         self.micro = win32com.client.Dispatch("Nikon.LvMic.nikonLV")
         # this line is shit, took 4 hours
 
+        self.set_default_values()
+
+    def set_default_values(self):
+        self.lamp_on()
+        self.set_lamp_voltage(6.4)
+        self.set_lamp_aperture_stop(2.3)
+
     def get_microscope_object(self):
         return self.micro
 

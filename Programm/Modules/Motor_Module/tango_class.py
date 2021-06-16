@@ -156,7 +156,7 @@ class motor_driver_class:
     def get_max_xy(self):
         return self.max_x, self.max_y
 
-    def abs_move(self, x, y, silent: bool = True):
+    def abs_move(self, x, y, silent: bool = True, wait_for_finish: bool = True):
         """
         moves to an absolute position, checks for max_y and max_y\n
         """
@@ -165,8 +165,11 @@ class motor_driver_class:
         moveY = c_double(y)
         moveZ = c_double(0.0)
         moveA = c_double(0.0)
+        wait_for_finish = c_bool(wait_for_finish)
 
-        error = self.m_Tango.LSX_MoveAbs(self.LSID, moveX, moveY, moveZ, moveA, True)
+        error = self.m_Tango.LSX_MoveAbs(
+            self.LSID, moveX, moveY, moveZ, moveA, wait_for_finish
+        )
         if error > 0:
             print("Error: abs_move " + str(error))
             sys.exit()

@@ -78,9 +78,7 @@ class camera_driver_class:
 
         # Set an absolute exposure time
         self.camera.SetPropertyAbsoluteValue("Exposure", "Value", exposure)
-
         self.camera.SetPropertyValue("Gain", "Value", gain)
-
         self.camera.SetPropertyValue("Gamma", "Value", gamma)
 
         self.camera.SetPropertyValue(
