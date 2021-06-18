@@ -19,7 +19,7 @@ import Modules.Utils.stitcher_functions as stitcher
 # 5. make a scan_area_mask
 # 6. raster over the scan area
 
-scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\FullScanF"
+scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanA"
 
 stitched_image_path = os.path.join(scan_directory, "stitched_image.png")
 mask_path = os.path.join(scan_directory, "mask.png")
@@ -44,12 +44,14 @@ microscope_driver = microscope_driver_class()
 # stitcher.stitch_image(compressed_images_dir, stitched_image_path)
 
 # print("Creating mask...")
-# stitcher.create_mask_from_stitched_image(stitched_image_path, mask_path)
+# stitcher.create_mask_from_stitched_image(
+#     stitched_image_path, mask_path, threshold_value=80
+# )
 
-print("Creating scan area mask...")
-labeled_scan_area = stitcher.create_area_scan_map_from_mask(
-    mask_path, scan_area_path, erode_iter=0
-)
+# print("Creating scan area mask...")
+# labeled_scan_area = stitcher.create_area_scan_map_from_mask(
+#     mask_path, scan_area_path, erode_iter=0
+# )
 
 labeled_scan_area = cv2.imread(scan_area_path, 0)
 
@@ -60,5 +62,5 @@ raster.raster_scan_area(
     motor_driver,
     microscope_driver,
     camera_driver,
-    wait_time=0.12,
+    wait_time=0.2,
 )

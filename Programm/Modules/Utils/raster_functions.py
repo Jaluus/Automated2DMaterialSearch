@@ -127,10 +127,10 @@ def raster_scan_area(
     camera_driver,
     x_dimension: float = 0.7380,
     y_dimension: float = 0.4613,
-    x_offset: float = 0.329,
-    y_offset: float = 0.4613,
+    x_offset: float = -0.329,
+    y_offset: float = -0.4613,
     magnification: float = 20,
-    wait_time: float = 0.1,
+    wait_time: float = 0.2,
 ):
     """
     real x view field 2.5x : 5.9048 mm\n
