@@ -123,7 +123,7 @@ def stitch_image(
 def create_mask_from_stitched_image(
     stitched_image_path: str,
     mask_path: str = "none",
-    threshold_value: int = 45,
+    threshold_value: int = 80,
     blur_kernel: int = 11,
     blur_strength: int = 100,
 ):

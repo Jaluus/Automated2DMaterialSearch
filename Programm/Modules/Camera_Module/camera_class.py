@@ -53,7 +53,7 @@ class camera_driver_class:
 
     def set_properties(
         self,
-        exposure: float = 0.03,
+        exposure: float = 0.07,
         gain: int = 0,
         white_balance: tuple = (127, 64, 90),
         gamma: int = 100,
