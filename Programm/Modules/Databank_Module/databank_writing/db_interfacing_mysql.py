@@ -119,22 +119,6 @@ class dbConnection:
 
         return flake_id
 
-    def create_relation(self, flake_id, image_id):
-        """
-        creates a relation between a flake and an image via ID
-        """
-        query = """
-        INSERT INTO relation_table (image_id,flake_id)
-        VALUES (%s,%s)
-        """
-        self.cur.execute(
-            query,
-            (image_id, flake_id),
-        )
-
-        # makes sure the databank is consistent
-        self.conn.commit()
-
     def get_image(self, image_id):
         query = """
         SELECT * FROM image
