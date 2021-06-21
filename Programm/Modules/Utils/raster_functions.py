@@ -146,12 +146,12 @@ def raster_scan_area(
         scan_directory, magnification
     )
 
+    # go into the 20x scope
+    microscope_driver.set_mag(3)
+
     # get the camera and microscope pros as these wont change
     cam_props = camera_driver.get_properties()
     mic_props = microscope_driver.get_properties()
-
-    # go into the 20x scope
-    microscope_driver.set_mag(3)
 
     num_images = cv2.countNonZero(area_map)
 

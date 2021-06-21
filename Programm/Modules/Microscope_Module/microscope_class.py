@@ -21,6 +21,23 @@ class microscope_driver_class:
     def get_microscope_object(self):
         return self.micro
 
+    def set_z_height(self, height):
+        """
+        Sets the Height in µm\n
+        Only works if the AF is not on\n
+        Has small protection by only setting height between 3500 and 6500 µm
+        """
+        try:
+            if 3500 < height < 6500:
+                rescaled_pulses = height * 20
+                self.micro.ZDrive.MoveAbsolute(rescaled_pulses)
+        except:
+            print("Already in Focus!")
+
+    def get_z_height(self):
+        height = self.micro.ZDrive.Value()
+        return height
+
     def lamp_on(self):
         self.micro.EpiLamp.On()
 
@@ -37,10 +54,30 @@ class microscope_driver_class:
         self.micro.EpiLamp.Voltage = voltage
 
     def set_mag(self, mag_idx: int):
-        if 1 <= mag_idx <= 5:
-            self.micro.Nosepiece.Position = mag_idx
+        """
+        Swaps the Position of the Nosepiece\n
+        1 : 2.5x\n
+        2 : 5x\n
+        3 : 20x\n
+        4 : 50x\n
+        5 : 100x\n
+        """
+        height = 5500
+        if mag_idx == 1:
+            height = 5500
+        elif mag_idx == 2:
+            height = 4300
+        elif mag_idx == 3:
+            height = 3930
+        elif mag_idx == 4:
+            height = 3900
+        elif mag_idx == 5:
+            height = 3900
         else:
             print("Wrong Idx, need values between 1 and 5")
+            return
+        self.micro.Nosepiece.Position = mag_idx
+        self.set_z_height(height)
 
     def set_lamp_aperture_stop(self, aperture_stop: float):
         self.micro.EpiApertureStop.ApertureStop = aperture_stop
@@ -74,6 +111,7 @@ class microscope_driver_class:
         'voltage'   : current Voltage of the EpiLamp in Volts
         """
         val_dict = {}
+        val_dict["z_height"] = self.get_z_height()
         val_dict["nosepiece"] = self.micro.Nosepiece.Position()
         val_dict["aperture"] = self.micro.EpiApertureStop.ApertureStop()
         val_dict["light"] = self.micro.EpiLamp.Voltage()
@@ -82,5 +120,6 @@ class microscope_driver_class:
 
 if __name__ == "__main__":
     micro = microscope_driver_class()
-    props = micro.get_properties()
     micro.set_mag(3)
+    props = micro.get_properties()
+    print(props)

@@ -190,7 +190,7 @@ def create_area_scan_map_from_mask(
     height = mask.shape[1]
 
     # Create an array which saves the points where we can raster to
-    scan_area = np.zeros((int(width / y_frame), int(height / x_frame)))
+    scan_area = np.zeros((int(width / y_frame) + 1, int(height / x_frame) + 1))
 
     i = 0
     while int(i * x_frame) < height:

@@ -11,7 +11,7 @@ from Modules.Motor_Module.tango_class import motor_driver_class
 
 file_path = os.path.dirname(__file__)
 
-# motor = motor_driver_class()
+motor = motor_driver_class()
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 

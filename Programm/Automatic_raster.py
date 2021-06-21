@@ -19,7 +19,7 @@ import Modules.Utils.stitcher_functions as stitcher
 # 5. make a scan_area_mask
 # 6. raster over the scan area
 
-scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanB"
+scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanC"
 
 stitched_image_path = os.path.join(scan_directory, "stitched_image.png")
 mask_path = os.path.join(scan_directory, "mask.png")
@@ -45,7 +45,7 @@ microscope_driver = microscope_driver_class()
 
 # print("Creating mask...")
 # stitcher.create_mask_from_stitched_image(
-#     stitched_image_path, mask_path, threshold_value=80
+#     stitched_image_path, mask_path, threshold_value=45
 # )
 
 # print("Creating scan area mask...")
