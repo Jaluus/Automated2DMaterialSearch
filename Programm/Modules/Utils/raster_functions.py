@@ -127,7 +127,7 @@ def raster_scan_area(
     camera_driver,
     x_dimension: float = 0.7380,
     y_dimension: float = 0.4613,
-    x_offset: float = 1,
+    x_offset: float = 0,
     y_offset: float = 0,
     magnification: float = 20,
     wait_time: float = 0.2,
@@ -148,6 +148,8 @@ def raster_scan_area(
 
     # go into the 20x scope
     microscope_driver.set_mag(3)
+
+    microscope_driver.set_default_values()
 
     # get the camera and microscope pros as these wont change
     cam_props = camera_driver.get_properties()
