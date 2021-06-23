@@ -20,7 +20,5 @@ database.ini
 Programm/Modules/Databank_Module/databank_writing/Pictures
 
 # Module Test Ignores
-Programm/Module Tests/Pictures
-Programm/Module Tests/Meta
-Programm/Module Tests/20xPictures
-Programm/Module Tests/20xMeta
+Pictures
+Meta

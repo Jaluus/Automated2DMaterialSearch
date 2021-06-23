@@ -1,7 +1,0 @@
-numpy
-matplotlib
-pyQt5
-opencv-python
-scikit-image
-pywin32
-mysql-connector-python
