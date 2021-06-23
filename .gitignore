@@ -3,22 +3,18 @@
 __pycache__
 Presentation
 node_modules
-
-
-# Motor Module ignores
-tango_dll_errlog.txt
-
-# Camera Module ignores
-Programm/Modules/Camera_Module/Pictures
-
-# Microscope Module ignores
-
-# Detection Module ignores
-
-# Databank Module ignores
-database.ini
-Programm/Modules/Databank_Module/databank_writing/Pictures
-
-# Module Test Ignores
 Pictures
 Meta
+
+
+# Motor Driver ignores
+tango_dll_errlog.txt
+
+# Camera Driver ignores
+
+# Microscope Driver ignores
+
+# Detection Driver ignores
+
+# Databank Driver ignores
+database.ini

@@ -244,8 +244,3 @@ if __name__ == "__main__":
         stitched_path,
         mask_path,
     )
-
-    find_area_scan_map_from_mask(
-        mask_path,
-        scan_area_path,
-    )
