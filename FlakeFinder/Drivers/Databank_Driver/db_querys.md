@@ -37,7 +37,7 @@
         CREATE TABLE scan
         (
             id   BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY ,
-            name VARCHAR (255) DEFAULT 'unnamed' NOT NULL ,
+            name VARCHAR (255) UNIQUE NOT NULL ,
             user VARCHAR(50) DEFAULT 'none' NOT NULL ,
             time BIGINT NOT NULL
         ) ENGINE=INNODB;
@@ -58,7 +58,16 @@
             size      DOUBLE NOT NULL ,
             thickness VARCHAR(50) NOT NULL ,
             used      TINYINT(1) DEFAULT 0 NOT NULL ,
-            entropy   DOUBLE DEFAULT -1 NOT NULL ,
+            position_x DOUBLE NOT NULL ,
+            position_y DOUBLE NOT NULL ,
+            entropy   DOUBLE DEFAULT -1 ,
+            proximity_stddev DOUBLE DEFAULT -1 ,
+            mean_contrast_r DOUBLE DEFAULT -1 ,
+            mean_contrast_g DOUBLE DEFAULT -1 ,
+            mean_contrast_b DOUBLE DEFAULT -1 ,
+            stddev_contrast_r DOUBLE DEFAULT -1 ,
+            stddev_contrast_g DOUBLE DEFAULT -1 ,
+            stddev_contrast_b DOUBLE DEFAULT -1 ,
             FOREIGN KEY (chip_id) REFERENCES chip(id)
         ) ENGINE=INNODB;
 
@@ -73,6 +82,9 @@
             white_balance_r INT NOT NULL ,
             white_balance_g INT NOT NULL ,
             white_balance_b INT NOT NULL ,
+            mean_background_r DOUBLE DEFAULT -1 ,
+            mean_background_g DOUBLE DEFAULT -1 ,
+            mean_background_b DOUBLE DEFAULT -1 ,
             gain DOUBLE NOT NULL ,
             exposure_time DOUBLE NOT NULL ,
             FOREIGN KEY (flake_id) REFERENCES flake(id)
