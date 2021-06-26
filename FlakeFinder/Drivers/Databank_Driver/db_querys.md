@@ -34,6 +34,49 @@
 
 # Creation Query (MySQL) (FULL)
 
+        CREATE TABLE scan
+        (
+            id   BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY ,
+            name VARCHAR (255) DEFAULT 'unnamed' NOT NULL ,
+            user VARCHAR(50) DEFAULT 'none' NOT NULL ,
+            time BIGINT NOT NULL
+        ) ENGINE=INNODB;
+
+        CREATE TABLE chip
+        (
+            id       BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY ,
+            scan_id  BIGINT UNSIGNED NOT NULL ,
+            exfoliated_material TEXT NOT NULL ,
+            chip_thickness INT DEFAULT 90 NOT NULL,
+            FOREIGN KEY (scan_id) REFERENCES scan(id)
+        ) ENGINE=INNODB;
+
+        CREATE TABLE flake
+        (
+            id        BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY ,
+            chip_id   BIGINT UNSIGNED NOT NULL ,
+            size      DOUBLE NOT NULL ,
+            thickness VARCHAR(50) NOT NULL ,
+            used      TINYINT(1) DEFAULT 0 NOT NULL ,
+            entropy   DOUBLE DEFAULT -1 NOT NULL ,
+            FOREIGN KEY (chip_id) REFERENCES chip(id)
+        ) ENGINE=INNODB;
+
+        CREATE TABLE image
+        (
+            id      BIGINT UNSIGNED AUTO_INCREMENT UNIQUE NOT NULL PRIMARY KEY ,
+            flake_id   BIGINT UNSIGNED NOT NULL ,
+            path    TEXT NOT NULL ,
+            aperture DOUBLE NOT NULL ,
+            light_voltage DOUBLE NOT NULL ,
+            magnification DOUBLE NOT NULL ,
+            white_balance_r INT NOT NULL ,
+            white_balance_g INT NOT NULL ,
+            white_balance_b INT NOT NULL ,
+            gain DOUBLE NOT NULL ,
+            exposure_time DOUBLE NOT NULL ,
+            FOREIGN KEY (flake_id) REFERENCES flake(id)
+        ) ENGINE=INNODB;
 
 
 
