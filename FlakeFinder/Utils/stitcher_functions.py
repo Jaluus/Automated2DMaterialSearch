@@ -4,12 +4,10 @@ A collection of helper functions to stitch a collection of images together
 import cv2
 import numpy as np
 import os
-import shutil
 import matplotlib.pyplot as plt
 from skimage import measure
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from Utils.etc_functions import *
 
 
@@ -70,7 +68,7 @@ def compress_images(
 
 def stitch_image(
     picture_directory: str,
-    stitched_image_path: str = "none",
+    stitched_image_path=None,
     x_rows: int = 21,
     y_rows: int = 31,
     x_pix_offset: int = 403,
@@ -111,7 +109,7 @@ def stitch_image(
                 axis=1,
             )
 
-    if stitched_image_path != "none":
+    if stitched_image_path is not None:
         try:
             cv2.imwrite(stitched_image_path, full_pic)
         except OSError as e:
@@ -123,7 +121,7 @@ def stitch_image(
 def create_mask_from_stitched_image(
     stitched_image_path: str,
     mask_path: str = "none",
-    threshold_value: int = 80,
+    threshold_value: int = 45,
     blur_kernel: int = 11,
     blur_strength: int = 100,
 ):
@@ -157,34 +155,42 @@ def create_mask_from_stitched_image(
     return mask
 
 
-def create_area_scan_map_from_mask(
+def create_scan_area_map_from_mask(
     mask_path: str,
-    scan_area_map_path: str = "none",
+    scan_area_map_path: str = None,
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
-    erode_iter: int = 1,
+    percentage_threshold: float = 0.9,
+    erode_iterations: int = 1,
 ):
     """
-    Creates a Scan Area Map and returns it\n
-    view_field_x is the x-dimension of the 20x Magnification Viewfield\n
-    view_field_y is the y-dimension of the 20x Magnification Viewfield\n
-    erode is the number of time the mask is being eroded\n
-    returns the labeled scna area
-    """
-    # Load the mask
-    mask = cv2.imread(mask_path)
+    Creates a Labeled Scan Area Map and returns it
 
-    # our area map has a resolution of 8401 pixels / 100 mm
+    Args:
+        mask_path (str): The path to the saved black and white mask
+        scan_area_map_path (str, optional): The optional path of where to save the Labeled scan area map. Defaults to None.
+        view_field_x (float, optional): the x View Field of the 20x in mm. Defaults to 0.7380.
+        view_field_y (float, optional): the y View Field of the 20x in mm. Defaults to 0.4613.
+        percentage_threshold (float,optional): The threshold for when a part of the map should still be considered as a part of the flake. Defaults to 0.9.
+        erode_iter (int, optional): How often to erode the Mask to remove edges. Defaults to 0.
+
+    Returns:
+        labeled_scan_area (NxMx1 Array) : The scan area map
+    """
+
+    # Load the mask
+    mask = cv2.imread(mask_path, 0)
+
+    # our area map has a resolution of 8463 pixels / 100 mm
     pixel_resolution_y = mask.shape[0] / 100
     pixel_resolution_x = mask.shape[1] / 100
 
     # Real 20x area (0.7380 x 0.4613)
-    ## (Later) Used offset area (0.6666 x 0.4)
+    ## (Unused) offset area (0.6666 x 0.4)
     x_frame = int(pixel_resolution_x * view_field_x)
     y_frame = int(pixel_resolution_y * view_field_y)
 
     # Create a new mask where we draw on
-    new_mask = mask.copy()
 
     width = mask.shape[0]
     height = mask.shape[1]
@@ -197,50 +203,41 @@ def create_area_scan_map_from_mask(
         j = 0
         while int(j * y_frame) < width:
 
-            # crop a part of the full image and look at the values
+            # Crop to the part of the Image which would be seen by the 20x scope
             x_start = i * x_frame
             y_start = j * y_frame
             x_end = (i + 1) * x_frame
             y_end = (j + 1) * y_frame
             crop_arr = mask[y_start:y_end, x_start:x_end]
 
-            if np.all(crop_arr):
+            non_zero_pixels = cv2.countNonZero(crop_arr)
+
+            # find the percentage of non background pixels
+            percentage_non_background = non_zero_pixels / (
+                crop_arr.shape[0] * crop_arr.shape[1]
+            )
+
+            # Save the Image only if a certain percantage of the image is not background
+            if percentage_non_background >= percentage_threshold:
                 scan_area[j, i] = 1
 
             j += 1
         i += 1
 
-    scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=erode_iter)
+    scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=erode_iterations)
 
     # find each chip in the image
     labeled_scan_area = measure.label(scan_area.copy())
 
-    if scan_area_map_path != "none":
+    if scan_area_map_path is not None:
         try:
             cv2.imwrite(scan_area_map_path, labeled_scan_area)
         except OSError as e:
             print(e)
+            print("Your path seems to be wrong")
 
     return labeled_scan_area
 
 
 if __name__ == "__main__":
-    scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\WSe2\FullScanD"
-
-    picture_dir = os.path.join(scan_dir, "2.5x", "Pictures")
-    compressed_dir = os.path.join(scan_dir, "2.5x", "Compressed")
-    stitched_path = os.path.join(scan_dir, "stiched_image.png")
-    mask_path = os.path.join(scan_dir, "mask.png")
-    scan_area_path = os.path.join(scan_dir, "scan_area.png")
-
-    compress_images(picture_dir)
-
-    stitch_image(
-        compressed_dir,
-        stitched_path,
-    )
-
-    create_mask_from_stitched_image(
-        stitched_path,
-        mask_path,
-    )
+    pass

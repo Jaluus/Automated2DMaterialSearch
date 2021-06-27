@@ -19,11 +19,18 @@ import Utils.stitcher_functions as stitcher
 # 5. make a scan_area_mask
 # 6. raster over the scan area
 
-scan_directory = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanE"
+material = "Graphene"
+scan_name = "FullScanTest"
 
-stitched_image_path = os.path.join(scan_directory, "stitched_image.png")
+microscope_image_dir = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+scan_directory = os.path.join(microscope_image_dir, material, scan_name)
+overview_path = os.path.join(scan_directory, "overview.png")
 mask_path = os.path.join(scan_directory, "mask.png")
-scan_area_path = os.path.join(scan_directory, "scan_area_mask.png")
+scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
+
+# Creating Paths
+if not os.path.exists(scan_directory):
+    os.makedirs(scan_directory)
 
 motor_driver = motor_driver_class()
 camera_driver = camera_driver_class()
@@ -41,22 +48,20 @@ print("Compressing...")
 compressed_images_dir = stitcher.compress_images(picture_dir)
 
 print("Stitching images...")
-stitcher.stitch_image(compressed_images_dir, stitched_image_path)
+stitcher.stitch_image(compressed_images_dir, overview_path)
 
 print("Creating mask...")
-stitcher.create_mask_from_stitched_image(
-    stitched_image_path, mask_path, threshold_value=45
-)
+stitcher.create_mask_from_stitched_image(overview_path, mask_path, threshold_value=45)
 
 print("Creating scan area mask...")
-labeled_scan_area = stitcher.create_area_scan_map_from_mask(
-    mask_path, scan_area_path, erode_iter=0
+labeled_scan_area = stitcher.create_scan_area_map_from_mask(
+    mask_path, scan_area_path, erode_iterations=1, percentage_threshold=0.8
 )
 
-# labeled_scan_area = cv2.imread(scan_area_path, 0)
+labeled_scan_area = cv2.imread(scan_area_path, 0)
 
 print("Rastering in 20x...")
-raster.raster_scan_area(
+raster.raster_scan_area_map(
     scan_directory,
     labeled_scan_area,
     motor_driver,
