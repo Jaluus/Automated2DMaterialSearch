@@ -16,6 +16,38 @@ class camera_driver_class:
         self.cam_name = cam_name
         self.camera = self.__init_camera(cam_name=self.cam_name)
         self.set_properties()
+        self.DEFAULT_PROPERTIES = {
+            1: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            2: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            3: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            4: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            5: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+        }
 
     def __init_camera(self, cam_name):
         """
@@ -50,6 +82,24 @@ class camera_driver_class:
 
     def get_camera(self):
         return self.camera
+
+    def set_default_properties(self, magnification: int):
+        """set default properties for each magnifiaction
+
+        Args:
+            magnification (int): Number between 1 and 5
+            - 1 : 2.5x
+            - 2 : 5x
+            - 3 : 20x
+            - 4 : 50x
+            - 5 : 100x
+        """
+        try:
+            self.set_properties(self.DEFAULT_PROPERTIES[magnification])
+        except KeyError as keyerror:
+            print("Wrong Magnification Number")
+        except OSError as oserror:
+            print(oserror)
 
     def set_properties(
         self,

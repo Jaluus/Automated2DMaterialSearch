@@ -181,7 +181,7 @@ class detector_class:
 
         BLUR_STRENGTH = 3
         GAUSS_KSIZE = (5, 5)
-
+        ENTROPY_THRESHOLD = 2.4
         MICROMETER_PER_PIXEL = 0.3833
 
         # Removing the Vignette from the Image
@@ -239,9 +239,10 @@ class detector_class:
             mask = cv2.bitwise_and(mask, contrast_b_threshed)
 
             # a bit of cleanup
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, disk(4), iterations=2)
-            mask = cv2.erode(mask, disk(2), iterations=3)
-            mask = cv2.dilate(mask, disk(2), iterations=3)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, disk(2), iterations=1)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, disk(2), iterations=1)
+            # mask = cv2.erode(mask, disk(2), iterations=1)
+            # mask = cv2.dilate(mask, disk(2), iterations=1)
 
             # counting the number of pixels and saving the masks only if it has more Pixels
             num_pixels = cv2.countNonZero(mask)
@@ -261,7 +262,7 @@ class detector_class:
             labeled_mask = measure.label(
                 masks[layer_name],
                 background=0,
-                connectivity=1,
+                connectivity=2,
             )
 
             # iterate over all flake, values, 0 is the Background, dont look at that
@@ -277,9 +278,8 @@ class detector_class:
 
                 # Start with a bit hole filling if there are some
                 # maybe do this later with Countour finding?
-
                 masked_flake = cv2.morphologyEx(
-                    masked_flake, cv2.MORPH_CLOSE, disk(3), iterations=2
+                    masked_flake, cv2.MORPH_CLOSE, disk(4), iterations=3
                 )
 
                 # now we characterize the Flake
@@ -328,6 +328,10 @@ class detector_class:
                     entropied_image_area,
                     mask=entropy_area_mask,
                 )[0]
+
+                # Filter High entropy Flakes, aka dirt
+                if flake_entropy > ENTROPY_THRESHOLD:
+                    continue
 
                 #### Find the Close Proximity of the Flake
 

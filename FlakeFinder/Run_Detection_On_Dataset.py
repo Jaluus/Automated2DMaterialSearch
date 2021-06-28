@@ -13,9 +13,10 @@ from Classes.detection_class import detector_class
 plt.rcParams["figure.dpi"] = 300
 
 # Pixel Offset @ 8463pix
-pixel_delta_full = (140, 0)
+# We need to better adjust it
+pixel_delta_full = (0, 0)
 
-scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\Graphene\FullScanE"
+scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\Graphene\FullScanAlex"
 
 # Defining Paths
 save_dir = os.path.join(scan_dir, "20x", "Masked_Images")
