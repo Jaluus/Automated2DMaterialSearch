@@ -1,14 +1,15 @@
-import cv2
-import numpy as np
-import os
-
-from skimage.morphology.selem import star
-from Utils.etc_functions import *
-import time
 import json
+import os
+import time
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 from skimage.morphology import disk
+from skimage.morphology.selem import star
+
 from Classes.detection_class import detector_class
+from Utils.etc_functions import *
 
 plt.rcParams["figure.dpi"] = 300
 
@@ -16,7 +17,7 @@ plt.rcParams["figure.dpi"] = 300
 # We need to better adjust it
 pixel_delta_full = (0, 0)
 
-scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\Graphene\FullScanAlex"
+scan_dir = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanAlex"
 
 # Defining Paths
 save_dir = os.path.join(scan_dir, "20x", "Masked_Images")

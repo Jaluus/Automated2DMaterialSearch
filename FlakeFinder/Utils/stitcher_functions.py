@@ -161,7 +161,7 @@ def create_scan_area_map_from_mask(
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
     percentage_threshold: float = 0.9,
-    erode_iterations: int = 1,
+    erode_iterations: int = 0,
 ):
     """
     Creates a Labeled Scan Area Map and returns it
@@ -224,7 +224,9 @@ def create_scan_area_map_from_mask(
             j += 1
         i += 1
 
-    scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=erode_iterations)
+    # Small adjustments
+    scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=1 + erode_iterations)
+    scan_area = cv2.dilate(scan_area, np.ones((3, 3)), iterations=1)
 
     # find each chip in the image
     labeled_scan_area = measure.label(scan_area.copy())

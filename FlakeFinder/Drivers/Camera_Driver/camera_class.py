@@ -42,8 +42,8 @@ class camera_driver_class:
                 "gamma": 100,
             },
             5: {
-                "exposure": 0.07,
-                "gain": 0,
+                "exposure": 0.03,
+                "gain": 100,
                 "white_balance": (127, 64, 90),
                 "gamma": 100,
             },
@@ -95,7 +95,7 @@ class camera_driver_class:
             - 5 : 100x
         """
         try:
-            self.set_properties(self.DEFAULT_PROPERTIES[magnification])
+            self.set_properties(**self.DEFAULT_PROPERTIES[magnification])
         except KeyError as keyerror:
             print("Wrong Magnification Number")
         except OSError as oserror:

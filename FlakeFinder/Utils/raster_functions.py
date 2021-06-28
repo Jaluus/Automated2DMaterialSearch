@@ -6,6 +6,7 @@ import json
 import numpy as np
 from numpy.core.numeric import full
 
+from Utils.etc_functions import sorted_alphanumeric
 from Classes.detection_class import detector_class
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
@@ -135,7 +136,7 @@ def image_generator(
     x_offset: float = 0,
     y_offset: float = 0,
     wait_time: float = 0.1,
-) -> tuple(bool, np.ndarray, dict):
+):
     """
     Image Generator\\
     Yields images taken from the Microscope\\
@@ -347,6 +348,9 @@ def search_scan_area_map(
                 flake_id[chip_id] = 0
 
             for flake in detected_flakes:
+
+                print(flake_id)
+
                 flake_id[chip_id] += 1
 
                 # this id is only! locally used to assign flakes to different folders
@@ -367,15 +371,15 @@ def search_scan_area_map(
                 if True:
                     picture_path = os.path.join(flake_dir, "eval_img.png")
 
-                    x, y = flake_dir["position"]
-                    w = flake_dir["width_bbox"]
-                    h = flake_dir["height_bbox"]
+                    x, y = flake["position"]
+                    w = flake["width_bbox"]
+                    h = flake["height_bbox"]
 
                     debug_image = image.copy()
 
                     cv2.putText(
                         debug_image,
-                        flake_dir["layer"],
+                        flake["layer"],
                         (x, y),
                         cv2.FONT_HERSHEY_SIMPLEX,
                         1,
@@ -391,18 +395,10 @@ def search_scan_area_map(
                         thickness=2,
                     )
 
-                    cv2.imwrite(picture_path, image)
+                    cv2.imwrite(picture_path, debug_image)
                 ####
 
-    #### 2. Read back the Positions and raster in 20x,50x,100x,2.5x,5x in that order
-    for mag in [3, 4, 5, 1, 2]:
-        read_meta_and_center_flakes(
-            scan_directory,
-            motor_driver,
-            microscope_driver,
-            camera_driver,
-            magnification=mag,
-        )
+    print("reading pos")
 
 
 def read_meta_and_center_flakes(
@@ -421,12 +417,12 @@ def read_meta_and_center_flakes(
         camera_driver (camera_driver_class): [description]
         magnification (int, optional): [description]. Defaults to 3.
     """
-    
+    print(f"setting mag to {magnification}")
     microscope_driver.set_mag(magnification)
-    microscope_driver.set_default_values()
     camera_driver.set_default_properties(magnification)
+    microscope_driver.set_default_values()
 
-    image_keys = {
+    IMAGE_KEYS = {
         1: "2.5x",
         2: "5x",
         3: "20x",
@@ -434,8 +430,18 @@ def read_meta_and_center_flakes(
         5: "100x",
     }
 
+    # The offset in mm
+    MAG_OFFSET = {
+        1: (0.406, -0.4534),
+        2: (0.406, -0.2428),
+        3: (0, 0),
+        4: (-0.0324, 0.0237),
+        5: (-0.0506, 0.1063),
+    }
+
     try:
-        current_image_key = image_keys[magnification]
+        current_image_key = IMAGE_KEYS[magnification]
+        xy_offset = MAG_OFFSET[magnification]
     except KeyError as e:
         print("wrong Magnification you need an int between 1 and 5, defaulting to 20x")
         current_image_key = "20x"
@@ -443,7 +449,7 @@ def read_meta_and_center_flakes(
     # Extract all the Chip Directorys, not the images in the scan directory
     chip_directory_names = [
         chip_directory_name
-        for chip_directory_name in os.listdir(scan_directory)
+        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
         if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
     ]
 
@@ -453,11 +459,13 @@ def read_meta_and_center_flakes(
         # get the full path to the chip dir
         chip_directory = os.path.join(scan_directory, chip_directory_name)
 
+        print(f"current dir : {chip_directory}")
+
         # Extract all the Flake Directory names
         flake_directory_names = [
             flake_directory_name
-            for flake_directory_name in os.listdir(chip_directory)
-            if os.path.isdir(os.path.join(scan_directory, flake_directory_name))
+            for flake_directory_name in sorted_alphanumeric(os.listdir(chip_directory))
+            if os.path.isdir(os.path.join(chip_directory, flake_directory_name))
         ]
 
         # iterate over all flake directory names
@@ -465,6 +473,8 @@ def read_meta_and_center_flakes(
 
             # get the full path to the flake dir
             flake_directory = os.path.join(chip_directory, flake_directory_name)
+
+            print(f"current flake dir : {flake_directory}")
 
             # Define the image path
             image_path = os.path.join(flake_directory, f"{current_image_key}.png")
@@ -474,8 +484,8 @@ def read_meta_and_center_flakes(
             with open(meta_path, "r") as f:
                 meta_data = json.load(f)
 
-            flake_position_x = meta_data["flake"]["position_x"]
-            flake_position_y = meta_data["flake"]["position_y"]
+            flake_position_x = meta_data["flake"]["position_x"] + xy_offset[0]
+            flake_position_y = meta_data["flake"]["position_y"] + xy_offset[1]
 
             # now execute Movement
             motor_driver.abs_move(flake_position_x, flake_position_y)
@@ -487,6 +497,9 @@ def read_meta_and_center_flakes(
                 **cam_props,
                 **mic_props,
             }
+
+            # Wait a short while
+            time.sleep(0.3)
 
             # Take an image of the centered flake and write it
             image = camera_driver.get_image()
@@ -511,16 +524,16 @@ def create_flake_dict(image_dict, flake_dict):
         dict: A dict with all the relevant keys needed to classify the Flake
     """
     # Possible error, swap posx and posy
-    flake_position_x = (
-        image_dict["motor_pos"][0] + flake_dict["position_x_micro"] / 1000
+    flake_position_x = round(
+        image_dict["motor_pos"][0] + flake_dict["position_x_micro"] / 1000, 5
     )
-    flake_position_y = (
-        image_dict["motor_pos"][1] + flake_dict["position_y_micro"] / 1000
+    flake_position_y = round(
+        image_dict["motor_pos"][1] + flake_dict["position_y_micro"] / 1000, 5
     )
-    flake_size = flake_dict["size_micro"]
+    flake_size = round(flake_dict["size_micro"], 1)
     flake_thickness = flake_dict["layer"]
-    flake_entropy = flake_dict["entropy"]
-    flake_proximity = flake_dict["proximity_stddev"]
+    flake_entropy = round(flake_dict["entropy"], 3)
+    flake_proximity = round(flake_dict["proximity_stddev"], 3)
 
     image_chip_id = image_dict["chip_id"]
 
@@ -614,8 +627,8 @@ def raster_scan_area_map_legacy(
             # Calculate the new Posiiton on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = round(x_dimension * x_idx - x_offset, 3)
-            y_pos = round(y_dimension * y_idx - y_offset, 3)
+            x_pos = round(x_dimension * x_idx - x_offset, 4)
+            y_pos = round(y_dimension * y_idx - y_offset, 4)
 
             # move to the new Position
             motor_driver.abs_move(x_pos, y_pos)
