@@ -5,6 +5,8 @@ import time
 import json
 import numpy as np
 from numpy.core.numeric import full
+from skimage.morphology import disk
+import matplotlib.pyplot as plt
 
 from Utils.etc_functions import sorted_alphanumeric
 from Classes.detection_class import detector_class
@@ -133,7 +135,7 @@ def image_generator(
     camera_driver: camera_driver_class,
     x_step: float = 0.7380,
     y_step: float = 0.4613,
-    x_offset: float = 0,
+    x_offset: float = -1.5,
     y_offset: float = 0,
     wait_time: float = 0.1,
 ):
@@ -188,23 +190,14 @@ def image_generator(
             # Calculate the new Position on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = round(x_step * x_idx - x_offset, 3)
-            y_pos = round(y_step * y_idx - y_offset, 3)
+            x_pos = round(x_step * x_idx + x_offset, 3)
+            y_pos = round(y_step * y_idx + y_offset, 3)
 
             # move to the new Position
             motor_driver.abs_move(x_pos, y_pos)
 
             # Yields the Image
             yield image, all_props
-
-            # get the motor props
-            motor_pos = motor_driver.get_pos()
-            all_props = {
-                **cam_props,
-                **mic_props,
-                "motor_pos": motor_pos,
-                "chip_id": int(area_map[y_idx, x_idx]),
-            }
 
             # just for Logging
             curr_idx += 1
@@ -214,9 +207,18 @@ def image_generator(
                 flush=True,
             )
 
-            # Take image here
+            # Wait for move to finish
             if wait_time > 0:
                 time.sleep(wait_time)
+
+            # get the motor props
+            motor_pos = motor_driver.get_pos()
+            all_props = {
+                **cam_props,
+                **mic_props,
+                "motor_pos": motor_pos,
+                "chip_id": int(area_map[y_idx, x_idx]),
+            }
 
             # take the image
             image = camera_driver.get_image()
@@ -360,7 +362,7 @@ def search_scan_area_map(
                 flake_dir = os.path.join(chip_dir, f"Flake_{local_flake_id}")
                 os.makedirs(flake_dir)
 
-                flake_meta_data = create_flake_dict(prop_dict, flake)
+                flake_meta_data, flake_mask = create_flake_dict(prop_dict, flake)
 
                 meta_path = os.path.join(flake_dir, "meta.json")
                 # Now save the Flake Metadata in the Directory
@@ -369,36 +371,44 @@ def search_scan_area_map(
 
                 #### ONLY FOR DEBUGGING
                 if True:
-                    picture_path = os.path.join(flake_dir, "eval_img.png")
+                    mask_path = os.path.join(flake_dir, f"flake_mask.png")
+                    cv2.imwrite(mask_path, flake_mask)
 
-                    x, y = flake["position"]
-                    w = flake["width_bbox"]
-                    h = flake["height_bbox"]
-
-                    debug_image = image.copy()
-
-                    cv2.putText(
-                        debug_image,
-                        flake["layer"],
-                        (x, y),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        [0, 255, 0],
-                        thickness=2,
-                    )
-
-                    cv2.rectangle(
-                        debug_image,
-                        (x, y),
-                        (x + w, y + h),
-                        color=[0, 255, 0],
-                        thickness=2,
-                    )
-
-                    cv2.imwrite(picture_path, debug_image)
+                    image_path = os.path.join(flake_dir, "eval_img.png")
+                    mark_flake(flake, image, image_path)
                 ####
 
-    print("reading pos")
+
+def mark_flake(flake, image, image_path):
+    plt.rcParams["figure.dpi"] = 300
+    debug_image = image.copy()
+    (x, y) = flake["position"]
+    w = flake["width_bbox"]
+    h = flake["height_bbox"]
+    cv2.rectangle(
+        debug_image,
+        (x - 20, y - 20),
+        (x + w + 20, y + h + 20),
+        color=[0, 0, 255],
+        thickness=2,
+    )
+
+    outline_flake = cv2.dilate(flake["mask"], disk(3))
+    outline_flake = cv2.morphologyEx(flake["mask"], cv2.MORPH_GRADIENT, disk(2))
+
+    debug_image[outline_flake != 0] = [0, 0, 255]
+
+    plt.text(
+        x - 20,
+        y - 40,
+        f"{flake['num_pixels'] * 0.15:.0f}μm² , S = {flake['entropy']:.2f} , σ = {flake['proximity_stddev']:.2f}",
+        color="red",
+    )
+    plt.title(flake["layer"])
+    plt.imshow(cv2.cvtColor(debug_image, cv2.COLOR_BGR2RGB))
+    plt.tight_layout()
+    plt.savefig(image_path)
+    plt.clf()
 
 
 def read_meta_and_center_flakes(
@@ -432,16 +442,25 @@ def read_meta_and_center_flakes(
 
     # The offset in mm
     MAG_OFFSET = {
-        1: (0.406, -0.4534),
-        2: (0.406, -0.2428),
+        1: (0.0406, -0.4534),
+        2: (0.0406, -0.2428),
         3: (0, 0),
         4: (-0.0324, 0.0237),
         5: (-0.0506, 0.1063),
     }
 
+    MAG_WAITTIME = {
+        1: 0.1,
+        2: 0.1,
+        3: 0.2,
+        4: 0.3,
+        5: 0.6,
+    }
+
     try:
         current_image_key = IMAGE_KEYS[magnification]
         xy_offset = MAG_OFFSET[magnification]
+        wait_time = MAG_WAITTIME[magnification]
     except KeyError as e:
         print("wrong Magnification you need an int between 1 and 5, defaulting to 20x")
         current_image_key = "20x"
@@ -459,7 +478,7 @@ def read_meta_and_center_flakes(
         # get the full path to the chip dir
         chip_directory = os.path.join(scan_directory, chip_directory_name)
 
-        print(f"current dir : {chip_directory}")
+        print(f"Current Chip Dir : {chip_directory_name}")
 
         # Extract all the Flake Directory names
         flake_directory_names = [
@@ -474,13 +493,10 @@ def read_meta_and_center_flakes(
             # get the full path to the flake dir
             flake_directory = os.path.join(chip_directory, flake_directory_name)
 
-            print(f"current flake dir : {flake_directory}")
-
             # Define the image path
             image_path = os.path.join(flake_directory, f"{current_image_key}.png")
-
-            # Open the metadata
             meta_path = os.path.join(flake_directory, "meta.json")
+
             with open(meta_path, "r") as f:
                 meta_data = json.load(f)
 
@@ -499,7 +515,7 @@ def read_meta_and_center_flakes(
             }
 
             # Wait a short while
-            time.sleep(0.3)
+            time.sleep(wait_time)
 
             # Take an image of the centered flake and write it
             image = camera_driver.get_image()
@@ -514,7 +530,7 @@ def read_meta_and_center_flakes(
 
 
 def create_flake_dict(image_dict, flake_dict):
-    """Creates a Dict used to classify the Flakes from the Image dict, as well as from the Flake_dict
+    """Creates a Dict used to classify the Flakes from the Image dict, as well as from the Flake_dict, corrects the flake position for the 20x scope
 
     Args:
         image_dict (dict): A dict containing metadata about the image
@@ -523,12 +539,29 @@ def create_flake_dict(image_dict, flake_dict):
     Returns:
         dict: A dict with all the relevant keys needed to classify the Flake
     """
-    # Possible error, swap posx and posy
+
+    MICROMETER_PER_PIXEL = 0.3833
+    IMAGE_X_DIMENSION = 1920
+    IMAGE_Y_DIMENSION = 1200
+
+    # Correcting the XY positions so the Flake is in the Middle, crrently really scuffed, gonna do it better later
     flake_position_x = round(
-        image_dict["motor_pos"][0] + flake_dict["position_x_micro"] / 1000, 5
+        image_dict["motor_pos"][0]
+        + (
+            flake_dict["position_x_micro"]
+            - (IMAGE_X_DIMENSION / 2 * MICROMETER_PER_PIXEL)
+        )
+        / 1000,
+        5,
     )
     flake_position_y = round(
-        image_dict["motor_pos"][1] + flake_dict["position_y_micro"] / 1000, 5
+        image_dict["motor_pos"][1]
+        + (
+            flake_dict["position_y_micro"]
+            - (IMAGE_Y_DIMENSION / 2 * MICROMETER_PER_PIXEL)
+        )
+        / 1000,
+        5,
     )
     flake_size = round(flake_dict["size_micro"], 1)
     flake_thickness = flake_dict["layer"]
@@ -539,7 +572,7 @@ def create_flake_dict(image_dict, flake_dict):
 
     new_flake_dict = {
         "chip_id": image_chip_id,
-        "position_x": flake_position_x,
+        "position_x": flake_position_x,  # Relative to the middle, the middle is (0,0)
         "position_y": flake_position_y,
         "size": flake_size,
         "thickness": flake_thickness,
@@ -549,7 +582,7 @@ def create_flake_dict(image_dict, flake_dict):
 
     full_meta_dict = {"flake": new_flake_dict, "images": {}}
 
-    return full_meta_dict
+    return full_meta_dict, flake_dict["mask"]
 
 
 def raster_scan_area_map_legacy(

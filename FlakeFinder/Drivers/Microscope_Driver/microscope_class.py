@@ -72,7 +72,7 @@ class microscope_driver_class:
         elif mag_idx == 4:
             height = 3900
         elif mag_idx == 5:
-            height = 3900
+            height = 3899
         else:
             print("Wrong Idx, need values between 1 and 5")
             return

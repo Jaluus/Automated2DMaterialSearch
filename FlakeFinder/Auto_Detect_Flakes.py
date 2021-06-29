@@ -13,9 +13,10 @@ from Classes.detection_class import detector_class
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 
+start = time.time()
 
 material = "Graphene"
-scan_name = "Eikes_Flocken_2"
+scan_name = "Eikes_Flocken_All"
 
 microscope_image_dir = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
 scan_directory = os.path.join(microscope_image_dir, material, scan_name)
@@ -49,7 +50,7 @@ microscope_driver = microscope_driver_class()
 # Detector Init
 myDetector = detector_class(detector_params, flat_field=flat_field)
 
-# #### Creating the Overview and the Scan Area Mask
+#### Creating the Overview and the Scan Area Mask
 # print("Starting to raster in 2.5x...")
 # picture_dir, meta_dir = raster.raster_plate(
 #     scan_directory,
@@ -69,20 +70,22 @@ myDetector = detector_class(detector_params, flat_field=flat_field)
 
 # print("Creating scan area map...")
 # labeled_scan_area = stitcher.create_scan_area_map_from_mask(mask_path, scan_area_path)
-# ####
+####
 
 # read back the labeled scan area Mask
-labeled_scan_area = cv2.imread(scan_area_path, 0)
+# labeled_scan_area = cv2.imread(scan_area_path, 0)
 
-print("Find Flakes in 20x...")
-raster.search_scan_area_map(
-    scan_directory,
-    labeled_scan_area,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
-    myDetector,
-)
+# print("Find Flakes in 20x...")
+# raster.search_scan_area_map(
+#     scan_directory,
+#     labeled_scan_area,
+#     motor_driver,
+#     microscope_driver,
+#     camera_driver,
+#     myDetector,
+# )
+
+# print(f" Time to search: {time.time() - start:.0f}")
 
 for mag in [3, 4, 5, 1, 2]:
     raster.read_meta_and_center_flakes(
@@ -92,3 +95,5 @@ for mag in [3, 4, 5, 1, 2]:
         camera_driver,
         magnification=mag,
     )
+
+print(time.time() - start)

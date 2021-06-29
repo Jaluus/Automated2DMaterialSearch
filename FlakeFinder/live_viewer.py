@@ -46,10 +46,10 @@ while True:
         motor_pos = motor.get_pos()
         print(motor_pos)
         # cam_props = camera.get_properties()
-        # mic_props = microscope.get_properties()
+        mic_props = microscope.get_properties()
         # all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
 
-        # print(all_props)
+        print(mic_props)
         # picture_path = os.path.join(file_path, f"{motor_pos}.png")
         # cv2.imwrite(picture_path, img)
         # Save image to server and write the path and the metadata to DB
