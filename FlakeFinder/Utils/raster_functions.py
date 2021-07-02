@@ -381,22 +381,23 @@ def search_scan_area_map(
 
 def mark_flake(flake, image, image_path):
     plt.rcParams["figure.dpi"] = 300
-    debug_image = image.copy()
+
+    marked_image = image.copy()
     (x, y) = flake["position"]
     w = flake["width_bbox"]
     h = flake["height_bbox"]
     cv2.rectangle(
-        debug_image,
+        marked_image,
         (x - 20, y - 20),
         (x + w + 20, y + h + 20),
         color=[0, 0, 255],
         thickness=2,
     )
 
-    outline_flake = cv2.dilate(flake["mask"], disk(3))
+    outline_flake = cv2.dilate(flake["mask"], disk(3), iterations=2)
     outline_flake = cv2.morphologyEx(flake["mask"], cv2.MORPH_GRADIENT, disk(2))
 
-    debug_image[outline_flake != 0] = [0, 0, 255]
+    marked_image[outline_flake != 0] = [0, 0, 255]
 
     plt.text(
         x - 20,
@@ -405,10 +406,74 @@ def mark_flake(flake, image, image_path):
         color="red",
     )
     plt.title(flake["layer"])
-    plt.imshow(cv2.cvtColor(debug_image, cv2.COLOR_BGR2RGB))
+    plt.imshow(cv2.cvtColor(marked_image, cv2.COLOR_BGR2RGB))
     plt.tight_layout()
     plt.savefig(image_path)
     plt.clf()
+
+
+def get_chip_directorys(scan_directory):
+    """Yields all the chip directorys in the Current scan Directory
+
+    Args:
+        scan_directory (string): The path of the current scan
+
+    Yields:
+        string: A path to a chip Directory
+    """
+    chip_directory_names = [
+        chip_directory_name
+        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
+        if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+    ]
+
+    # iterate over all chip directory names
+    for chip_directory_name in chip_directory_names:
+
+        # get the full path to the chip dir
+        chip_directory = os.path.join(scan_directory, chip_directory_name)
+
+        yield chip_directory
+
+
+def get_flake_directorys(scan_directory: str, callback_function=None):
+    """Yields all the Flake directorys in the Current scan Directory
+
+    Args:
+        scan_directory (string): The apth of the current scan
+        callback_function (function) : a Callback function that is beeing calld each time a new Chip is created
+
+    Yields:
+        string: A path to a Flake Directory
+    """
+    chip_directory_names = [
+        chip_directory_name
+        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
+        if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+    ]
+
+    # iterate over all chip directory names
+    for chip_directory_name in chip_directory_names:
+
+        # get the full path to the chip dir
+        chip_directory = os.path.join(scan_directory, chip_directory_name)
+
+        if callback_function is not None:
+            callback_function()
+
+        # Extract all the Flake Directory names
+        flake_directory_names = [
+            flake_directory_name
+            for flake_directory_name in sorted_alphanumeric(os.listdir(chip_directory))
+            if os.path.isdir(os.path.join(chip_directory, flake_directory_name))
+        ]
+
+        # iterate over all flake directory names
+        for flake_directory_name in flake_directory_names:
+
+            # get the full path to the flake dir
+            flake_directory = os.path.join(chip_directory, flake_directory_name)
+            yield flake_directory
 
 
 def read_meta_and_center_flakes(
@@ -462,71 +527,50 @@ def read_meta_and_center_flakes(
         xy_offset = MAG_OFFSET[magnification]
         wait_time = MAG_WAITTIME[magnification]
     except KeyError as e:
-        print("wrong Magnification you need an int between 1 and 5, defaulting to 20x")
-        current_image_key = "20x"
+        print("Wrong Magnification you need an int between 1 and 5, defaulting to 20x")
+        current_image_key = IMAGE_KEYS[3]
+        xy_offset = MAG_OFFSET[3]
+        wait_time = MAG_WAITTIME[3]
 
-    # Extract all the Chip Directorys, not the images in the scan directory
-    chip_directory_names = [
-        chip_directory_name
-        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
-        if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
-    ]
+    flake_directorys = get_flake_directorys(scan_directory)
 
-    # iterate over all chip directory names
-    for chip_directory_name in chip_directory_names:
+    # Extract all the Flake Directorys
+    for flake_directory in flake_directorys:
 
-        # get the full path to the chip dir
-        chip_directory = os.path.join(scan_directory, chip_directory_name)
+        # Define the image path
+        image_path = os.path.join(flake_directory, f"{current_image_key}.png")
+        meta_path = os.path.join(flake_directory, "meta.json")
 
-        print(f"Current Chip Dir : {chip_directory_name}")
+        with open(meta_path, "r") as f:
+            meta_data = json.load(f)
 
-        # Extract all the Flake Directory names
-        flake_directory_names = [
-            flake_directory_name
-            for flake_directory_name in sorted_alphanumeric(os.listdir(chip_directory))
-            if os.path.isdir(os.path.join(chip_directory, flake_directory_name))
-        ]
+        flake_position_x = meta_data["flake"]["position_x"] + xy_offset[0]
+        flake_position_y = meta_data["flake"]["position_y"] + xy_offset[1]
 
-        # iterate over all flake directory names
-        for flake_directory_name in flake_directory_names:
+        # now execute Movement
+        motor_driver.abs_move(flake_position_x, flake_position_y)
 
-            # get the full path to the flake dir
-            flake_directory = os.path.join(chip_directory, flake_directory_name)
+        # get the properties relevant for the Image
+        cam_props = camera_driver.get_properties()
+        mic_props = microscope_driver.get_properties()
+        all_props = {
+            **cam_props,
+            **mic_props,
+        }
 
-            # Define the image path
-            image_path = os.path.join(flake_directory, f"{current_image_key}.png")
-            meta_path = os.path.join(flake_directory, "meta.json")
+        # Wait a short while
+        time.sleep(wait_time)
 
-            with open(meta_path, "r") as f:
-                meta_data = json.load(f)
+        # Take an image of the centered flake and write it
+        image = camera_driver.get_image()
+        cv2.imwrite(image_path, image)
 
-            flake_position_x = meta_data["flake"]["position_x"] + xy_offset[0]
-            flake_position_y = meta_data["flake"]["position_y"] + xy_offset[1]
+        # Append more info to the metadata
+        meta_data["images"][current_image_key] = all_props
 
-            # now execute Movement
-            motor_driver.abs_move(flake_position_x, flake_position_y)
-
-            # get the properties relevant for the Image
-            cam_props = camera_driver.get_properties()
-            mic_props = microscope_driver.get_properties()
-            all_props = {
-                **cam_props,
-                **mic_props,
-            }
-
-            # Wait a short while
-            time.sleep(wait_time)
-
-            # Take an image of the centered flake and write it
-            image = camera_driver.get_image()
-            cv2.imwrite(image_path, image)
-
-            # Append more info to the metadata
-            meta_data["images"][current_image_key] = all_props
-
-            # rewrite the data to the metafile
-            with open(meta_path, "w") as f:
-                json.dump(meta_data, f, sort_keys=True, indent=4)
+        # rewrite the data to the metafile
+        with open(meta_path, "w") as f:
+            json.dump(meta_data, f, sort_keys=True, indent=4)
 
 
 def create_flake_dict(image_dict, flake_dict):
@@ -537,7 +581,7 @@ def create_flake_dict(image_dict, flake_dict):
         flake_dict (dict): A dict containing metadata about the Flake
 
     Returns:
-        dict: A dict with all the relevant keys needed to classify the Flake
+        dict, (NxMx1 Array): A dict with all the relevant keys needed to classify the Flake, A Mask of the Flake
     """
 
     MICROMETER_PER_PIXEL = 0.3833
@@ -572,7 +616,7 @@ def create_flake_dict(image_dict, flake_dict):
 
     new_flake_dict = {
         "chip_id": image_chip_id,
-        "position_x": flake_position_x,  # Relative to the middle, the middle is (0,0)
+        "position_x": flake_position_x,
         "position_y": flake_position_y,
         "size": flake_size,
         "thickness": flake_thickness,

@@ -6,7 +6,6 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from skimage import measure
-import sys
 
 from Utils.etc_functions import *
 
@@ -186,7 +185,6 @@ def create_scan_area_map_from_mask(
     pixel_resolution_x = mask.shape[1] / 100
 
     # Real 20x area (0.7380 x 0.4613)
-    ## (Unused) offset area (0.6666 x 0.4)
     x_frame = int(pixel_resolution_x * view_field_x)
     y_frame = int(pixel_resolution_y * view_field_y)
 

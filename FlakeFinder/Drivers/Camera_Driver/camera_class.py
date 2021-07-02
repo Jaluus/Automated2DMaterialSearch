@@ -13,8 +13,7 @@ class camera_driver_class:
     """
 
     def __init__(self, cam_name="DFK 33UX174 38020321"):
-        self.cam_name = cam_name
-        self.camera = self.__init_camera(cam_name=self.cam_name)
+        self.camera = self.__init_camera(cam_name)
         self.set_properties()
         self.DEFAULT_PROPERTIES = {
             1: {
@@ -62,13 +61,10 @@ class camera_driver_class:
         # Open a device with hard coded unique name:
         Camera.open(cam_name)
 
-        # testing selection
-        # Camera.ShowDeviceSelectionDialog()
-
         # checks it the cam exists
         if Camera.IsDevValid() != 1:
-            print(f"No device found with the name {cam_name}, exiting program")
-            sys.exit(0)
+            print(f"No device found with the name {cam_name}, Choose Camera : ")
+            Camera.ShowDeviceSelectionDialog()
 
         # Set a video format
         Camera.SetVideoFormat("RGB24 (1920x1200)")
