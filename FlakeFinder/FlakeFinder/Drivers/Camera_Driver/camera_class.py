@@ -1,4 +1,4 @@
-import Drivers.Camera_Driver.tisgrabber.tisgrabber as IC
+import FlakeFinder.Drivers.Camera_Driver.tisgrabber.tisgrabber as IC
 import cv2
 import numpy as np
 import time

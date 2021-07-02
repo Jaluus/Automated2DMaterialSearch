@@ -1,7 +1,7 @@
 import json
 import os
 from sys import prefix
-from Utils.raster_functions import get_flake_directorys
+from FlakeFinder.Utils.raster_functions import get_flake_directorys
 
 # How to send to DB
 # 1. Create a new Scan in the DB and get the ID

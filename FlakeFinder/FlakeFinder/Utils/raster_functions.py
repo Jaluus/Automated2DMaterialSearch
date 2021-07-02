@@ -8,11 +8,13 @@ from numpy.core.numeric import full
 from skimage.morphology import disk
 import matplotlib.pyplot as plt
 
-from Utils.etc_functions import sorted_alphanumeric
-from Classes.detection_class import detector_class
-from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
-from Drivers.Motor_Driver.tango_class import motor_driver_class
+from FlakeFinder.Utils.etc_functions import sorted_alphanumeric
+from FlakeFinder.Classes.detection_class import detector_class
+from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
+from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
+    microscope_driver_class,
+)
+from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
 
 
 def _create_folder_structure(
@@ -135,7 +137,7 @@ def image_generator(
     camera_driver: camera_driver_class,
     x_step: float = 0.7380,
     y_step: float = 0.4613,
-    x_offset: float = -1.5,
+    x_offset: float = 0,
     y_offset: float = 0,
     wait_time: float = 0.1,
 ):
@@ -190,8 +192,8 @@ def image_generator(
             # Calculate the new Position on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = round(x_step * x_idx + x_offset, 3)
-            y_pos = round(y_step * y_idx + y_offset, 3)
+            x_pos = round(x_step * x_idx + x_offset, 4)
+            y_pos = round(y_step * y_idx + y_offset, 4)
 
             # move to the new Position
             motor_driver.abs_move(x_pos, y_pos)

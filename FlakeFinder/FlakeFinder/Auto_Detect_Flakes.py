@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 import json
 
 # Custom imports
-from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
-from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Classes.detection_class import detector_class
-import Utils.raster_functions as raster
-import Utils.stitcher_functions as stitcher
+from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
+from FlakeFinder.Drivers.Microscope_Driver.microscope_class import microscope_driver_class
+from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
+from FlakeFinder.Classes.detection_class import detector_class
+import FlakeFinder.Utils.raster_functions as raster
+import FlakeFinder.Utils.stitcher_functions as stitcher
 
 start = time.time()
 

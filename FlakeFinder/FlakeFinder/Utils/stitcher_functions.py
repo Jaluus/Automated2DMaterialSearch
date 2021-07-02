@@ -7,7 +7,7 @@ import os
 import matplotlib.pyplot as plt
 from skimage import measure
 
-from Utils.etc_functions import *
+from FlakeFinder.Utils.etc_functions import *
 
 
 def compress_images(
@@ -160,7 +160,9 @@ def create_scan_area_map_from_mask(
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
     percentage_threshold: float = 0.9,
-    erode_iterations: int = 1,
+    x_motor_range: float = 105,
+    y_motor_range: float = 103.333,
+    erode_iterations: int = 0,
 ):
     """
     Creates a Labeled Scan Area Map and returns it
@@ -179,48 +181,42 @@ def create_scan_area_map_from_mask(
 
     # Load the mask
     mask = cv2.imread(mask_path, 0)
-
-    # our area map has a resolution of 8463 pixels / 100 mm
-    pixel_resolution_y = mask.shape[0] / 100
-    pixel_resolution_x = mask.shape[1] / 100
-
-    # Real 20x area (0.7380 x 0.4613)
-    x_frame = int(pixel_resolution_x * view_field_x)
-    y_frame = int(pixel_resolution_y * view_field_y)
-
-    # Create a new mask where we draw on
-
     width = mask.shape[0]
     height = mask.shape[1]
 
+    # here we calculate the Resolution of pixels in x and y
+    pixel_resolution_y = width / x_motor_range
+    pixel_resolution_x = height / y_motor_range
+
+    # Real 20x area (0.7380 x 0.4613)
+    x_pixels = int(round(pixel_resolution_x * view_field_x, 0))
+    y_pixels = int(round(pixel_resolution_y * view_field_y, 0))
+
     # Create an array which saves the points where we can raster to
-    scan_area = np.zeros((int(width / y_frame) + 1, int(height / x_frame) + 1))
+    scan_area = np.zeros(
+        (
+            int(round(width / y_pixels, 0)),
+            int(round(height / x_pixels, 0)),
+        )
+    )
 
-    i = 0
-    while int(i * x_frame) < height:
-        j = 0
-        while int(j * y_frame) < width:
-
+    for i in range(scan_area.shape[0]):
+        for j in range(scan_area.shape[1]):
             # Crop to the part of the Image which would be seen by the 20x scope
-            x_start = i * x_frame
-            y_start = j * y_frame
-            x_end = (i + 1) * x_frame
-            y_end = (j + 1) * y_frame
+            x_start = j * x_pixels
+            y_start = i * y_pixels
+            x_end = (j + 1) * x_pixels
+            y_end = (i + 1) * y_pixels
             crop_arr = mask[y_start:y_end, x_start:x_end]
 
             non_zero_pixels = cv2.countNonZero(crop_arr)
 
             # find the percentage of non background pixels
-            percentage_non_background = non_zero_pixels / (
-                crop_arr.shape[0] * crop_arr.shape[1]
-            )
+            percentage_non_background = non_zero_pixels / (x_pixels * y_pixels)
 
             # Save the Image only if a certain percantage of the image is not background
             if percentage_non_background >= percentage_threshold:
-                scan_area[j, i] = 1
-
-            j += 1
-        i += 1
+                scan_area[i, j] = 1
 
     # Small adjustments
     scan_area = cv2.erode(scan_area, np.ones((3, 3)), iterations=1 + erode_iterations)

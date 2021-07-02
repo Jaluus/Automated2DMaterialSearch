@@ -8,16 +8,14 @@ import numpy as np
 from skimage.morphology import disk
 from skimage.morphology.selem import star
 
-from Classes.detection_class import detector_class
-from Utils.etc_functions import *
+from FlakeFinder.Classes.detection_class import detector_class
+from FlakeFinder.Utils.etc_functions import *
+
+from PIL import ImageFont, ImageDraw, Image
 
 plt.rcParams["figure.dpi"] = 300
 
-# Pixel Offset @ 8463pix
-# We need to better adjust it
-pixel_delta_full = (0, 0)
-
-scan_dir = r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Graphene\FullScanAlex"
+scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\Graphene\FullScanAlex"
 
 # Defining Paths
 save_dir = os.path.join(scan_dir, "20x", "Masked_Images")
@@ -37,8 +35,8 @@ contrasts_path = os.path.join(
     os.path.dirname(__file__), "Detection", "Params", "contrasts_Alex.json"
 )
 
-image_names = sorted_alphanumeric(os.listdir(image_dir))
-meta_names = sorted_alphanumeric(os.listdir(meta_dir))
+image_names = sorted_alphanumeric(os.listdir(image_dir))[:750]
+meta_names = sorted_alphanumeric(os.listdir(meta_dir))[:750]
 
 # Load the Overview Image
 overview_image = cv2.imread(overview_path)
@@ -60,8 +58,8 @@ colors = {
 
 plt_colors = {
     "monolayer": "lime",  # green
-    "bilayer": "yellow",  # yellow
-    "trilayer": "red",  # red
+    "bilayer": "cyan",  # yellow
+    "trilayer": "blue",  # red
 }
 
 # Saving the Contrasts for later
@@ -70,6 +68,11 @@ flake_contrasts = {
     "bilayer": [],
     "trilayer": [],
 }
+
+X_MOTOR_RANGE = 100.368
+Y_MOTOR_RANGE = 100.1021
+
+font = ImageFont.truetype("FlakeFinder/Helvetica.ttf", 40)
 
 # Define the start time
 start_time = time.time()
@@ -102,7 +105,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
     # Operation on the flakes
     if len(detected_flakes) != 0:
         ctr += 1
-        print(image_name)
+        print(image_name, meta_name)
 
         # load the Metadata
         meta_path = os.path.join(meta_dir, meta_name)
@@ -110,14 +113,20 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
         motor_pos = np.array(data["motor_pos"], dtype=np.float64)
 
         # mark the flake on overview map
-        picture_coords = np.array(motor_pos / 100 * overview_image.shape[0], dtype=int)
-        cv2.circle(
+        picture_coords = [
+            int((motor_pos[0] + X_OFFSET) / X_MOTOR_RANGE * overview_image.shape[0]),
+            int(motor_pos[1] / Y_MOTOR_RANGE * overview_image.shape[1]),
+        ]
+        cv2.rectangle(
             overview_image,
             (
-                picture_coords[0] + pixel_delta_full[0],
-                picture_coords[1] + pixel_delta_full[1],
+                picture_coords[0],
+                picture_coords[1],
             ),
-            20,
+            (
+                picture_coords[0] + 62,
+                picture_coords[1] + 39,
+            ),
             [0, 255, 0],
             thickness=5,
         )
@@ -125,8 +134,8 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             overview_image,
             str(ctr),
             (
-                picture_coords[0] - 15 + pixel_delta_full[0],
-                picture_coords[1] + 6 + pixel_delta_full[1],
+                picture_coords[0] - 15,
+                picture_coords[1] + 6,
             ),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -134,7 +143,6 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             thickness=2,
         )
 
-        # Mark the Flakes on the Image
         for flake in detected_flakes:
             (x, y) = flake["position"]
             w = flake["width_bbox"]
@@ -152,17 +160,17 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
             image[outline_flake != 0] = colors[flake["layer"]]
 
-            plt.text(
-                x - 20,
-                y - 40,
-                f"{flake['num_pixels'] * 0.15:.0f}μm² , S = {flake['entropy']:.2f} , σ = {flake['proximity_stddev']:.2f}",
-                color=plt_colors[flake["layer"]],
+            img_pil = Image.fromarray(image)
+            draw = ImageDraw.Draw(img_pil)
+            draw.text(
+                (x + w + 25, y - 35),
+                f"{flake['num_pixels'] * 0.15:.0f} µm²\nS = {flake['entropy']:.2f}\nσ = {flake['proximity_stddev']:.2f}",
+                fill=plt_colors[flake["layer"]],
+                font=font,
             )
-        plt.title(f"Overview ID: {ctr:.0f}")
-        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        plt.tight_layout()
-        plt.savefig(os.path.join(save_dir, image_name))
-        plt.clf()
+            image = np.array(img_pil)
+
+        cv2.imwrite(os.path.join(save_dir, image_name), image)
 
 
 cv2.imwrite(marked_overview_path, overview_image)

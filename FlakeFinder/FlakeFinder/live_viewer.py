@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 import cv2
 import time
 
-from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
-from Drivers.Motor_Driver.tango_class import motor_driver_class
+from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
+from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
+    microscope_driver_class,
+)
+from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
 
 file_path = os.path.dirname(__file__)
 

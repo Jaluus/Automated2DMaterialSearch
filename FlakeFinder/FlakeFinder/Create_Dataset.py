@@ -5,11 +5,13 @@ import time
 import matplotlib.pyplot as plt
 
 # Custom imports
-from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
-from Drivers.Motor_Driver.tango_class import motor_driver_class
-import Utils.raster_functions as raster
-import Utils.stitcher_functions as stitcher
+from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
+from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
+    microscope_driver_class,
+)
+from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
+import FlakeFinder.Utils.raster_functions as raster
+import FlakeFinder.Utils.stitcher_functions as stitcher
 
 # flow
 # 1. Raster the Plate in 2.5x
@@ -55,7 +57,7 @@ stitcher.create_mask_from_stitched_image(overview_path, mask_path, threshold_val
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    mask_path, scan_area_path, erode_iterations=1, percentage_threshold=0.8
+    mask_path, scan_area_path, percentage_threshold=0.8
 )
 
 labeled_scan_area = cv2.imread(scan_area_path, 0)
