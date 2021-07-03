@@ -4,7 +4,7 @@ from numba import jit
 from skimage import measure
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
-
+import copy
 import matplotlib.pyplot as plt
 
 
@@ -34,14 +34,16 @@ class detector_class:
             contrast_dict (dict): A Dictionary with the Keys "layers" and "color_radius"
             flat_field (NxMx1 Array, optional): The background Image, if none is given doesnt correct the Vignette, HIGHLY RECOMMENDED. Defaults to None.
         """
+
         self.flat_field = flat_field.copy()
-        self.layers = contrast_dict["layers"]
-        self.color_radius = contrast_dict["color_radius"]
-        self.searched_layers = self.layers.keys()
+
+        # make sure not to accidentally fuck up your dict
+        self.contrast_dict = copy.deepcopy(contrast_dict)
+        self.searched_layers = self.contrast_dict.keys()
 
     def set_searched_layers(
         self,
-        which_layers,
+        which_layers: list,
     ):
         """Sets the Currently Searched Layers
 
@@ -141,7 +143,6 @@ class detector_class:
         self,
         image,
         size_thresh=200,
-        silent: bool = False,
     ):
         """
         Detects Flakes in the given Image, Expects images without vignette
@@ -152,8 +153,6 @@ class detector_class:
             image (NxMx3 Array): The Image which the detection is being run on
 
             size_thresh (int, optional): The Threshold for Detecting a flake on an Image in μm². Defaults to 200.
-
-            silent (Boolean, optional): Sets if the Function is writing to console, currently unused. Defaults to False.
 
         Returns:
             (Nx1 Array): an Array with the number of entry corrosponding to the number of Flakes
@@ -214,23 +213,23 @@ class detector_class:
         for layer_name in self.searched_layers:
 
             # Set the current layer by getting the value using the key 'layer'
-            current_layer = self.layers[layer_name]
+            current_layer = self.contrast_dict[layer_name]
 
             ## Threshing the contrasted Images only for Mono ~30ms
             contrast_b_threshed = cv2.inRange(
                 contrasts[:, :, 0],
-                current_layer["b"] - self.color_radius["b"],
-                current_layer["b"] + self.color_radius["b"],
+                current_layer["contrast"]["b"] - current_layer["color_radius"]["b"],
+                current_layer["contrast"]["b"] + current_layer["color_radius"]["b"],
             )
             contrast_g_threshed = cv2.inRange(
                 contrasts[:, :, 1],
-                current_layer["g"] - self.color_radius["g"],
-                current_layer["g"] + self.color_radius["g"],
+                current_layer["contrast"]["g"] - current_layer["color_radius"]["g"],
+                current_layer["contrast"]["g"] + current_layer["color_radius"]["g"],
             )
             contrast_r_threshed = cv2.inRange(
                 contrasts[:, :, 2],
-                current_layer["r"] - self.color_radius["r"],
-                current_layer["r"] + self.color_radius["r"],
+                current_layer["contrast"]["r"] - current_layer["color_radius"]["r"],
+                current_layer["contrast"]["r"] + current_layer["color_radius"]["r"],
             )
 
             #### all this ~4 ms
