@@ -160,8 +160,8 @@ def create_scan_area_map_from_mask(
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
     percentage_threshold: float = 0.9,
-    x_motor_range: float = 105,
-    y_motor_range: float = 103.333,
+    overview_image_x_dimension: float = 105,
+    overview_image_y_dimension: float = 103.333,
     erode_iterations: int = 0,
 ):
     """
@@ -185,8 +185,8 @@ def create_scan_area_map_from_mask(
     height = mask.shape[1]
 
     # here we calculate the Resolution of pixels in x and y
-    pixel_resolution_y = width / x_motor_range
-    pixel_resolution_x = height / y_motor_range
+    pixel_resolution_y = width / overview_image_x_dimension
+    pixel_resolution_x = height / overview_image_y_dimension
 
     # Real 20x area (0.7380 x 0.4613)
     x_pixels = int(round(pixel_resolution_x * view_field_x, 0))
