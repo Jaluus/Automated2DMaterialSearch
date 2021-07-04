@@ -14,6 +14,10 @@ class microscope_driver_class:
         self.set_default_values()
 
     def set_default_values(self):
+        """Sets the Default values\n
+        Lamp Volatge: 6.4V\n
+        Aperture: 2.3\n
+        """
         self.lamp_on()
         self.set_lamp_voltage(6.4)
         self.set_lamp_aperture_stop(2.3)
@@ -56,11 +60,12 @@ class microscope_driver_class:
     def set_mag(self, mag_idx: int):
         """
         Swaps the Position of the Nosepiece\n
-        1 : 2.5x\n
-        2 : 5x\n
-        3 : 20x\n
-        4 : 50x\n
-        5 : 100x\n
+        Automatically sets the Height\n
+        1 : 2.5x 5500µm\n
+        2 : 5x 4300µm\n
+        3 : 20x 3930µm\n
+        4 : 50x 3900µm\n
+        5 : 100x 3900µm\n
         """
         height = 5500
         if mag_idx == 1:
@@ -72,7 +77,7 @@ class microscope_driver_class:
         elif mag_idx == 4:
             height = 3900
         elif mag_idx == 5:
-            height = 3899
+            height = 3900
         else:
             print("Wrong Idx, need values between 1 and 5")
             return
@@ -84,6 +89,7 @@ class microscope_driver_class:
 
     def get_af_status(self):
         """
+        Currently Bugged\n
         Return Codes:\n
         AfStatusUnknown     : -1\n
         AfStatusJustFocus   : 1\n
