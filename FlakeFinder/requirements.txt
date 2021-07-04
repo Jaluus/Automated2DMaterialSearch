@@ -3,4 +3,4 @@ matplotlib
 opencv-python
 scikit-image
 pywin32
-mysql-connector-python
+requests
