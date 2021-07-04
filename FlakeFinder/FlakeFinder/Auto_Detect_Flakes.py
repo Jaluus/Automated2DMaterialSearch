@@ -7,33 +7,66 @@ import json
 
 # Custom imports
 from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
-from FlakeFinder.Drivers.Microscope_Driver.microscope_class import microscope_driver_class
+from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
+    microscope_driver_class,
+)
 from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
 from FlakeFinder.Classes.detection_class import detector_class
 import FlakeFinder.Utils.raster_functions as raster
 import FlakeFinder.Utils.stitcher_functions as stitcher
+from FlakeFinder.Utils.etc_functions import calibrate_scope
 
 start = time.time()
 
-material = "Graphene"
-scan_name = "Eikes_Flocken_All"
+# Constants
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+EXFOLIATED_MATERIAL = "Graphene"
+SCAN_NAME = "Eikes_Flocken_All"
+CHIP_THICKNESS = "90nm"
+SCAN_USER = "Eike"
 
-microscope_image_dir = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-scan_directory = os.path.join(microscope_image_dir, material, scan_name)
+# Created Metadict
+META_DICT = {
+    "scan_user": SCAN_USER,
+    "scan_name": SCAN_NAME,
+    "chip_thickness": CHIP_THICKNESS,
+    "scan_exfoliated_material": EXFOLIATED_MATERIAL,
+}
+
+# Directory Paths
+scan_directory = os.path.join(IMAGE_DIRECTORY, EXFOLIATED_MATERIAL, SCAN_NAME)
+
+# File Paths
+scan_meta_path = os.path.join(scan_directory, "meta.json")
 overview_path = os.path.join(scan_directory, "overview.png")
+overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
 mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
 
 flat_field_path = os.path.join(
-    os.path.dirname(__file__), "Detection", "Flatfield", "90nm.png"
+    os.path.dirname(__file__),
+    "Parameters",
+    "Flatfields",
+    f"{CHIP_THICKNESS}.png",
 )
 contrasts_path = os.path.join(
-    os.path.dirname(__file__), "Detection", "Params", "contrasts_Alex.json"
+    os.path.dirname(__file__),
+    "Parameters",
+    "Contrasts",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
+)
+background_values_path = os.path.join(
+    os.path.dirname(__file__),
+    "Parameters",
+    "Background_Values",
+    f"{CHIP_THICKNESS}.json",
 )
 
-# Open the Json and get the Need infos
+# Open the Jsons and get the needed Data
 with open(contrasts_path) as f:
-    detector_params = json.load(f)
+    contrast_params = json.load(f)
+with open(background_values_path) as f:
+    background_values_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
@@ -42,51 +75,77 @@ flat_field = cv2.imread(flat_field_path)
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
 
-# Driver Creation
+# Dump the Scan Metadata into the folder
+with open(scan_meta_path, "w") as fp:
+    json.dump(META_DICT, fp, sort_keys=True, indent=4)
+
+# Driver Initialization
 motor_driver = motor_driver_class()
 camera_driver = camera_driver_class()
 microscope_driver = microscope_driver_class()
 
-# Detector Init
-myDetector = detector_class(detector_params, flat_field=flat_field)
+# Detector Initialization
+myDetector = detector_class(
+    contrast_dict=contrast_params,
+    background_values=background_values_params,
+    flat_field=flat_field,
+)
 
-#### Creating the Overview and the Scan Area Mask
 print("Starting to raster in 2.5x...")
-picture_dir, meta_dir = raster.raster_plate(
+image_2_directory, meta_2_directory = raster.raster_plate(
     scan_directory,
     motor_driver,
     microscope_driver,
     camera_driver,
 )
 
-print("Compressing...")
-compressed_images_dir = stitcher.compress_images(picture_dir)
+print("Compressing 2.5x Images...")
+compressed_images_2_directory = stitcher.compress_images(image_2_directory)
 
-print("Stitching images...")
-stitcher.stitch_image(compressed_images_dir, overview_path)
+print("Stitching Images...")
+overview_image = stitcher.stitch_image(compressed_images_2_directory)
+cv2.imwrite(overview_path, overview_image)
+
+print("Compressing Overview Image...")
+overview_image_compressed = cv2.resize(overview_image, (2000, 2000))
+cv2.imwrite(
+    overview_compressed_path,
+    overview_image_compressed,
+    [int(cv2.IMWRITE_JPEG_QUALITY), 80],
+)
 
 print("Creating mask...")
-stitcher.create_mask_from_stitched_image(overview_path, mask_path)
+masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
+cv2.imwrite(mask_path, masked_overview)
 
-print("Creating scan area map...")
-labeled_scan_area = stitcher.create_scan_area_map_from_mask(mask_path, scan_area_path)
-####
+print("Creating scan area mask...")
+labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
+cv2.imwrite(scan_area_path, labeled_scan_area)
 
-# read back the labeled scan area Mask
-labeled_scan_area = cv2.imread(scan_area_path, 0)
-
-print("Find Flakes in 20x...")
-raster.search_scan_area_map(
-    scan_directory,
-    labeled_scan_area,
+print("Please Calibrate the 20x Scope")
+print("Use E and R to Swap the Scopes")
+print("Use Q to finish the Calibration")
+print("Make sure to end the Calibration when in the 20x Scope")
+calibrate_scope(
     motor_driver,
     microscope_driver,
     camera_driver,
-    myDetector,
 )
 
-print(f" Time to search: {time.time() - start:.0f}")
+print("Finding Flakes in 20x...")
+raster.search_scan_area_map(
+    scan_directory=scan_directory,
+    area_map=labeled_scan_area,
+    motor_driver=motor_driver,
+    microscope_driver=microscope_driver,
+    camera_driver=camera_driver,
+    detector=myDetector,
+    overview=overview_image_compressed,
+)
 
+print(f"Time to search: {(time.time() - start) // 60}:{int(time.time() - start) % 60}")
+
+print("Revisiting each Flake to take Pictures...")
 for mag in [3, 4, 5, 1, 2]:
     raster.read_meta_and_center_flakes(
         scan_directory,
@@ -96,4 +155,6 @@ for mag in [3, 4, 5, 1, 2]:
         magnification=mag,
     )
 
-print(time.time() - start)
+print(
+    f"Total elapsed time: {(time.time() - start) // 60}:{int(time.time() - start) % 60}"
+)

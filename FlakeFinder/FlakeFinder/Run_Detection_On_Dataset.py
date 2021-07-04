@@ -5,46 +5,58 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+
 from skimage.morphology import disk
-from skimage.morphology.selem import star
+from PIL import ImageFont, ImageDraw, Image
 
 from FlakeFinder.Classes.detection_class import detector_class
 from FlakeFinder.Utils.etc_functions import *
+from FlakeFinder.Utils.marker_functions import *
 
-from PIL import ImageFont, ImageDraw, Image
 
-plt.rcParams["figure.dpi"] = 300
+# Constants
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+EXFOLIATED_MATERIAL = "Graphene"
+SCAN_NAME = "FullScanAlex"
 
-scan_dir = r"C:\Users\duden\Desktop\Mikroskop Bilder\Graphene\FullScanAlex"
+# Directory Paths
+scan_directory = os.path.join(IMAGE_DIRECTORY, EXFOLIATED_MATERIAL, SCAN_NAME)
 
-# Defining Paths
-save_dir = os.path.join(scan_dir, "20x", "Masked_Images")
+# Defining directorys
+save_dir = os.path.join(scan_directory, "20x", "Masked_Images")
+image_dir = os.path.join(scan_directory, "20x", "Pictures")
+meta_dir = os.path.join(scan_directory, "20x", "Meta")
+overview_path = os.path.join(scan_directory, "overview.png")
+marked_overview_path = os.path.join(scan_directory, "overview_marked.png")
+scan_meta_data_path = os.path.join(scan_directory, "meta.json")
+
+# Creating non Existant Paths
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
-image_dir = os.path.join(scan_dir, "20x", "Pictures")
-meta_dir = os.path.join(scan_dir, "20x", "Meta")
-
-overview_path = os.path.join(scan_dir, "stitched_image.png")
-marked_overview_path = os.path.join(scan_dir, "stitched_image_marked.png")
-
+# Defining parameter Paths
 flat_field_path = os.path.join(
-    os.path.dirname(__file__), "Detection", "Flatfield", "90nm.png"
+    os.path.dirname(__file__), "Parameters", "Flatfields", "90nm.png"
 )
 contrasts_path = os.path.join(
-    os.path.dirname(__file__), "Detection", "Params", "contrasts_Alex.json"
+    os.path.dirname(__file__), "Parameters", "Contrasts", "graphene_90nm.json"
+)
+background_values_path = os.path.join(
+    os.path.dirname(__file__), "Parameters", "Background_Values", "90nm.json"
 )
 
-image_names = sorted_alphanumeric(os.listdir(image_dir))[:750]
-meta_names = sorted_alphanumeric(os.listdir(meta_dir))[:750]
+image_names = sorted_alphanumeric(os.listdir(image_dir))
+meta_names = sorted_alphanumeric(os.listdir(meta_dir))
+num_images = len(image_names)
 
 # Load the Overview Image
 overview_image = cv2.imread(overview_path)
 
 # Open the Json and get the Need infos
 with open(contrasts_path) as f:
-    json_data = json.load(f)
-
+    contrast_params = json.load(f)
+with open(background_values_path) as f:
+    background_values_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
@@ -56,35 +68,29 @@ colors = {
     "trilayer": [0, 0, 255],  # red
 }
 
+# The Colors are getting flipped
 plt_colors = {
     "monolayer": "lime",  # green
     "bilayer": "cyan",  # yellow
     "trilayer": "blue",  # red
 }
 
-# Saving the Contrasts for later
-flake_contrasts = {
-    "monolayer": [],
-    "bilayer": [],
-    "trilayer": [],
-}
-
-X_MOTOR_RANGE = 100.368
-Y_MOTOR_RANGE = 100.1021
-
-font = ImageFont.truetype("FlakeFinder/Helvetica.ttf", 40)
+font_path = os.path.join(os.path.dirname(__file__), "Helvetica.ttf")
+font = ImageFont.truetype(font_path, 40)
 
 # Define the start time
 start_time = time.time()
 
-# Initializing the Detector
-myDetector = detector_class(json_data, flat_field=flat_field)
-# myDetector.set_searched_layers(["trilayer"])
+# Detector Init
+myDetector = detector_class(
+    contrast_dict=contrast_params,
+    background_values=background_values_params,
+    flat_field=flat_field,
+)
 
-num_images = len(image_names)
-
-# An indexing method for forund flakes
-ctr = 0
+# An indexing method for found flakes
+current_flake_number = 0
+current_image_number = 0
 
 for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
@@ -104,63 +110,48 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
     # Operation on the flakes
     if len(detected_flakes) != 0:
-        ctr += 1
+        current_image_number += 1
         print(image_name, meta_name)
 
         # load the Metadata
         meta_path = os.path.join(meta_dir, meta_name)
-        data = json.load(open(meta_path, "r"))
-        motor_pos = np.array(data["motor_pos"], dtype=np.float64)
+        meta_data = json.load(open(meta_path, "r"))
 
         # mark the flake on overview map
-        picture_coords = [
-            int((motor_pos[0] + X_OFFSET) / X_MOTOR_RANGE * overview_image.shape[0]),
-            int(motor_pos[1] / Y_MOTOR_RANGE * overview_image.shape[1]),
-        ]
-        cv2.rectangle(
-            overview_image,
-            (
-                picture_coords[0],
-                picture_coords[1],
-            ),
-            (
-                picture_coords[0] + 62,
-                picture_coords[1] + 39,
-            ),
-            [0, 255, 0],
-            thickness=5,
-        )
-        cv2.putText(
-            overview_image,
-            str(ctr),
-            (
-                picture_coords[0] - 15,
-                picture_coords[1] + 6,
-            ),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            [0, 0, 255],
-            thickness=2,
+        overview_image = mark_on_overview(
+            overview_image, current_image_number, meta_data["motor_pos"]
         )
 
+        # Operate on each Flake
         for flake in detected_flakes:
-            (x, y) = flake["position"]
+            current_flake_number += 1
+
+            # Copy the Image to not Modify the Original
+            # If you dont know why I do this, Google Mutable Types
+            # In short, I will fuck up my Image if im not copying it as I just pass a reference
+            draw_image = image.copy()
+
+            # Extract some data from the Dict
+            (x, y) = flake["position_bbox"]
             w = flake["width_bbox"]
             h = flake["height_bbox"]
             cv2.rectangle(
-                image,
+                draw_image,
                 (x - 20, y - 20),
                 (x + w + 20, y + h + 20),
                 color=colors[flake["layer"]],
                 thickness=2,
             )
 
+            # Dilate the flake outline and get the gradient to get a nice border
             outline_flake = cv2.dilate(flake["mask"], disk(3))
             outline_flake = cv2.morphologyEx(flake["mask"], cv2.MORPH_GRADIENT, disk(2))
 
-            image[outline_flake != 0] = colors[flake["layer"]]
+            # Draw this border on the image
+            draw_image[outline_flake != 0] = colors[flake["layer"]]
 
-            img_pil = Image.fromarray(image)
+            #### All this is just to draw some text on the image, opencv doesnt allow µ, so I had to improvise
+            img_pil = Image.fromarray(draw_image)
             draw = ImageDraw.Draw(img_pil)
             draw.text(
                 (x + w + 25, y - 35),
@@ -168,11 +159,17 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 fill=plt_colors[flake["layer"]],
                 font=font,
             )
-            image = np.array(img_pil)
+            draw_image = np.array(img_pil)
+            #####
 
-        cv2.imwrite(os.path.join(save_dir, image_name), image)
-
+            # Now save the Image to its new Home
+            cv2.imwrite(
+                os.path.join(save_dir, f"{current_flake_number}_{image_name}"),
+                draw_image,
+            )
 
 cv2.imwrite(marked_overview_path, overview_image)
 
-print(time.time() - start_time)
+print(
+    f"Total elapsed time: {(time.time() - start_time) // 60}:{int(time.time() - start_time) % 60}"
+)
