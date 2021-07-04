@@ -20,7 +20,7 @@ EXFOLIATED_MATERIAL = "Graphene"
 SCAN_NAME = "FullScanAlex"
 
 # Directory Paths
-scan_directory = os.path.join(IMAGE_DIRECTORY, EXFOLIATED_MATERIAL, SCAN_NAME)
+scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # Defining directorys
 save_dir = os.path.join(scan_directory, "20x", "Masked_Images")

@@ -30,7 +30,7 @@ META_DICT = {
 }
 
 # Directory Paths
-scan_directory = os.path.join(IMAGE_DIRECTORY, EXFOLIATED_MATERIAL, SCAN_NAME)
+scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # File Paths
 scan_meta_path = os.path.join(scan_directory, "meta.json")

@@ -1,9 +1,8 @@
-import sys
 import os
 import cv2
 import time
-import matplotlib.pyplot as plt
 import json
+import shutil
 
 # Custom imports
 from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
@@ -14,11 +13,13 @@ from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
 from FlakeFinder.Classes.detection_class import detector_class
 import FlakeFinder.Utils.raster_functions as raster
 import FlakeFinder.Utils.stitcher_functions as stitcher
+import FlakeFinder.Utils.upload_functions as uploader
 from FlakeFinder.Utils.etc_functions import calibrate_scope
 
 start = time.time()
 
 # Constants
+SERVER_URL = "localhost:5000/upload"
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
 EXFOLIATED_MATERIAL = "Graphene"
 SCAN_NAME = "Eikes_Flocken_All"
@@ -31,10 +32,11 @@ META_DICT = {
     "scan_name": SCAN_NAME,
     "chip_thickness": CHIP_THICKNESS,
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
+    "scan_time": time.time(),
 }
 
 # Directory Paths
-scan_directory = os.path.join(IMAGE_DIRECTORY, EXFOLIATED_MATERIAL, SCAN_NAME)
+scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # File Paths
 scan_meta_path = os.path.join(scan_directory, "meta.json")
@@ -122,6 +124,10 @@ print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
+print("Removing unneeded 2.5x directory...")
+dir_path = os.path.dirname(image_2_directory)
+shutil.rmtree(dir_path)
+
 print("Please Calibrate the 20x Scope")
 print("Use E and R to Swap the Scopes")
 print("Use Q to finish the Calibration")
@@ -143,7 +149,10 @@ raster.search_scan_area_map(
     overview=overview_image_compressed,
 )
 
-print(f"Time to search: {(time.time() - start) // 60}:{int(time.time() - start) % 60}")
+print(
+    f"Time to search: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+)
+local = time.time()
 
 print("Revisiting each Flake to take Pictures...")
 for mag in [3, 4, 5, 1, 2]:
@@ -156,5 +165,12 @@ for mag in [3, 4, 5, 1, 2]:
     )
 
 print(
-    f"Total elapsed time: {(time.time() - start) // 60}:{int(time.time() - start) % 60}"
+    f"Elapsed Time during revisiting: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
+)
+
+print("Uploading the Scan Directory...")
+uploader.upload_directory(scan_directory, SERVER_URL)
+
+print(
+    f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
 )

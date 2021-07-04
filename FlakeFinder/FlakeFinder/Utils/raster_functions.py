@@ -394,7 +394,9 @@ def search_scan_area_map(
                     cv2.imwrite(overview_marked_path, overview_marked)
 
                 # reformat the Flake dict to make it easier to save to the DB
-                flake_meta_data, flake_mask = reformat_flake_dict(prop_dict, flake)
+                flake_meta_data, flake_mask = reformat_flake_dict(
+                    prop_dict, flake, flake_dir
+                )
 
                 # Now save the Flake Metadata in the Directory
                 meta_path = os.path.join(flake_dir, "meta.json")
@@ -422,7 +424,10 @@ def get_chip_directorys(scan_directory):
     chip_directory_names = [
         chip_directory_name
         for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
-        if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+        if (
+            os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+            and chip_directory_name[:4] == "Chip"
+        )
     ]
 
     # iterate over all chip directory names
@@ -434,7 +439,7 @@ def get_chip_directorys(scan_directory):
         yield chip_directory
 
 
-def get_flake_directorys(scan_directory: str, callback_function=None):
+def get_flake_directorys(scan_directory: str):
     """Yields all the Flake directorys in the Current scan Directory
 
     Args:
@@ -447,7 +452,10 @@ def get_flake_directorys(scan_directory: str, callback_function=None):
     chip_directory_names = [
         chip_directory_name
         for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
-        if os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+        if (
+            os.path.isdir(os.path.join(scan_directory, chip_directory_name))
+            and chip_directory_name[:4] == "Chip"
+        )
     ]
 
     # iterate over all chip directory names
@@ -455,9 +463,6 @@ def get_flake_directorys(scan_directory: str, callback_function=None):
 
         # get the full path to the chip dir
         chip_directory = os.path.join(scan_directory, chip_directory_name)
-
-        if callback_function is not None:
-            callback_function()
 
         # Extract all the Flake Directory names
         flake_directory_names = [
@@ -574,7 +579,7 @@ def read_meta_and_center_flakes(
             json.dump(meta_data, f, sort_keys=True, indent=4)
 
 
-def reformat_flake_dict(image_dict, flake_dict):
+def reformat_flake_dict(image_dict, flake_dict, flake_directory):
     """Creates a Dict used to classify the Flakes from the Image dict, as well as from the Flake_dict, corrects the flake position for the 20x scope
 
     Args:
@@ -630,6 +635,9 @@ def reformat_flake_dict(image_dict, flake_dict):
     flake_height = flake_dict["height_rotated"] * MICROMETER_PER_PIXEL
     flake_width = flake_dict["width_rotated"] * MICROMETER_PER_PIXEL
     flake_contrast = flake_dict["mean_contrast"]
+    # Extract the Flake Path
+    path = os.path.normpath(flake_directory)
+    flake_path = "/".join(path.split(os.sep)[-3:])
 
     image_chip_id = image_dict["chip_id"]
 
@@ -647,6 +655,7 @@ def reformat_flake_dict(image_dict, flake_dict):
         "mean_contrast_r": flake_contrast[2],
         "mean_contrast_g": flake_contrast[1],
         "mean_contrast_b": flake_contrast[0],
+        "path": flake_path,
     }
 
     full_meta_dict = {"flake": new_flake_dict, "images": {}}
