@@ -26,6 +26,7 @@ class detector_class:
     def __init__(
         self,
         contrast_dict: dict,
+        background_values: dict,
         flat_field=None,
     ):
         """Create the Detection Class
@@ -39,6 +40,7 @@ class detector_class:
 
         # make sure not to accidentally fuck up your dict
         self.contrast_dict = copy.deepcopy(contrast_dict)
+        self.background_values = copy.deepcopy(background_values)
         self.searched_layers = self.contrast_dict.keys()
 
     def set_searched_layers(
@@ -57,12 +59,6 @@ class detector_class:
     def mask_background(
         self,
         img,
-        r_min: int = 120,
-        r_max: int = 160,
-        g_min: int = 120,
-        g_max: int = 150,
-        b_min: int = 150,
-        b_max: int = 200,
     ):
         """
         Maskes the Background\n
@@ -74,9 +70,21 @@ class detector_class:
         img_g = img_blurred[:, :, 1]
         img_b = img_blurred[:, :, 0]
 
-        img_r = cv2.inRange(img_r, r_min, r_max)
-        img_g = cv2.inRange(img_g, g_min, g_max)
-        img_b = cv2.inRange(img_b, b_min, b_max)
+        img_r = cv2.inRange(
+            img_r,
+            self.background_values["r"]["min"],
+            self.background_values["r"]["max"],
+        )
+        img_g = cv2.inRange(
+            img_g,
+            self.background_values["g"]["min"],
+            self.background_values["g"]["max"],
+        )
+        img_b = cv2.inRange(
+            img_b,
+            self.background_values["b"]["min"],
+            self.background_values["b"]["max"],
+        )
 
         # We have an invertet mask => Bitwise_and and not or
         mask = cv2.bitwise_and(img_r, img_b)
@@ -159,18 +167,22 @@ class detector_class:
             [flake1,flake2,flake3,flake4, ...]  Each flake Object is a Dict
             The dict contains the following Keys:
             - 'mask' (NxMx1 Array): A Mask which contains the Flake
-            - 'num_pixels' (int): Number of Pixels belongig to the Flake
             - 'layer' (String): The Layer Type
+            - 'num_pixels' (int): Number of Pixels belongig to the Flake
             - 'mean_contrast' (Nx3 Array): The mean BGR Contrasts relative to the background
             - 'stddev_contrast' (Nx3 Array): The Stddevs BGR Contrasts relative to the background
             - 'mean_background' (Nx3 Array): The mean BGR background values
-            - 'position' (2x1 tuple): The Position of the Flake in mm relative to the upper left hand corner
-            - 'width_bbox' (int): The Width of the Bounding Box
-            - 'height_bbox' (int): The Height of the Bounding Box
-            - 'proximity_stddev' (float): the standartdeviation of the close proximity of the Flake
+            - 'position_bbox' (2x1 tuple): The Position of the Cardinal Bounding Box in pixels relative to the upper left hand corner
+            - 'width_bbox' (int): The Width of the Cardinal Bounding Box
+            - 'height_bbox' (int): The Height of the Cardinal Bounding Box
+            - 'center_rotated' (2x1 tuple): The Center of the rotated Bounding Box
+            - 'width_rotated' (float): The Width of the rotated Bounding Box
+            - 'height_rotated' (float): The Height of the rotated Bounding Box
+            - 'rotation' (float): The Rotation of the rotated Bounding Box
+            - 'aspect_ratio' (float): The Aspect ratio of the Flake
             - 'entropy' (float): The entropy Value of the Flake
-            - 'position_x_micro' (float): The x Middlepoint of the flake on the image
-            - 'position_y_micro' (float): The y Middlepoint of the flake on the image
+            - 'position_micro' (2x1 tuple): The Middlepoint of the flake on the image in mm from the top left
+            - 'proximity_stddev' (float): the Standarddeviation of the close proximity of the Flake
             - 'size_micro' (float): The Size of the Flake in μm²
         """
         # Define some Default Vars
@@ -294,7 +306,21 @@ class detector_class:
                 stddev_contrast = stddev_contrast[:, 0].tolist()
 
                 #### Calculate a Bounding Box
-                x, y, w, h = cv2.boundingRect(masked_flake)
+
+                contour, _ = cv2.findContours(
+                    image=masked_flake,
+                    mode=cv2.RETR_TREE,
+                    method=cv2.CHAIN_APPROX_NONE,
+                )
+
+                x, y, w, h = cv2.boundingRect(contour[0])
+
+                # add this later
+                ((center_x, center_y), (width_r, height_r), rotation) = cv2.minAreaRect(
+                    contour[0]
+                )
+
+                aspect_ratio = round(max(width_r / height_r, height_r / width_r), 2)
 
                 #### Calculate the Entropy
 
@@ -304,28 +330,37 @@ class detector_class:
                 y_min = max(y - 20, 0)
                 y_max = min(y + h + 20, image.shape[0])
                 # Cut out the Bounding boxes
-                entropy_area = image[
+                cut_out_flake = image[
                     y_min:y_max,
                     x_min:x_max,
                 ]
-                entropy_area_mask = masked_flake[
+                cut_out_flake_mask = masked_flake[
                     y_min:y_max,
                     x_min:x_max,
                 ]
 
                 # Erode the mask to not accidentally have the Edges in the mean
-                entropy_area_mask = cv2.erode(entropy_area_mask, disk(2), iterations=2)
+                cut_out_flake_mask = cv2.erode(
+                    cut_out_flake_mask, disk(2), iterations=2
+                )
 
                 # go to Gray as we only need the gray Entropy
-                entropy_area_gray = cv2.cvtColor(entropy_area, cv2.COLOR_BGR2GRAY)
+                entropy_area_gray = cv2.cvtColor(cut_out_flake, cv2.COLOR_BGR2GRAY)
 
                 # Do the entropy function, really quit as we only use a small part
-                entropied_image_area = entropy(entropy_area_gray, disk(2))
+                entropied_image_area = entropy(
+                    entropy_area_gray,
+                    selem=disk(2),
+                    mask=cut_out_flake_mask,
+                )
 
-                # Get the Mean entropy of the flake, maybe use a different Metric -> Not so good for big flakes
+                # Get the max entropy of the flake, maybe use a different Metric -> Not so good for big flakes
+                # flake_entropy = np.max(
+                #     entropied_image_area,
+                # )
                 flake_entropy = cv2.mean(
                     entropied_image_area,
-                    mask=entropy_area_mask,
+                    mask=cut_out_flake_mask,
                 )[0]
 
                 # Filter High entropy Flakes, aka dirt
@@ -356,11 +391,15 @@ class detector_class:
                     "mean_contrast": mean_contrast,
                     "stddev_contrast": stddev_contrast,
                     "mean_background": mean_background_values,
-                    "position": (x, y),
+                    "position_bbox": (x, y),
                     "width_bbox": w,
                     "height_bbox": h,
-                    "position_x_micro": (x + w / 2) * MICROMETER_PER_PIXEL,
-                    "position_y_micro": (y + h / 2) * MICROMETER_PER_PIXEL,
+                    "center_rotated": (center_x, center_y),
+                    "width_rotated": width_r,
+                    "height_rotated": height_r,
+                    "rotation": rotation,
+                    "aspect_ratio": aspect_ratio,
+                    "position_micro": (center_x, center_y) * MICROMETER_PER_PIXEL,
                     "proximity_stddev": proximity_stddev[0][0],
                     "entropy": flake_entropy,
                 }
