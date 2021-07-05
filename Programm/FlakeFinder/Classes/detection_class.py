@@ -192,7 +192,7 @@ class detector_class:
 
         BLUR_STRENGTH = 3
         GAUSS_KSIZE = (5, 5)
-        ENTROPY_THRESHOLD = 2.4
+        ENTROPY_THRESHOLD = 1.7
         MICROMETER_PER_PIXEL = 0.3833
 
         # Removing the Vignette from the Image

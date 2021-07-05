@@ -161,6 +161,8 @@ def create_scan_area_map_from_mask(
         labeled_scan_area (NxMx1 Array) : The scan area map
     """
 
+    gridded_overview = cv2.cvtColor(overview_mask.copy(), cv2.COLOR_GRAY2BGR)
+
     X_MOTOR_RANGE = 100
     Y_MOTOR_RANGE = 100
 
@@ -196,6 +198,14 @@ def create_scan_area_map_from_mask(
             y_end = (j + 1) * y_pixels
             crop_arr = mask[y_start:y_end, x_start:x_end]
 
+            cv2.rectangle(
+                gridded_overview,
+                (x_start, y_start),
+                (x_end, y_end),
+                [0, 255, 0],
+                thickness=2,
+            )
+
             non_zero_pixels = cv2.countNonZero(crop_arr)
 
             # find the percentage of non background pixels
@@ -212,7 +222,7 @@ def create_scan_area_map_from_mask(
     # find each chip in the image
     labeled_scan_area = measure.label(scan_area.copy())
 
-    return labeled_scan_area
+    return labeled_scan_area, gridded_overview
 
 
 if __name__ == "__main__":

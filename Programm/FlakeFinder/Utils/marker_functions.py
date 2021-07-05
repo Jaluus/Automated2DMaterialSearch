@@ -34,13 +34,16 @@ def mark_on_overview(
         picture_coords,
         picture_coords + frame_size,
         [0, 255, 0],
-        thickness=5,
+        thickness=1,
     )
     if flake_number is not None:
         cv2.putText(
             overview_copy,
             str(flake_number),
-            picture_coords + frame_size / 2,
+            (
+                int(picture_coords[0] + frame_size[0] / 2),
+                int(picture_coords[1] + frame_size[1] / 2),
+            ),
             cv2.FONT_HERSHEY_DUPLEX,
             0.7,
             [0, 0, 255],

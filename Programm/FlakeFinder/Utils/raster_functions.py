@@ -138,6 +138,8 @@ def image_generator(
     x_step: float = 0.7380,
     y_step: float = 0.4613,
     wait_time: float = 0.1,
+    x_offset: float = -2.6121,
+    y_offset: float = -1.1672,
 ):
     """
     Image Generator\\
@@ -202,8 +204,11 @@ def image_generator(
             # Calculate the new Position on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = round(x_step * x_idx, 4)
-            y_pos = round(y_step * y_idx, 4)
+            x_pos = x_step * x_idx + x_offset
+            y_pos = y_step * y_idx + y_offset
+
+            if x_pos < 0 or y_pos < 0:
+                continue
 
             # move to the new Position
             motor_driver.abs_move(x_pos, y_pos)
@@ -274,13 +279,13 @@ def raster_scan_area_map(
     )
 
     image_gen = image_generator(
-        area_map,
-        motor_driver,
-        microscope_driver,
-        camera_driver,
-        x_step,
-        y_step,
-        wait_time,
+        area_map=area_map,
+        motor_driver=motor_driver,
+        microscope_driver=microscope_driver,
+        camera_driver=camera_driver,
+        x_step=x_step,
+        y_step=y_step,
+        wait_time=wait_time,
     )
 
     idx = 0
@@ -340,13 +345,13 @@ def search_scan_area_map(
 
     # Initiating the Generator, we fetch images from it
     image_gen = image_generator(
-        area_map,
-        motor_driver,
-        microscope_driver,
-        camera_driver,
-        x_step,
-        y_step,
-        wait_time,
+        area_map=area_map,
+        motor_driver=motor_driver,
+        microscope_driver=microscope_driver,
+        camera_driver=camera_driver,
+        x_step=x_step,
+        y_step=y_step,
+        wait_time=wait_time,
     )
 
     # Autoincrementing Flake ID

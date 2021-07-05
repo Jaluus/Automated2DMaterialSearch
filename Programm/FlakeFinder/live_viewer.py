@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import cv2
 import time
 
+sys.path.insert(
+    0, r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\Programm"
+)
+
 from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
 from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,

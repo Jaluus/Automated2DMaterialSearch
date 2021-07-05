@@ -1,13 +1,19 @@
 import json
 import os
 import time
-
+import sys
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 from skimage.morphology import disk
 from PIL import ImageFont, ImageDraw, Image
+
+sys.path.insert(
+    0, r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\Programm"
+)
+
 
 from FlakeFinder.Classes.detection_class import detector_class
 from FlakeFinder.Utils.etc_functions import *
@@ -16,8 +22,7 @@ from FlakeFinder.Utils.marker_functions import *
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-EXFOLIATED_MATERIAL = "Graphene"
-SCAN_NAME = "FullScanAlex"
+SCAN_NAME = "Dataset_Eike_050721"
 
 # Directory Paths
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
@@ -118,9 +123,9 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
         meta_data = json.load(open(meta_path, "r"))
 
         # mark the flake on overview map
-        overview_image = mark_on_overview(
-            overview_image, current_image_number, meta_data["motor_pos"]
-        )
+        # overview_image = mark_on_overview(
+        #     overview_image, current_image_number, meta_data["motor_pos"]
+        # )
 
         # Operate on each Flake
         for flake in detected_flakes:
