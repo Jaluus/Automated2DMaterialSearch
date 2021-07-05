@@ -3,6 +3,11 @@ import cv2
 import time
 import json
 import shutil
+import sys
+
+sys.path.insert(
+    0, r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\Programm"
+)
 
 # Custom imports
 from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
@@ -22,7 +27,7 @@ start = time.time()
 SERVER_URL = "localhost:5000/upload"
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
 EXFOLIATED_MATERIAL = "Graphene"
-SCAN_NAME = "Eikes_Flocken_All"
+SCAN_NAME = "Eikes_Flocken_Full_Final"
 CHIP_THICKNESS = "90nm"
 SCAN_USER = "Eike"
 
@@ -93,40 +98,44 @@ myDetector = detector_class(
     flat_field=flat_field,
 )
 
-print("Starting to raster in 2.5x...")
-image_2_directory, meta_2_directory = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
-)
+# print("Starting to raster in 2.5x...")
+# image_2_directory, meta_2_directory = raster.raster_plate(
+#     scan_directory,
+#     motor_driver,
+#     microscope_driver,
+#     camera_driver,
+# )
 
-print("Compressing 2.5x Images...")
-compressed_images_2_directory = stitcher.compress_images(image_2_directory)
+# print("Compressing 2.5x Images...")
+# compressed_images_2_directory = stitcher.compress_images(image_2_directory)
 
-print("Stitching Images...")
-overview_image = stitcher.stitch_image(compressed_images_2_directory)
-cv2.imwrite(overview_path, overview_image)
+# print("Stitching Images...")
+# overview_image = stitcher.stitch_image(compressed_images_2_directory)
+# cv2.imwrite(overview_path, overview_image)
 
-print("Compressing Overview Image...")
-overview_image_compressed = cv2.resize(overview_image, (2000, 2000))
-cv2.imwrite(
-    overview_compressed_path,
-    overview_image_compressed,
-    [int(cv2.IMWRITE_JPEG_QUALITY), 80],
-)
+# print("Compressing Overview Image...")
+# overview_image_compressed = cv2.resize(overview_image, (2000, 2000))
+# cv2.imwrite(
+#     overview_compressed_path,
+#     overview_image_compressed,
+#     [int(cv2.IMWRITE_JPEG_QUALITY), 80],
+# )
 
-print("Creating mask...")
-masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
-cv2.imwrite(mask_path, masked_overview)
+# print("Creating mask...")
+# masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
+# cv2.imwrite(mask_path, masked_overview)
 
-print("Creating scan area mask...")
-labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
-cv2.imwrite(scan_area_path, labeled_scan_area)
+# print("Creating scan area mask...")
+# labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
+# cv2.imwrite(scan_area_path, labeled_scan_area)
 
-print("Removing unneeded 2.5x directory...")
-dir_path = os.path.dirname(image_2_directory)
-shutil.rmtree(dir_path)
+# print("Removing unneeded 2.5x directory...")
+# dir_path = os.path.dirname(image_2_directory)
+# shutil.rmtree(dir_path)
+
+# print(
+#     f"Time to create overview Image: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+# )
 
 print("Please Calibrate the 20x Scope")
 print("Use E and R to Swap the Scopes")
@@ -137,6 +146,11 @@ calibrate_scope(
     microscope_driver,
     camera_driver,
 )
+
+local = time.time()
+
+labeled_scan_area = cv2.imread(scan_area_path, 0)
+overview_image_compressed = cv2.imread(overview_compressed_path, 0)
 
 print("Finding Flakes in 20x...")
 raster.search_scan_area_map(
@@ -150,7 +164,7 @@ raster.search_scan_area_map(
 )
 
 print(
-    f"Time to search: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+    f"Time to search in 20x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
 )
 local = time.time()
 
@@ -168,8 +182,8 @@ print(
     f"Elapsed Time during revisiting: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
 )
 
-print("Uploading the Scan Directory...")
-uploader.upload_directory(scan_directory, SERVER_URL)
+# print("Uploading the Scan Directory...")
+# uploader.upload_directory(scan_directory, SERVER_URL)
 
 print(
     f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"

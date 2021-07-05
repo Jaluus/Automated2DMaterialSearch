@@ -381,6 +381,9 @@ def search_scan_area_map(
 
                 # create the flake directory
                 flake_dir = os.path.join(chip_dir, f"Flake_{flake_id[chip_id]}")
+
+                print(flake_dir)
+
                 os.makedirs(flake_dir)
 
                 # mark the Flake on the overview and save it

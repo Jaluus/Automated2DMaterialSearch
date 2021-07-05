@@ -399,7 +399,10 @@ class detector_class:
                     "height_rotated": height_r,
                     "rotation": rotation,
                     "aspect_ratio": aspect_ratio,
-                    "position_micro": (center_x, center_y) * MICROMETER_PER_PIXEL,
+                    "position_micro": (
+                        center_x * MICROMETER_PER_PIXEL,
+                        center_y * MICROMETER_PER_PIXEL,
+                    ),
                     "proximity_stddev": proximity_stddev[0][0],
                     "entropy": flake_entropy,
                 }

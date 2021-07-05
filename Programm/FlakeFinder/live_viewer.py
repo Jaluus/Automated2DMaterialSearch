@@ -76,3 +76,5 @@ while True:
 
     elif key == ord("r"):
         microscope.rotate_nosepiece_backward()
+
+cv2.destroyAllWindows()
