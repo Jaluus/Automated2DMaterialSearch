@@ -138,8 +138,6 @@ def image_generator(
     x_step: float = 0.7380,
     y_step: float = 0.4613,
     wait_time: float = 0.1,
-    x_offset: float = -2.6121,
-    y_offset: float = -1.1672,
 ):
     """
     Image Generator\\
@@ -204,8 +202,8 @@ def image_generator(
             # Calculate the new Position on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = x_step * x_idx + x_offset
-            y_pos = y_step * y_idx + y_offset
+            x_pos = x_step * x_idx
+            y_pos = y_step * y_idx
 
             if x_pos < 0 or y_pos < 0:
                 continue

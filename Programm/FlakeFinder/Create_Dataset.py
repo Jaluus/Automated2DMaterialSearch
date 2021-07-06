@@ -85,7 +85,7 @@ microscope_driver = microscope_driver_class()
 masked_overview = cv2.imread(mask_path, 0)
 
 print("Creating scan area mask...")
-labeled_scan_area, _ = stitcher.create_scan_area_map_from_mask(masked_overview)
+labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
 print("Please Calibrate the 20x Scope")

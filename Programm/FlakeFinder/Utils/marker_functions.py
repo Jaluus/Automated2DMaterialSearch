@@ -10,40 +10,25 @@ def mark_on_overview(
     flake_number: int = None,
     x_motor_range: float = 105,
     y_motor_range: float = 103.333,
-    x_step: float = 0.7380,
-    y_step: float = 0.4613,
+    x_offset: float = 2.6121,
+    y_offset: float = 1.1672,
 ):
     overview_copy = overview_image.copy()
 
     picture_coords = np.array(
         [
-            int(motor_pos[0] * overview_copy.shape[0] / x_motor_range),
-            int(motor_pos[1] * overview_copy.shape[1] / y_motor_range),
+            int((motor_pos[0] + x_offset) * overview_copy.shape[0] / x_motor_range),
+            int((motor_pos[1] + y_offset) * overview_copy.shape[1] / y_motor_range),
         ]
     )
 
-    frame_size = np.array(
-        [
-            int(x_step * overview_copy.shape[0] / x_motor_range),
-            int(y_step * overview_copy.shape[1] / y_motor_range),
-        ]
-    )
+    cv2.circle(overview_copy, picture_coords, 20, [0, 255, 0], thickness=3)
 
-    cv2.rectangle(
-        overview_copy,
-        picture_coords,
-        picture_coords + frame_size,
-        [0, 255, 0],
-        thickness=1,
-    )
     if flake_number is not None:
         cv2.putText(
             overview_copy,
             str(flake_number),
-            (
-                int(picture_coords[0] + frame_size[0] / 2),
-                int(picture_coords[1] + frame_size[1] / 2),
-            ),
+            picture_coords,
             cv2.FONT_HERSHEY_DUPLEX,
             0.7,
             [0, 0, 255],

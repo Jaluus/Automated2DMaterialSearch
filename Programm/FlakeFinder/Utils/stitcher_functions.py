@@ -140,10 +140,12 @@ def create_scan_area_map_from_mask(
     overview_mask,
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
-    percentage_threshold: float = 0.9,
+    percentage_threshold: float = 0.95,
     overview_image_x_dimension: float = 105,
     overview_image_y_dimension: float = 103.333,
     erode_iterations: int = 0,
+    x_offset: float = 2.6121,
+    y_offset: float = 1.1672,
 ):
     """
     Creates a Labeled Scan Area Map and returns it
@@ -160,8 +162,6 @@ def create_scan_area_map_from_mask(
     Returns:
         labeled_scan_area (NxMx1 Array) : The scan area map
     """
-
-    gridded_overview = cv2.cvtColor(overview_mask.copy(), cv2.COLOR_GRAY2BGR)
 
     X_MOTOR_RANGE = 100
     Y_MOTOR_RANGE = 100
@@ -192,19 +192,11 @@ def create_scan_area_map_from_mask(
     for i in range(scan_area.shape[1]):
         for j in range(scan_area.shape[0]):
             # Crop to the part of the Image which would be seen by the 20x scope
-            x_start = i * x_pixels
-            y_start = j * y_pixels
-            x_end = (i + 1) * x_pixels
-            y_end = (j + 1) * y_pixels
+            x_start = i * x_pixels + int(x_offset * pixel_resolution_x)
+            y_start = j * y_pixels + int(y_offset * pixel_resolution_y)
+            x_end = (i + 1) * x_pixels + int(x_offset * pixel_resolution_x)
+            y_end = (j + 1) * y_pixels + int(y_offset * pixel_resolution_y)
             crop_arr = mask[y_start:y_end, x_start:x_end]
-
-            cv2.rectangle(
-                gridded_overview,
-                (x_start, y_start),
-                (x_end, y_end),
-                [0, 255, 0],
-                thickness=2,
-            )
 
             non_zero_pixels = cv2.countNonZero(crop_arr)
 
@@ -222,7 +214,7 @@ def create_scan_area_map_from_mask(
     # find each chip in the image
     labeled_scan_area = measure.label(scan_area.copy())
 
-    return labeled_scan_area, gridded_overview
+    return labeled_scan_area
 
 
 if __name__ == "__main__":

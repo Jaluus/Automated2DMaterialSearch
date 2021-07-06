@@ -127,7 +127,7 @@ masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
 cv2.imwrite(mask_path, masked_overview)
 
 print("Creating scan area mask...")
-labeled_scan_area, _ = stitcher.create_scan_area_map_from_mask(
+labeled_scan_area = stitcher.create_scan_area_map_from_mask(
     masked_overview,
     erode_iterations=1,
 )
