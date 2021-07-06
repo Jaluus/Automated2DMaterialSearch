@@ -56,44 +56,49 @@ class detector_class:
         # Check for layers
         self.searched_layers = which_layers
 
-    def mask_background(
-        self,
-        img,
-    ):
+    def mask_background(self, img, radius=7, blue_bg=80):
         """
         Maskes the Background\n
         The Values are standard values of 90nm SiO Chips with removed Vignette\n
         returns the masked background, as well as the mask\n
         """
-        img_blurred = cv2.GaussianBlur(img, (5, 5), 10)
-        img_r = img_blurred[:, :, 2]
-        img_g = img_blurred[:, :, 1]
-        img_b = img_blurred[:, :, 0]
+        img_r = img[:, :, 2]
+        img_g = img[:, :, 1]
+        img_b = img[:, :, 0]
 
-        img_r = cv2.inRange(
-            img_r,
-            self.background_values["r"]["min"],
-            self.background_values["r"]["max"],
-        )
-        img_g = cv2.inRange(
-            img_g,
-            self.background_values["g"]["min"],
-            self.background_values["g"]["max"],
-        )
-        img_b = cv2.inRange(
-            img_b,
-            self.background_values["b"]["min"],
-            self.background_values["b"]["max"],
+        # A threshold which removes the Unwanted background of the non chip
+        ret, threshed_b_background = cv2.threshold(
+            img_b, blue_bg, 255, cv2.THRESH_BINARY
         )
 
-        # We have an invertet mask => Bitwise_and and not or
-        mask = cv2.bitwise_and(img_r, img_b)
-        mask = cv2.bitwise_and(mask, img_g)
+        hist_r = cv2.calcHist([img_r], [0], threshed_b_background, [256], [0, 256])
+        hist_g = cv2.calcHist([img_g], [0], threshed_b_background, [256], [0, 256])
+        hist_b = cv2.calcHist([img_b], [0], threshed_b_background, [256], [0, 256])
 
-        # Remove the excess edges from the masked Flakes by infalting the Mask
-        mask = cv2.erode(mask, disk(2), iterations=4)
+        hist_max_r = np.argmax(hist_r)
+        hist_max_g = np.argmax(hist_g)
+        hist_max_b = np.argmax(hist_b)
+
+        threshed_r = cv2.inRange(
+            img_r, int(hist_max_r - radius), int(hist_max_r + radius)
+        )
+        threshed_r = cv2.erode(threshed_r, np.ones((3, 3)))
+
+        threshed_g = cv2.inRange(
+            img_g, int(hist_max_g - radius), int(hist_max_g + radius)
+        )
+        threshed_g = cv2.erode(threshed_g, np.ones((3, 3)))
+
+        threshed_b = cv2.inRange(
+            img_b, int(hist_max_b - radius), int(hist_max_b + radius)
+        )
+        threshed_b = cv2.erode(threshed_b, np.ones((3, 3)))
+
+        mask = cv2.bitwise_and(threshed_r, threshed_g)
+        mask = cv2.bitwise_and(mask, threshed_b)
 
         masked_image = cv2.bitwise_and(img, img, mask=mask)
+
         return masked_image, mask
 
     @staticmethod
@@ -151,6 +156,7 @@ class detector_class:
         self,
         image,
         size_thresh=200,
+        entropy_thresh=2.5,
     ):
         """
         Detects Flakes in the given Image, Expects images without vignette
@@ -189,11 +195,8 @@ class detector_class:
         masks = {}
         num_pixels = {}
         detected_flakes = []
-
-        BLUR_STRENGTH = 3
-        GAUSS_KSIZE = (5, 5)
-        ENTROPY_THRESHOLD = 1.7
         MICROMETER_PER_PIXEL = 0.3833
+        BACKGROUND_THRESH = 0.2
 
         # Removing the Vignette from the Image
         if self.flat_field is not None:
@@ -202,15 +205,18 @@ class detector_class:
                 self.flat_field,
             )
 
-        # blur the image a bit
-        image_blurred = image  # cv2.GaussianBlur(image, GAUSS_KSIZE, BLUR_STRENGHT)
-
         # Conversion to the right format, internaly im working with Pixel thresholds
         # The Conversion in the 20x scope is 1 px = 0.15 μm²
         pixel_threshold = size_thresh // (MICROMETER_PER_PIXEL ** 2)
 
         # get the Background of the image ~15 ms
-        image_background, background_mask = self.mask_background(image_blurred)
+        image_background, background_mask = self.mask_background(image)
+
+        # Counting the number of background pixels
+        # if its to low, we most likely have to much dirt or non chip on the image
+        background_pixels = cv2.countNonZero(background_mask)
+        if background_pixels / (image.shape[0] * image.shape[1]) < BACKGROUND_THRESH:
+            return np.array(detected_flakes)
 
         # find the mean b g r values of the background ~2 ms
         mean_background_values = cv2.mean(
@@ -219,7 +225,7 @@ class detector_class:
         )[:-1]
 
         # calculate the contrast ~50ms with numba
-        contrasts = self.calc_contrast(image_blurred, mean_background_values)
+        contrasts = self.calc_contrast(image, mean_background_values)
 
         # go through all layers
         for layer_name in self.searched_layers:
@@ -364,7 +370,7 @@ class detector_class:
                 )[0]
 
                 # Filter High entropy Flakes, aka dirt
-                if flake_entropy > ENTROPY_THRESHOLD:
+                if flake_entropy > entropy_thresh:
                     continue
 
                 #### Find the Close Proximity of the Flake
@@ -379,7 +385,7 @@ class detector_class:
                 proximity_mask = cv2.bitwise_xor(dilated_masked_flake, proximity_mask)
 
                 _, proximity_stddev = cv2.meanStdDev(
-                    cv2.cvtColor(image_blurred, cv2.COLOR_BGR2GRAY),
+                    cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
                     mask=proximity_mask,
                 )
                 #################
@@ -387,24 +393,26 @@ class detector_class:
                     "mask": masked_flake,
                     "layer": layer_name,
                     "num_pixels": flake_pixel_number,
-                    "size_micro": flake_pixel_number * (MICROMETER_PER_PIXEL ** 2),
-                    "mean_contrast": mean_contrast,
-                    "stddev_contrast": stddev_contrast,
-                    "mean_background": mean_background_values,
-                    "position_bbox": (x, y),
-                    "width_bbox": w,
-                    "height_bbox": h,
-                    "center_rotated": (center_x, center_y),
-                    "width_rotated": width_r,
-                    "height_rotated": height_r,
-                    "rotation": rotation,
-                    "aspect_ratio": aspect_ratio,
-                    "position_micro": (
-                        center_x * MICROMETER_PER_PIXEL,
-                        center_y * MICROMETER_PER_PIXEL,
+                    "size_micro": round(
+                        flake_pixel_number * (MICROMETER_PER_PIXEL ** 2), 1
                     ),
-                    "proximity_stddev": proximity_stddev[0][0],
-                    "entropy": flake_entropy,
+                    "mean_contrast": [round(c, 3) for c in mean_contrast],
+                    "stddev_contrast": [round(c, 3) for c in stddev_contrast],
+                    "mean_background": [round(c, 3) for c in mean_background_values],
+                    "position_bbox": (x, y),
+                    "width_bbox": int(w),
+                    "height_bbox": int(h),
+                    "center_rotated": (int(center_x), int(center_y)),
+                    "width_rotated": int(width_r),
+                    "height_rotated": int(height_r),
+                    "rotation": round(rotation, 3),
+                    "aspect_ratio": round(aspect_ratio, 2),
+                    "position_micro": (
+                        round(center_x * MICROMETER_PER_PIXEL, 0),
+                        round(center_y * MICROMETER_PER_PIXEL, 0),
+                    ),
+                    "proximity_stddev": round(proximity_stddev[0][0], 2),
+                    "entropy": round(flake_entropy, 2),
                 }
 
                 detected_flakes.append(flake_dict)

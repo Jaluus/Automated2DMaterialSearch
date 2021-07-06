@@ -6,14 +6,10 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 from skimage.morphology import disk
 from PIL import ImageFont, ImageDraw, Image
 
-sys.path.insert(
-    0, r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\Programm"
-)
-
+sys.path.insert(0, r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm")
 
 from FlakeFinder.Classes.detection_class import detector_class
 from FlakeFinder.Utils.etc_functions import *
@@ -21,7 +17,7 @@ from FlakeFinder.Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+IMAGE_DIRECTORY = r"C:\Users\duden\Desktop\Mikroskop Bilder"
 SCAN_NAME = "Dataset_Eike_050721"
 
 # Directory Paths
@@ -29,6 +25,7 @@ scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # Defining directorys
 save_dir = os.path.join(scan_directory, "20x", "Masked_Images")
+save_dir_meta = os.path.join(scan_directory, "20x", "Masked_Images_Meta")
 image_dir = os.path.join(scan_directory, "20x", "Pictures")
 meta_dir = os.path.join(scan_directory, "20x", "Meta")
 overview_path = os.path.join(scan_directory, "overview.png")
@@ -38,6 +35,8 @@ scan_meta_data_path = os.path.join(scan_directory, "meta.json")
 # Creating non Existant Paths
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
+if not os.path.exists(save_dir_meta):
+    os.makedirs(save_dir_meta)
 
 # Defining parameter Paths
 flat_field_path = os.path.join(
@@ -111,7 +110,9 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
     image = cv2.imread(image_path)
 
     # ~120ms
-    detected_flakes = myDetector.detect_flakes(image)
+    detected_flakes = myDetector.detect_flakes(
+        image, entropy_thresh=1.7, size_thresh=400
+    )
 
     # Operation on the flakes
     if len(detected_flakes) != 0:
@@ -173,8 +174,15 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 draw_image,
             )
 
+            del flake["mask"]
+
+            with open(
+                os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
+            ) as f:
+                json.dump(flake, f, indent=4, sort_keys=True)
+
 cv2.imwrite(marked_overview_path, overview_image)
 
 print(
-    f"Total elapsed time: {(time.time() - start_time) // 60}:{int(time.time() - start_time) % 60}"
+    f"Total Elapsed Time: {(time.time() - start_time) // 3600:02.0f}:{((time.time() - start_time) // 60 )% 60:02.0f}:{int(time.time() - start_time) % 60:02.0f}"
 )
