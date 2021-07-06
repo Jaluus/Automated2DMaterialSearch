@@ -521,8 +521,8 @@ def read_meta_and_center_flakes(
     }
 
     MAG_WAITTIME = {
-        1: 0.1,
-        2: 0.1,
+        1: 0.2,
+        2: 0.2,
         3: 0.2,
         4: 0.3,
         5: 0.3,
@@ -530,7 +530,15 @@ def read_meta_and_center_flakes(
 
     print(f"setting mag to {magnification}")
     microscope_driver.set_mag(magnification)
+
+    # Wait a short time to make sure the setting took over
+    time.sleep(1)
+
     camera_driver.set_default_properties(magnification)
+
+    # Wait a short time to make sure the setting took over
+    time.sleep(1)
+
     microscope_driver.set_default_values()
 
     # Wait a short time to make sure the setting took over
