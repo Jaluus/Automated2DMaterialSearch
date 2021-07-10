@@ -26,8 +26,9 @@ class detector_class:
     def __init__(
         self,
         contrast_dict: dict,
-        background_values: dict,
         flat_field=None,
+        size_threshold=200,
+        entropy_threshold=2.4,
     ):
         """Create the Detection Class
 
@@ -40,8 +41,10 @@ class detector_class:
 
         # make sure not to accidentally fuck up your dict
         self.contrast_dict = copy.deepcopy(contrast_dict)
-        self.background_values = copy.deepcopy(background_values)
         self.searched_layers = self.contrast_dict.keys()
+
+        self.size_thresh = size_threshold
+        self.entropy_thresh = entropy_threshold
 
     def set_searched_layers(
         self,
@@ -155,8 +158,6 @@ class detector_class:
     def detect_flakes(
         self,
         image,
-        size_thresh=200,
-        entropy_thresh=2.5,
     ):
         """
         Detects Flakes in the given Image, Expects images without vignette
@@ -207,7 +208,7 @@ class detector_class:
 
         # Conversion to the right format, internaly im working with Pixel thresholds
         # The Conversion in the 20x scope is 1 px = 0.15 μm²
-        pixel_threshold = size_thresh // (MICROMETER_PER_PIXEL ** 2)
+        pixel_threshold = self.size_thresh // (MICROMETER_PER_PIXEL ** 2)
 
         # get the Background of the image ~15 ms
         image_background, background_mask = self.mask_background(image)
@@ -370,7 +371,7 @@ class detector_class:
                 )[0]
 
                 # Filter High entropy Flakes, aka dirt
-                if flake_entropy > entropy_thresh:
+                if flake_entropy > self.entropy_thresh:
                     continue
 
                 #### Find the Close Proximity of the Flake

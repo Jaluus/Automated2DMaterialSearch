@@ -53,8 +53,8 @@ def mark_flake(flake, image, image_path):
         thickness=2,
     )
 
-    outline_flake = cv2.dilate(flake["mask"], disk(3), iterations=2)
-    outline_flake = cv2.morphologyEx(flake["mask"], cv2.MORPH_GRADIENT, disk(2))
+    outline_flake = cv2.dilate(flake["mask"], disk(3))
+    outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
 
     marked_image[outline_flake != 0] = [0, 0, 255]
 
@@ -69,3 +69,24 @@ def mark_flake(flake, image, image_path):
     plt.tight_layout()
     plt.savefig(image_path)
     plt.clf()
+
+
+def mark_flake_2(flake, image, image_path):
+    marked_image = image.copy()
+    (x, y) = flake["position_bbox"]
+    w = flake["width_bbox"]
+    h = flake["height_bbox"]
+    cv2.rectangle(
+        marked_image,
+        (x - 20, y - 20),
+        (x + w + 20, y + h + 20),
+        color=[0, 0, 255],
+        thickness=2,
+    )
+
+    outline_flake = cv2.dilate(flake["mask"], disk(3))
+    outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
+
+    marked_image[outline_flake != 0] = [0, 0, 255]
+
+    cv2.imwrite(image_path, marked_image)

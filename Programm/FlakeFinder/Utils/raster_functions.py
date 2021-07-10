@@ -7,7 +7,7 @@ import numpy as np
 from skimage.morphology import disk
 import matplotlib.pyplot as plt
 
-from FlakeFinder.Utils.etc_functions import sorted_alphanumeric
+from FlakeFinder.Utils.etc_functions import get_flake_directorys
 from FlakeFinder.Utils.marker_functions import *
 from FlakeFinder.Classes.detection_class import detector_class
 from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
@@ -69,10 +69,15 @@ def raster_plate(
     # Start at 00 and make sure to be in 2.5x Mag
     motor_driver.abs_move(0, 0)
 
-    # go into the 2.5x scope
+    # go into the 2.5x scope, wait for a secound for the setting to tkae effect
     microscope_driver.set_mag(1)
+    time.sleep(1)
+
     microscope_driver.set_default_values()
+    time.sleep(1)
+
     camera_driver.set_default_properties(1)
+    time.sleep(1)
 
     # Checks if it is actually at 00
     can_move_x = motor_driver.can_move(x_step, 0)
@@ -83,13 +88,13 @@ def raster_plate(
     mic_props = microscope_driver.get_properties()
 
     curr_idx = 0
-
+    start_time = time.time()
     while can_move_x:
         while can_move_y:
             curr_idx += 1
 
             print(
-                f"\r{curr_idx}/651 scanned\r",
+                f"\r{curr_idx}/651 scanned | Time to go : {(651 - curr_idx) * (time.time() - start_time) / curr_idx :.0f}s\r",
                 end="",
                 flush=True,
             )
@@ -414,75 +419,8 @@ def search_scan_area_map(
                 cv2.imwrite(mask_path, flake_mask)
 
                 # Save the Original eval Image
-                image_path = os.path.join(flake_dir, "eval_img.png")
-                mark_flake(flake, image, image_path)
-
-
-def get_chip_directorys(scan_directory):
-    """Yields all the chip directorys in the Current scan Directory
-
-    Args:
-        scan_directory (string): The path of the current scan
-
-    Yields:
-        string: A path to a chip Directory
-    """
-    chip_directory_names = [
-        chip_directory_name
-        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
-        if (
-            os.path.isdir(os.path.join(scan_directory, chip_directory_name))
-            and chip_directory_name[:4] == "Chip"
-        )
-    ]
-
-    # iterate over all chip directory names
-    for chip_directory_name in chip_directory_names:
-
-        # get the full path to the chip dir
-        chip_directory = os.path.join(scan_directory, chip_directory_name)
-
-        yield chip_directory
-
-
-def get_flake_directorys(scan_directory: str):
-    """Yields all the Flake directorys in the Current scan Directory
-
-    Args:
-        scan_directory (string): The apth of the current scan
-        callback_function (function) : a Callback function that is beeing calld each time a new Chip is created
-
-    Yields:
-        string: A path to a Flake Directory
-    """
-    chip_directory_names = [
-        chip_directory_name
-        for chip_directory_name in sorted_alphanumeric(os.listdir(scan_directory))
-        if (
-            os.path.isdir(os.path.join(scan_directory, chip_directory_name))
-            and chip_directory_name[:4] == "Chip"
-        )
-    ]
-
-    # iterate over all chip directory names
-    for chip_directory_name in chip_directory_names:
-
-        # get the full path to the chip dir
-        chip_directory = os.path.join(scan_directory, chip_directory_name)
-
-        # Extract all the Flake Directory names
-        flake_directory_names = [
-            flake_directory_name
-            for flake_directory_name in sorted_alphanumeric(os.listdir(chip_directory))
-            if os.path.isdir(os.path.join(chip_directory, flake_directory_name))
-        ]
-
-        # iterate over all flake directory names
-        for flake_directory_name in flake_directory_names:
-
-            # get the full path to the flake dir
-            flake_directory = os.path.join(chip_directory, flake_directory_name)
-            yield flake_directory
+                image_path = os.path.join(flake_dir, "eval_img.jpg")
+                mark_flake_2(flake, image, image_path)
 
 
 def read_meta_and_center_flakes(

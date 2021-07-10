@@ -45,9 +45,6 @@ flat_field_path = os.path.join(
 contrasts_path = os.path.join(
     os.path.dirname(__file__), "Parameters", "Contrasts", "graphene_90nm.json"
 )
-background_values_path = os.path.join(
-    os.path.dirname(__file__), "Parameters", "Background_Values", "90nm.json"
-)
 
 image_names = sorted_alphanumeric(os.listdir(image_dir))
 meta_names = sorted_alphanumeric(os.listdir(meta_dir))
@@ -59,8 +56,6 @@ overview_image = cv2.imread(overview_path)
 # Open the Json and get the Need infos
 with open(contrasts_path) as f:
     contrast_params = json.load(f)
-with open(background_values_path) as f:
-    background_values_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
@@ -88,7 +83,6 @@ start_time = time.time()
 # Detector Init
 myDetector = detector_class(
     contrast_dict=contrast_params,
-    background_values=background_values_params,
     flat_field=flat_field,
 )
 
@@ -151,7 +145,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
             # Dilate the flake outline and get the gradient to get a nice border
             outline_flake = cv2.dilate(flake["mask"], disk(3))
-            outline_flake = cv2.morphologyEx(flake["mask"], cv2.MORPH_GRADIENT, disk(2))
+            outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
 
             # Draw this border on the image
             draw_image[outline_flake != 0] = colors[flake["layer"]]

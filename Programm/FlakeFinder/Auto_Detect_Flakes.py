@@ -19,7 +19,7 @@ from FlakeFinder.Classes.detection_class import detector_class
 import FlakeFinder.Utils.raster_functions as raster
 import FlakeFinder.Utils.stitcher_functions as stitcher
 import FlakeFinder.Utils.upload_functions as uploader
-from FlakeFinder.Utils.etc_functions import calibrate_scope
+from FlakeFinder.Utils.etc_functions import *
 
 start = time.time()
 
@@ -30,6 +30,10 @@ EXFOLIATED_MATERIAL = "Graphene"
 SCAN_NAME = "Eikes_Flocken_Full_Final"
 CHIP_THICKNESS = "90nm"
 SCAN_USER = "Eike"
+
+# Hyperparamter
+ENTROPY_THRESHOLD = 2.4
+SIZE_THRESHOLD = 200
 
 # Created Metadict
 META_DICT = {
@@ -62,18 +66,10 @@ contrasts_path = os.path.join(
     "Contrasts",
     f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
 )
-background_values_path = os.path.join(
-    os.path.dirname(__file__),
-    "Parameters",
-    "Background_Values",
-    f"{CHIP_THICKNESS}.json",
-)
 
 # Open the Jsons and get the needed Data
 with open(contrasts_path) as f:
     contrast_params = json.load(f)
-with open(background_values_path) as f:
-    background_values_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
@@ -94,8 +90,9 @@ microscope_driver = microscope_driver_class()
 # Detector Initialization
 myDetector = detector_class(
     contrast_dict=contrast_params,
-    background_values=background_values_params,
     flat_field=flat_field,
+    size_threshold=SIZE_THRESHOLD,
+    entropy_threshold=ENTROPY_THRESHOLD,
 )
 
 print("Starting to raster in 2.5x...")
@@ -182,6 +179,12 @@ for mag in [3, 4, 5, 1, 2]:
 print(
     f"Elapsed Time during revisiting: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
 )
+
+print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
+microscope_driver.lamp_off()
+
+print("Creating Histograms...")
+Create_Metahistograms(scan_directory)
 
 # print("Uploading the Scan Directory...")
 # uploader.upload_directory(scan_directory, SERVER_URL)
