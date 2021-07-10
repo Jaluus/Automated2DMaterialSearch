@@ -1,19 +1,18 @@
 """
 A collection of various functions
 """
-import re
 import functools
 import json
 import os
+import re
 import time
-import numpy as np
-import matplotlib.pyplot as plt
+
 import cv2
-from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
-from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
-    microscope_driver_class,
-)
-from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
+import matplotlib.pyplot as plt
+import numpy as np
+from Drivers.Camera_Driver.camera_class import camera_driver_class
+from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
+from Drivers.Motor_Driver.tango_class import motor_driver_class
 
 
 def sorted_alphanumeric(data):

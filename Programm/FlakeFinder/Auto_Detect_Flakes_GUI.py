@@ -1,24 +1,20 @@
-import os
-import cv2
-import time
 import json
+import os
 import shutil
 import sys
+import time
 
+import cv2
 
-# Custom imports
-from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import (
-    microscope_driver_class,
-)
-from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Classes.detection_class import detector_class
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
-from Utils.etc_functions import *
-
+from Classes.detection_class import detector_class
+from Drivers.Camera_Driver.camera_class import camera_driver_class
+from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
+from Drivers.Motor_Driver.tango_class import motor_driver_class
 from GUI.parameter_picker import parameter_picker_class
+from Utils.etc_functions import *
 
 start = time.time()
 

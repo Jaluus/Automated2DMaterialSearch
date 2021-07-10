@@ -1,13 +1,14 @@
 """
 A collection of helper functions to stitch a collection of images together
 """
-import cv2
-import numpy as np
 import os
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 from skimage import measure
 
-from FlakeFinder.Utils.etc_functions import *
+from Utils.etc_functions import *
 
 
 def compress_images(

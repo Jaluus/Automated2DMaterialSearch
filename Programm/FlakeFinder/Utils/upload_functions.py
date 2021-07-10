@@ -1,11 +1,12 @@
-import os
-import cv2
-import requests
-from FlakeFinder.Utils.raster_functions import get_flake_directorys
 import json
 import os
-import time
 import shutil
+import time
+
+import cv2
+import requests
+
+from Utils.raster_functions import get_flake_directorys
 
 
 def upload_directory_legacy(scan_dir, url):

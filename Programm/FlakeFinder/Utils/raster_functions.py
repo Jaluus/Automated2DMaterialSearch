@@ -1,20 +1,19 @@
-import sys
-import os
-import cv2
-import time
 import json
-import numpy as np
-from skimage.morphology import disk
-import matplotlib.pyplot as plt
+import os
+import sys
+import time
 
-from FlakeFinder.Utils.etc_functions import get_flake_directorys
-from FlakeFinder.Utils.marker_functions import *
-from FlakeFinder.Classes.detection_class import detector_class
-from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
-from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
-    microscope_driver_class,
-)
-from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+from Classes.detection_class import detector_class
+from Drivers.Camera_Driver.camera_class import camera_driver_class
+from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
+from Drivers.Motor_Driver.tango_class import motor_driver_class
+from skimage.morphology import disk
+
+from Utils.etc_functions import get_flake_directorys
+from Utils.marker_functions import *
 
 
 def _create_folder_structure(
