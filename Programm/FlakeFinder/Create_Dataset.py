@@ -33,6 +33,7 @@ META_DICT = {
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # File Paths
+file_path = os.path.dirname(os.path.abspath(__file__))
 scan_meta_path = os.path.join(scan_directory, "meta.json")
 overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")

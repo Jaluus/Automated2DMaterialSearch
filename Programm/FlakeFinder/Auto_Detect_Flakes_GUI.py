@@ -16,33 +16,27 @@ from Drivers.Motor_Driver.tango_class import motor_driver_class
 from GUI.parameter_picker import parameter_picker_class
 from Utils.etc_functions import *
 
-start = time.time()
-
-# Constants
-SERVER_URL = "localhost:5000/upload"
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-EXFOLIATED_MATERIAL = "Graphene"
-SCAN_NAME = "Eikes_Flocken_Full_Final"
-CHIP_THICKNESS = "90nm"
-SCAN_USER = "Eike"
-
-# Hyperparamter
-ENTROPY_THRESHOLD = 2.4
-SIZE_THRESHOLD = 200
+# getting the Parameters
+try:
+    parameter_picker = parameter_picker_class()
+    parameter_dict = parameter_picker.take_input()
+except:
+    sys.exit(0)
 
 # Created Metadict
 META_DICT = {
-    "scan_user": SCAN_USER,
-    "scan_name": SCAN_NAME,
-    "chip_thickness": CHIP_THICKNESS,
-    "scan_exfoliated_material": EXFOLIATED_MATERIAL,
+    **parameter_dict,
     "scan_time": time.time(),
 }
 
+
 # Directory Paths
-scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
+scan_directory = os.path.join(META_DICT["image_directory"], META_DICT["scan_name"])
 
 # File Paths
+file_path = os.path.dirname(os.path.abspath(__file__))
+print(file_path)
+
 scan_meta_path = os.path.join(scan_directory, "meta.json")
 overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
@@ -50,16 +44,16 @@ mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
 
 flat_field_path = os.path.join(
-    os.path.dirname(__file__),
+    file_path,
     "Parameters",
     "Flatfields",
-    f"{CHIP_THICKNESS}.png",
+    f"{META_DICT['chip_thickness']}.png",
 )
 contrasts_path = os.path.join(
-    os.path.dirname(__file__),
+    file_path,
     "Parameters",
     "Contrasts",
-    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
+    f"{META_DICT['scan_exfoliated_material'].lower()}_{META_DICT['chip_thickness']}.json",
 )
 
 # Open the Jsons and get the needed Data
@@ -86,10 +80,11 @@ microscope_driver = microscope_driver_class()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     flat_field=flat_field,
-    size_threshold=SIZE_THRESHOLD,
-    entropy_threshold=ENTROPY_THRESHOLD,
+    size_threshold=META_DICT["size_threshold"],
+    entropy_threshold=META_DICT["entropy_threshold"],
 )
 
+start = time.time()
 print("Starting to raster in 2.5x...")
 image_2_directory, meta_2_directory = raster.raster_plate(
     scan_directory,
@@ -182,7 +177,7 @@ print("Creating Histograms...")
 Create_Metahistograms(scan_directory)
 
 # print("Uploading the Scan Directory...")
-# uploader.upload_directory(scan_directory, SERVER_URL)
+# uploader.upload_directory(scan_directory, META_DICT["server_url"])
 
 print(
     f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"

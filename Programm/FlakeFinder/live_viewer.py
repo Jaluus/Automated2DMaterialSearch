@@ -10,7 +10,7 @@ from Drivers.Microscope_Driver.microscope_class import (
 )
 from Drivers.Motor_Driver.tango_class import motor_driver_class
 
-file_path = os.path.dirname(__file__)
+file_path = os.path.dirname(os.path.abspath(__file__))
 
 motor = motor_driver_class()
 microscope = microscope_driver_class()

@@ -19,6 +19,7 @@ IMAGE_DIRECTORY = r"C:\Users\duden\Desktop\Mikroskop Bilder"
 SCAN_NAME = "Dataset_Eike_050721"
 
 # Directory Paths
+file_path = os.path.dirname(os.path.abspath(__file__))
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # Defining directorys
@@ -38,10 +39,16 @@ if not os.path.exists(save_dir_meta):
 
 # Defining parameter Paths
 flat_field_path = os.path.join(
-    os.path.dirname(__file__), "Parameters", "Flatfields", "90nm.png"
+    file_path,
+    "Parameters",
+    "Flatfields",
+    "90nm.png",
 )
 contrasts_path = os.path.join(
-    os.path.dirname(__file__), "Parameters", "Contrasts", "graphene_90nm.json"
+    file_path,
+    "Parameters",
+    "Contrasts",
+    "graphene_90nm.json",
 )
 
 image_names = sorted_alphanumeric(os.listdir(image_dir))

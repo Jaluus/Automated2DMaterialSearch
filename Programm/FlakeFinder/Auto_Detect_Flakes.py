@@ -45,6 +45,7 @@ META_DICT = {
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # File Paths
+file_path = os.path.dirname(os.path.abspath(__file__))
 scan_meta_path = os.path.join(scan_directory, "meta.json")
 overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
@@ -52,13 +53,13 @@ mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
 
 flat_field_path = os.path.join(
-    os.path.dirname(__file__),
+    file_path,
     "Parameters",
     "Flatfields",
     f"{CHIP_THICKNESS}.png",
 )
 contrasts_path = os.path.join(
-    os.path.dirname(__file__),
+    file_path,
     "Parameters",
     "Contrasts",
     f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",

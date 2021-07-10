@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import filedialog
 from tkinter.messagebox import askyesno, showwarning
 import sys
 
@@ -22,6 +23,8 @@ class parameter_picker_class:
         # Keeps track if the user closed the application, cant raise exeption in tkinter
         self.user_closed = False
 
+        self.image_dir = None
+        self.serverURL = None
         self.scan_name = None
         self.scan_user = None
         self.scan_exfoliated_material = None
@@ -65,7 +68,7 @@ class parameter_picker_class:
         )
 
         self.Scan_parameters_label = Label(
-            self.parameter_picker, text="Scan Parameters"
+            self.parameter_picker, text="--- Scan Parameters ---"
         )
 
         self.Scan_name_label = Label(self.parameter_picker, text="Scan name")
@@ -91,7 +94,7 @@ class parameter_picker_class:
         self.Sigma_threshold_input.insert(0, "50")
 
         self.Filter_parameters_label = Label(
-            self.parameter_picker, text="Filter Parameters"
+            self.parameter_picker, text="--- Filter Parameters ---"
         )
 
         self.Entropy_threshold_label = Label(
@@ -103,6 +106,31 @@ class parameter_picker_class:
         self.Sigma_threshold_material_label = Label(
             self.parameter_picker, text="Sigma Threshold"
         )
+
+        ### Etc Params
+
+        self.etc_parameters_label = Label(
+            self.parameter_picker, text="--- etc Parameters ---"
+        )
+
+        self.Directory_label = Label(self.parameter_picker, text="File Directory")
+        self.Directory_button = Button(
+            self.parameter_picker,
+            text="Choose Directory",
+            command=self.choose_directory,
+        )
+
+        self.ServerURL_label = Label(self.parameter_picker, text="Server URL")
+        self.ServerURL_input = Entry(self.parameter_picker, width=50, borderwidth=5)
+        self.ServerURL_input.insert(0, "localhost:5000/upload")
+
+        self.Exfoliation_method_label = Label(
+            self.parameter_picker, text="Exfoliation Method"
+        )
+        self.Exfoliation_method_input = Entry(
+            self.parameter_picker, width=50, borderwidth=5
+        )
+        self.Exfoliation_method_input.insert(0, "unspecified")
 
         ### Start Button
 
@@ -118,38 +146,54 @@ class parameter_picker_class:
             row=1, columnspan=2, sticky="ew", padx=10, pady=10
         )
 
-        self.Scan_name_input.grid(row=2, column=1, sticky="ew", padx=10, pady=10)
-        self.Scan_user_input.grid(row=3, column=1, sticky="ew", padx=10, pady=10)
+        self.Scan_name_label.grid(row=2, column=0, padx=10)
+        self.Scan_name_input.grid(row=2, column=1, sticky="ew", padx=10)
+
+        self.Scan_user_label.grid(row=3, column=0, padx=10)
+        self.Scan_user_input.grid(row=3, column=1, sticky="ew", padx=10)
+
+        self.Scan_exfoliated_material_label.grid(row=4, column=0)
         self.Scan_exfoliated_material_dropdown.grid(
-            row=4, column=1, sticky="ew", padx=10, pady=10
+            row=4, column=1, sticky="ew", padx=10
         )
-        self.chip_thickness_dropdown.grid(
-            row=5, column=1, sticky="ew", padx=10, pady=10
-        )
+
+        self.chip_thickness_label.grid(row=5, column=0, padx=10)
+        self.chip_thickness_dropdown.grid(row=5, column=1, sticky="ew", padx=10)
 
         self.Filter_parameters_label.grid(
             row=6, columnspan=2, sticky="ew", padx=10, pady=10
         )
 
-        self.Entropy_threshold_input.grid(
-            row=7, column=1, sticky="ew", padx=10, pady=10
+        self.Entropy_threshold_label.grid(row=7, column=0, padx=10)
+        self.Entropy_threshold_input.grid(row=7, column=1, sticky="ew", padx=10)
+
+        self.Size_threshold_label.grid(row=8, column=0, padx=10)
+        self.Size_threshold_input.grid(row=8, column=1, sticky="ew", padx=10)
+
+        self.Sigma_threshold_material_label.grid(row=9, column=0, padx=10)
+        self.Sigma_threshold_input.grid(row=9, column=1, sticky="ew", padx=10)
+
+        self.etc_parameters_label.grid(
+            row=10, columnspan=2, sticky="ew", padx=10, pady=10
         )
-        self.Size_threshold_input.grid(row=8, column=1, sticky="ew", padx=10, pady=10)
-        self.Sigma_threshold_input.grid(row=9, column=1, sticky="ew", padx=10, pady=10)
 
-        self.Scan_name_label.grid(row=2, column=0)
-        self.Scan_user_label.grid(row=3, column=0)
-        self.Scan_exfoliated_material_label.grid(row=4, column=0)
-        self.chip_thickness_label.grid(row=5, column=0)
-        self.Entropy_threshold_label.grid(row=7, column=0)
-        self.Size_threshold_label.grid(row=8, column=0)
-        self.Sigma_threshold_material_label.grid(row=9, column=0)
+        self.Directory_label.grid(row=11, column=0, padx=10)
+        self.Directory_button.grid(row=11, column=1, sticky="ew", padx=10)
 
-        self.start_button.grid(row=10, columnspan=2, sticky="ew")
+        self.ServerURL_label.grid(row=12, column=0, padx=10)
+        self.ServerURL_input.grid(row=12, column=1, padx=10)
+
+        self.Exfoliation_method_label.grid(row=13, column=0, padx=10)
+        self.Exfoliation_method_input.grid(row=13, column=1, padx=10)
+
+        self.start_button.grid(row=14, columnspan=2, sticky="ew", padx=10, pady=10)
 
     def on_close(self):
         self.user_closed = True
         self.parameter_picker.destroy()
+
+    def choose_directory(self):
+        self.image_dir = filedialog.askdirectory()
 
     def validate_input(self):
         self.scan_name = self.Scan_name_input.get().strip()
@@ -161,10 +205,23 @@ class parameter_picker_class:
         self.size_threshold = self.Size_threshold_input.get()
         self.sigma_threshold = self.Sigma_threshold_input.get()
 
+        self.scan_exfoliation_method = (
+            self.Exfoliation_method_input.get().strip().lower()
+        )
+
+        self.serverURL = self.ServerURL_input.get()
+
         if self.scan_name == "" or self.scan_user == "":
             showwarning(
                 title="Null Error",
                 message="You need to specify a Scan User and Scan Name!",
+            )
+            return
+
+        if self.image_dir is None:
+            showwarning(
+                title="Null Error",
+                message="You need to pick an Image Directory where to save the Scan!",
             )
             return
 
@@ -180,8 +237,8 @@ class parameter_picker_class:
             return
 
         text_string = (
-            f"Start the Scan with the current Parameters?\n"
-            "--- Scan Parameters ---\n"
+            f"Start the Scan with the following Parameters?\n"
+            "\n--- Scan Parameters ---\n"
             f"Current User : {self.scan_user}\n"
             f"Scan Name : {self.scan_name}\n"
             f"Exfoliated Material : {self.scan_exfoliated_material}\n"
@@ -190,6 +247,10 @@ class parameter_picker_class:
             f"Entropy Threshold : {self.entropy_threshold}\n"
             f"Size Threshold : {self.size_threshold}\n"
             f"Sigma Threshold : {self.sigma_threshold}\n"
+            "\n--- Etc Parameters ---\n"
+            f"Image Directory : {self.image_dir}\n"
+            f"Server URL : {self.serverURL}\n"
+            f"Exfoliation Method : {self.scan_exfoliation_method}\n"
         )
 
         answer = askyesno("LOL", text_string)
@@ -207,6 +268,18 @@ class parameter_picker_class:
 
         Returns:
             dict: a dict with the user input
+
+            Keys:
+            - scan_user
+            - scan_name
+            - scan_exfoliated_material
+            - scan_exfoliation_method
+            - chip_thickness
+            - entropy_threshold
+            - size_threshold
+            - sigma_threshold
+            - image_directory
+            - server_url
         """
         # Displays the GUI,Continues when the User has finished entering his input
         mainloop()
@@ -215,9 +288,12 @@ class parameter_picker_class:
             raise RuntimeError("Closed by User")
 
         return {
+            "image_directory": self.image_dir,
+            "server_url": self.serverURL,
             "scan_user": self.scan_user,
             "scan_name": self.scan_name,
             "scan_exfoliated_material": self.scan_exfoliated_material,
+            "scan_exfoliation_method": self.scan_exfoliation_method,
             "chip_thickness": self.chip_thickness,
             "entropy_threshold": self.entropy_threshold,
             "size_threshold": self.size_threshold,
@@ -230,5 +306,4 @@ if __name__ == "__main__":
     try:
         input_dict = mygui.take_input()
     except RuntimeError:
-        print("lol")
         sys.exit(0)
