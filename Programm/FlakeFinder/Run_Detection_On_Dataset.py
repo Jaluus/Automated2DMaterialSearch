@@ -9,11 +9,9 @@ import numpy as np
 from skimage.morphology import disk
 from PIL import ImageFont, ImageDraw, Image
 
-sys.path.insert(0, r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm")
-
-from FlakeFinder.Classes.detection_class import detector_class
-from FlakeFinder.Utils.etc_functions import *
-from FlakeFinder.Utils.marker_functions import *
+from Classes.detection_class import detector_class
+from Utils.etc_functions import *
+from Utils.marker_functions import *
 
 
 # Constants

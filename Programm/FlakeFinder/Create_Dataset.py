@@ -5,19 +5,15 @@ import time
 import matplotlib.pyplot as plt
 import json
 
-sys.path.insert(
-    0, r"C:\Users\Transfersystem User\Desktop\Repos\BachelorThesis\Programm"
-)
-
 # Custom imports
-from FlakeFinder.Drivers.Camera_Driver.camera_class import camera_driver_class
-from FlakeFinder.Drivers.Microscope_Driver.microscope_class import (
+from Drivers.Camera_Driver.camera_class import camera_driver_class
+from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
-from FlakeFinder.Drivers.Motor_Driver.tango_class import motor_driver_class
-from FlakeFinder.Utils.etc_functions import calibrate_scope
-import FlakeFinder.Utils.raster_functions as raster
-import FlakeFinder.Utils.stitcher_functions as stitcher
+from Drivers.Motor_Driver.tango_class import motor_driver_class
+from Utils.etc_functions import calibrate_scope
+import Utils.raster_functions as raster
+import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"

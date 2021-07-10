@@ -5,6 +5,7 @@ import json
 import shutil
 import sys
 
+
 # Custom imports
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import (
@@ -17,20 +18,21 @@ import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
 from Utils.etc_functions import *
 
+from GUI.parameter_picker import parameter_picker_class
+
 start = time.time()
 
 # Constants
 SERVER_URL = "localhost:5000/upload"
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-SCAN_NAME = "Eikes_Flocken_Full_Final"
-SCAN_USER = "Eike"
 EXFOLIATED_MATERIAL = "Graphene"
+SCAN_NAME = "Eikes_Flocken_Full_Final"
 CHIP_THICKNESS = "90nm"
+SCAN_USER = "Eike"
 
-# Filter Parameter
+# Hyperparamter
 ENTROPY_THRESHOLD = 2.4
 SIZE_THRESHOLD = 200
-SIGMA_THRESHOLD = 50
 
 # Created Metadict
 META_DICT = {
