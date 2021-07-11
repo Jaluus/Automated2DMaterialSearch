@@ -1,3 +1,4 @@
+import time
 import cv2
 import numpy as np
 from numba import jit
@@ -155,6 +156,80 @@ class detector_class:
         image_no_vigentte = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
         return image_no_vigentte
 
+    def mask_contrasted_image(
+        self,
+        contrasts,
+        current_layer,
+    ):
+
+        ## Threshing the contrasted Images only for Mono ~30ms
+        contrast_b_threshed = cv2.inRange(
+            contrasts[:, :, 0],
+            current_layer["contrast"]["b"] - current_layer["color_radius"]["b"],
+            current_layer["contrast"]["b"] + current_layer["color_radius"]["b"],
+        )
+        contrast_g_threshed = cv2.inRange(
+            contrasts[:, :, 1],
+            current_layer["contrast"]["g"] - current_layer["color_radius"]["g"],
+            current_layer["contrast"]["g"] + current_layer["color_radius"]["g"],
+        )
+        contrast_r_threshed = cv2.inRange(
+            contrasts[:, :, 2],
+            current_layer["contrast"]["r"] - current_layer["color_radius"]["r"],
+            current_layer["contrast"]["r"] + current_layer["color_radius"]["r"],
+        )
+
+        # finding the intersection of the Masks (mask_a ∩ mask_b ∩ mask_c)
+        mask = cv2.bitwise_and(contrast_r_threshed, contrast_g_threshed)
+        mask = cv2.bitwise_and(mask, contrast_b_threshed)
+        return mask
+
+    @staticmethod
+    @jit(nopython=True)
+    def mask_contrasted_image_new_inner(
+        contrasts,
+        contrast_r,
+        contrast_g,
+        contrast_b,
+        radius_r,
+        radius_g,
+        radius_b,
+    ):
+        mask = np.zeros(shape=(contrasts.shape[0], contrasts.shape[1]), dtype=np.uint8)
+        for i in range(mask.shape[0]):
+            for j in range(mask.shape[1]):
+                pixel = contrasts[i, j]
+
+                dist_b = ((pixel[0] - contrast_b) / radius_b) ** 2
+                dist_g = ((pixel[1] - contrast_g) / radius_g) ** 2
+                dist_r = ((pixel[2] - contrast_r) / radius_r) ** 2
+
+                if (dist_b + dist_g + dist_r) <= 1:
+                    mask[i, j] = 255
+
+        return mask
+
+    def mask_contrasted_image_new(
+        self,
+        contrasts,
+        current_layer,
+    ):
+        # for more information
+        # https://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse
+
+        ## we had to write this warper function to not give jit the dict, it can handle dicts
+        mask = detector_class.mask_contrasted_image_new_inner(
+            contrasts,
+            current_layer["contrast"]["r"],
+            current_layer["contrast"]["g"],
+            current_layer["contrast"]["b"],
+            current_layer["color_radius"]["r"],
+            current_layer["color_radius"]["g"],
+            current_layer["color_radius"]["b"],
+        )
+
+        return mask
+
     def detect_flakes(
         self,
         image,
@@ -234,33 +309,15 @@ class detector_class:
             # Set the current layer by getting the value using the key 'layer'
             current_layer = self.contrast_dict[layer_name]
 
-            ## Threshing the contrasted Images only for Mono ~30ms
-            contrast_b_threshed = cv2.inRange(
-                contrasts[:, :, 0],
-                current_layer["contrast"]["b"] - current_layer["color_radius"]["b"],
-                current_layer["contrast"]["b"] + current_layer["color_radius"]["b"],
+            # masks the contrasted Image, it marks all the parts of the image within a certain RGB contrast range
+            mask = self.mask_contrasted_image_new(
+                contrasts=contrasts,
+                current_layer=current_layer,
             )
-            contrast_g_threshed = cv2.inRange(
-                contrasts[:, :, 1],
-                current_layer["contrast"]["g"] - current_layer["color_radius"]["g"],
-                current_layer["contrast"]["g"] + current_layer["color_radius"]["g"],
-            )
-            contrast_r_threshed = cv2.inRange(
-                contrasts[:, :, 2],
-                current_layer["contrast"]["r"] - current_layer["color_radius"]["r"],
-                current_layer["contrast"]["r"] + current_layer["color_radius"]["r"],
-            )
-
-            #### all this ~4 ms
-            # finding the intersection of the Masks (mask_a ∩ mask_b ∩ mask_c)
-            mask = cv2.bitwise_and(contrast_r_threshed, contrast_g_threshed)
-            mask = cv2.bitwise_and(mask, contrast_b_threshed)
 
             # a bit of cleanup
             mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, disk(2), iterations=1)
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, disk(2), iterations=1)
-            # mask = cv2.erode(mask, disk(2), iterations=1)
-            # mask = cv2.dilate(mask, disk(2), iterations=1)
 
             # counting the number of pixels and saving the masks only if it has more Pixels
             num_pixels = cv2.countNonZero(mask)

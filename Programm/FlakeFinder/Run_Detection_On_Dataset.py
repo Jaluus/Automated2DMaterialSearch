@@ -89,6 +89,8 @@ start_time = time.time()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     flat_field=flat_field,
+    entropy_threshold=1.7,
+    size_threshold=200,
 )
 
 # An indexing method for found flakes
@@ -109,9 +111,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
     image = cv2.imread(image_path)
 
     # ~120ms
-    detected_flakes = myDetector.detect_flakes(
-        image, entropy_thresh=1.7, size_thresh=400
-    )
+    detected_flakes = myDetector.detect_flakes(image)
 
     # Operation on the flakes
     if len(detected_flakes) != 0:

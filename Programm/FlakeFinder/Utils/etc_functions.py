@@ -6,6 +6,9 @@ import json
 import os
 import re
 import time
+import sys
+
+sys.path.append(r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm\FlakeFinder")
 
 import cv2
 import matplotlib.pyplot as plt
@@ -195,7 +198,9 @@ def Create_Metahistograms(
     for key in meta_dict[layers[0]].keys():
         fig, axes = plt.subplots(num_hists, sharex=True)
         for idx, layer in enumerate(layers):
-            array = meta_dict[layer][key]
+            array = np.array(meta_dict[layer][key])
+
+            mean, stddev = cv2.meanStdDev(array)
 
             axes[idx].grid()
             axes[idx].set_ylabel("counts")
@@ -204,7 +209,7 @@ def Create_Metahistograms(
                 array,
                 bins=50,
                 rwidth=0.8,
-                label=f"n = {len(array)}",
+                label=f"n = {len(array)}\nmean = {mean[0,0]:.3g}\n$\sigma$ = {stddev[0,0]:.3g}",
             )
             axes[idx].legend()
         plt.savefig(os.path.join(hist_dir, f"{key}_hist.png"))
@@ -215,6 +220,7 @@ def Create_Metahistograms(
 
 
 if __name__ == "__main__":
+
     Create_Metahistograms(
         r"C:\Users\duden\Desktop\Mikroskop Bilder\Eikes_Flocken_Full_Final"
     )
