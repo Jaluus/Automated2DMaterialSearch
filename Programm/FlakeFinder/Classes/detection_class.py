@@ -60,7 +60,7 @@ class detector_class:
         # Check for layers
         self.searched_layers = which_layers
 
-    def mask_background(self, img, radius=7, blue_bg=80):
+    def mask_background(self, img, radius=7, blue_bg=100):
         """
         Maskes the Background\n
         The Values are standard values of 90nm SiO Chips with removed Vignette\n
@@ -328,7 +328,8 @@ class detector_class:
 
         # Return empty array when you found no masks
         if len(masks.keys()) == 0:
-            return np.array(detected_flakes)  # This array is Empty
+            # This array is Empty
+            return np.array(detected_flakes)
 
         # iterate over all Masks and Label them
         for layer_name in masks.keys():

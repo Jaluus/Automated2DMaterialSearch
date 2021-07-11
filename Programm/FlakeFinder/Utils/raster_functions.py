@@ -213,7 +213,7 @@ def image_generator(
                 continue
 
             # move to the new Position
-            motor_driver.abs_move(x_pos, y_pos)
+            motor_driver.abs_move(x_pos, y_pos, wait_for_finish=False)
 
             # Yields the Image
             yield image, all_props
