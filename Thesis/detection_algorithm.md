@@ -18,7 +18,7 @@ Glare in the B-Channel -> not very sharp images
 2. Remove the Vignette ~30ms
    1. Convert the images to HSV
    2. Divide the V channel of the image by the V channel of the flatfield
-      1. the vignette only manifests in the V Channel
+      1. The vignette only manifests in the V Channel
    3. Multiply the image V channel by the mean of the flatfield
    4. The vignette and all artifacts of the lens and camera are now removed
 3. Mask out the Background ~15ms
