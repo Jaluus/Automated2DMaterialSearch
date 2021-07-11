@@ -82,11 +82,12 @@ def raster_plate(
     can_move_x = motor_driver.can_move(x_step, 0)
     can_move_y = motor_driver.can_move(0, y_step)
 
-    # get the properties
+    # get the properties as these dont change
     cam_props = camera_driver.get_properties()
     mic_props = microscope_driver.get_properties()
 
     curr_idx = 0
+    direction = 1
     start_time = time.time()
     while can_move_x:
         while can_move_y:
@@ -125,12 +126,14 @@ def raster_plate(
             picture_path = os.path.join(picture_dir, f"{curr_idx}.png")
             cv2.imwrite(picture_path, img)
 
-            can_move_y = motor_driver.rel_move(0, y_step)
+            can_move_y = motor_driver.rel_move(0, direction * y_step)
 
-        curr_x, curr_y = motor_driver.get_pos()
-        motor_driver.abs_move(curr_x, 0)
+        # Switch direction
+        direction = -1 * direction
+        # Move one x unit over
         can_move_x = motor_driver.rel_move(x_step, 0)
-        can_move_y = motor_driver.can_move(0, y_step)
+        # Check if you can move
+        can_move_y = motor_driver.can_move(0, direction * y_step)
     return picture_dir, meta_dir
 
 

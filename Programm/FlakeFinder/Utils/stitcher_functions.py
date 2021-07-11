@@ -85,7 +85,14 @@ def stitch_image(
     full_pic = None
 
     for i in range(x_rows):
-        for j in range(y_rows):
+
+        y_row = range(y_rows)
+
+        # Compenstate the Snaking pattern during the rastering
+        if i % 2 == 1:
+            y_row = reversed(y_row)
+
+        for j in y_row:
             curr_idx = i * y_rows + j
             full_path = os.path.join(picture_directory, pic_files[curr_idx])
             img = cv2.imread(full_path)
