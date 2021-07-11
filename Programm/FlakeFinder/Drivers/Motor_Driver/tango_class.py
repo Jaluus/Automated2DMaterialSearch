@@ -118,6 +118,12 @@ class motor_driver_class:
         if y > self.max_y:
             y = self.max_y
             print("Y bigger than Secure Stop, setting Y to Max_y")
+        if 0 > y:
+            y = 0
+            print("Y smaller than 0, setting Y to 0")
+        if 0 > x:
+            x = 0
+            print("X smaller than 0, setting X to 0")
         return x, y
 
     def full_calibrate(self):
@@ -185,9 +191,9 @@ class motor_driver_class:
         return True if possible
         """
         curr_x, curr_y = self.get_pos()
-        if curr_x + dx > self.max_x:
+        if not (0 < curr_x + dx < self.max_x):
             return False
-        if curr_y + dy > self.max_y:
+        if not (0 < curr_y + dy < self.max_y):
             return False
         return True
 
