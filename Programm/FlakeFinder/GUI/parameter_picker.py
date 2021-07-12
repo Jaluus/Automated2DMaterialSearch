@@ -218,7 +218,7 @@ class parameter_picker_class:
             )
             return
 
-        if self.image_dir is None:
+        if self.image_dir is None or self.image_dir == "":
             showwarning(
                 title="Null Error",
                 message="You need to pick an Image Directory where to save the Scan!",
@@ -253,7 +253,7 @@ class parameter_picker_class:
             f"Exfoliation Method : {self.scan_exfoliation_method}\n"
         )
 
-        answer = askyesno("LOL", text_string)
+        answer = askyesno("Validation", text_string)
 
         if answer == 1:
             self.parameter_picker.destroy()

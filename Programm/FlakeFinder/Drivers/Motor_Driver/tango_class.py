@@ -191,9 +191,9 @@ class motor_driver_class:
         return True if possible
         """
         curr_x, curr_y = self.get_pos()
-        if not (0 < curr_x + dx < self.max_x):
+        if not (0 <= round(curr_x + dx, 4) <= self.max_x):
             return False
-        if not (0 < curr_y + dy < self.max_y):
+        if not (0 <= round(curr_y + dy, 4) <= self.max_y):
             return False
         return True
 
