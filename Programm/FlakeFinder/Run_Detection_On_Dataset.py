@@ -123,9 +123,9 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
         meta_data = json.load(open(meta_path, "r"))
 
         # mark the flake on overview map
-        # overview_image = mark_on_overview(
-        #     overview_image, current_image_number, meta_data["motor_pos"]
-        # )
+        overview_image = mark_on_overview(
+            overview_image, current_image_number, meta_data["motor_pos"]
+        )
 
         # Operate on each Flake
         for flake in detected_flakes:

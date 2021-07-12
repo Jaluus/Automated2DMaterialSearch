@@ -61,6 +61,10 @@ def calibrate_scope(
         5: "100x",
     }
 
+    cv2.namedWindow("Calibration Window")
+    curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
+    cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+
     while True:
 
         img = camera.get_image()
@@ -74,11 +78,7 @@ def calibrate_scope(
             color=[255, 0, 0],
             thickness=3,
         )
-
-        curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
-
         cv2.imshow("Calibration Window", img_small)
-        cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
 
         key = cv2.waitKey(1)
         if key == ord("q"):
@@ -86,9 +86,13 @@ def calibrate_scope(
 
         elif key == ord("e"):
             microscope.rotate_nosepiece_forward()
+            curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
+            cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
 
         elif key == ord("r"):
             microscope.rotate_nosepiece_backward()
+            curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
+            cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
 
     cv2.destroyAllWindows()
 

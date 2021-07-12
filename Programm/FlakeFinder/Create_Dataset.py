@@ -17,16 +17,18 @@ import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-EXFOLIATED_MATERIAL = "hBN"
-SCAN_NAME = "Dataset_Taoufiq_120721"
+EXFOLIATED_MATERIAL = "empty"
+SCAN_NAME = "Dataset_EmptyChip_120721"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "Taoufiq"
+SCAN_USER = "Jan"
+EXFOLIATION_METHOD = ""
 
 META_DICT = {
     "scan_user": SCAN_USER,
     "scan_name": SCAN_NAME,
     "chip_thickness": CHIP_THICKNESS,
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
+    "scan_exfoliation_method": EXFOLIATION_METHOD,
 }
 
 # Directory Paths

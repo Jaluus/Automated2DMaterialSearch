@@ -43,7 +43,7 @@ def raster_plate(
     camera_driver: camera_driver_class,
     x_step: float = 5,
     y_step: float = 3.333,
-    wait_time: float = 0.1,
+    wait_time: float = 0.2,
 ):
     """
     scan_directory is the directory in which the scan is being saved\n
@@ -216,7 +216,7 @@ def image_generator(
                 continue
 
             # move to the new Position
-            motor_driver.abs_move(x_pos, y_pos, wait_for_finish=False)
+            motor_driver.abs_move(x_pos, y_pos, wait_for_finish=True)
 
             # Yields the Image
             yield image, all_props
