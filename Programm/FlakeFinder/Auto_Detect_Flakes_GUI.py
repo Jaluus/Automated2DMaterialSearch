@@ -176,8 +176,8 @@ microscope_driver.lamp_off()
 print("Creating Histograms...")
 Create_Metahistograms(scan_directory)
 
-# print("Uploading the Scan Directory...")
-# uploader.upload_directory(scan_directory, META_DICT["server_url"])
+print("Uploading the Scan Directory...")
+uploader.upload_directory(scan_directory, META_DICT["server_url"])
 
 print(
     f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
