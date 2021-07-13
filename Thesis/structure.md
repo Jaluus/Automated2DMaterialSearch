@@ -1,5 +1,4 @@
-# BA Ideen
-
+# Thesis Structure
 ## Motivation
 - Efficient Flake Search
 - New Methods
@@ -23,11 +22,19 @@
   - How does the Database Operate
   - How does the Frontend work
 
+## The Detection Algorithm
+
+## The Database
+- What does it store
+- The Frontend
+## The Drivers
+
 
 ## Extracted Data
-- Use a Lot of metadata about the Chips with histograms
+- Use a Lot of Metadata about the Chips with histograms
 - Histogramme
   - Flake Sizes
+  - Flake Contrasts
 - Exfoliation Methods
 
 ## Comparison to other Programms
@@ -35,5 +42,8 @@
 
 ## Future
 - Usecases for Drivers
-- Usecases For Algorithm
+- Usecases for Algorithm
+  - Train more sophisticated Models
+- Usecases for the Collected Data
+  - Extract Metadata about chip thicknesses
 
