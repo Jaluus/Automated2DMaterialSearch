@@ -9,26 +9,20 @@
 - Japanese Dudes
   - As a Starting Point
   - How I differ
-
 ## What can the Setup do
 - Microscope
 - Camera
 - XY-Tango Plate
 
-## Programm Flow
-- Program flow
-  - How does the Detection work
-  - How do the Drivers work
-  - How does the Database Operate
-  - How does the Frontend work
-
-## The Detection Algorithm
-
-## The Database
-- What does it store
-- The Frontend
-## The Drivers
-
+## Programm
+- How does one use the Algortihm
+- Detection Algorithm
+  - Overview
+  - One section for each step
+- The Database
+  - Frontend
+  - SQL Structure
+- The Drivers for the Setup
 
 ## Extracted Data
 - Use a Lot of Metadata about the Chips with histograms

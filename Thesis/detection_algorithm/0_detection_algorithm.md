@@ -36,10 +36,9 @@ Glare in the B-Channel -> not very sharp images
       1. e.g. die contrast of monolayer graphene in the R-channel is 0.12+/-0.04
    2. Look for contrasts within an ellipsoid in the 3D contrast space
       1. Center and radii of the ellipsoid are predefined my us
-6. Clean the Mask and Label each blob on the mask < 5ms
+6. Clean the Mask < 5ms
    1. The cleaning are just a few morph operations
-   2. We are running a blobfinding algorithm
-7. Filter Small Blobs < 5ms
+7. Label each blob on the mask < 5ms
    1. These are possibly dirt or other impurities
 
 Has a Flake been detected?
