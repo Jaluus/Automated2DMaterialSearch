@@ -1,0 +1,24 @@
+In order to mask out the right contrast values for each layer type an ellipsoid is used to determine if a given pixel has the right contrasts.\\
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.5\linewidth]{example-image-duck}
+    \caption{Example 2D Space with marked contrast regions}
+    \label{fig:my_label}
+\end{figure}
+\\
+This Custom Threshold checks if the Value of the Pixel is within the bounds of the ellipsoid.\\
+\begin{equation}
+     I_{Mask} =
+     \begin{cases}
+      255 & \frac{I^R - c^R}{r^R}^2 + \frac{I^G - c^G}{r^G}^2 + \frac{I^B - c^B}{r^B}^2 < 1\\
+      0 & \text{otherwise}
+    \end{cases}
+\end{equation}\\
+$c^{R,G,B}$ and $r^{R,G,B}$ are parameters in this setup\\
+After applying the threshold to the contrasted image we yield the following image.\\
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.5\linewidth]{example-image-duck}
+    \caption{Masked Contrast Image for Monolayer}
+    \label{fig:my_label}
+\end{figure}

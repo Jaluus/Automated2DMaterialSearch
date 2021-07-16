@@ -1,0 +1,13 @@
+To calculate the contrast of the image the Weber-Contrast is used\\
+\begin{equation}
+C^{R,G,B} = \frac{I^{R,G,B} - \bar{I}^{R,G,B}_{Background}}
+{\bar{I}^{R,G,B}_{Background}}
+\end{equation}
+with
+\begin{equation}
+    \bar{I}^{R,G,B}_{Background} = \frac{1}{n} \sum^n I^{R,G,B}_{Background}
+\end{equation}
+\\
+and $n$ being the number of background pixels.\\
+This contrast is independent of the brightness of the image as a multiplicative factor is being canceled by the fraction.\\
+The Weber-Contrast is being used as it has been observed that this metric stays the same for different lighting conditions but more data has to be taken to validate this claim, for now it serves as a good indicator of the thickness of graphene flakes.\\

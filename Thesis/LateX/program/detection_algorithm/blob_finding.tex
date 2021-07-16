@@ -1,0 +1,15 @@
+In order to group the pixels in the mask together into cohesive flakes we use a labeling operations based on an established labeling algorithm\cite{labeler}. This resulted in a labeled mask with numbered flakes, these flakes are now able to be categorized. The first thing we do is calculate the flake sizes by converting the number of pixels of each flake to the corresponding size, this is a matter of simple multiplication as we know the resolution of the image as well as the size of the view of the image. In this step we are also filtering small flakes by a predefined size threshold to minimize false positives as dirt often leads to small detected region we can easily filter by applying the threshold.\\
+\begin{figure}[h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{Unlabeled Mask}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{Labeled Mask}
+\end{minipage}
+\caption{Labeling Process, different colors denote different Labels}
+\end{figure}

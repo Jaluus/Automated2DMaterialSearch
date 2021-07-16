@@ -18,3 +18,11 @@ tango_dll_errlog.txt
 
 # Databank Driver ignores
 database.ini
+
+# Latex Ignore
+main.pdf
+main.aux
+main.idx
+main.log
+main.synctex.gz
+main.toc

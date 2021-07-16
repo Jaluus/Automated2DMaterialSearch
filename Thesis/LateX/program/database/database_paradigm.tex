@@ -1,0 +1,13 @@
+In order to save the metadata of the found flakes a SQL Database is employed.
+This type of database paradigm is used as it has multiple advantages for our use case.
+\paragraph{Saving Structured Data}
+The underlying data is highly structured and can easily be normalized, the SQL paradigm offers the best performance in this regard as it is designed to support huge data consisting of structured data.
+
+\paragraph{Joining Operation}
+The support of joining operations allows us to further normalize the data by introducing tables which save references to other tables, this reduces the size of the database considerably, as it allows us to group large amounts of similar data.
+
+\paragraph{Easily expandable}
+The ability to expand the tables in which the data is saved gives us the flexibility to later add more data columns if we decide to track more data for each table.
+
+\paragraph{ACID Compliance}
+The ACID Compliance of the SQL paradigm is a nice plus as it guarantees the consistency of the database in case of power outages and failed writes to the database by network outages.

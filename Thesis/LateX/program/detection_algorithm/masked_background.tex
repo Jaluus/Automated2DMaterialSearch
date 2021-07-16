@@ -1,0 +1,17 @@
+In order to mask out the background the color histogram of the image is used, the peak in the histogram denotes the background color, as it is homogeneous and takes up most of the image space.
+By selecting a region of color around the peaks of the histogram we can effectively mask out the background.\\
+\begin{figure}[h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{The Background Mask}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{The region used}
+\end{minipage}
+\end{figure}
+\\
+This Method yields the best results as it cuts out the need to specify the background colors as these change with varying SiO2 Thicknesses
