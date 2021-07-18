@@ -1,0 +1,93 @@
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width = 0.9\linewidth, height=15cm]{example-image-duck}
+    \caption{The Program Flowchart}
+\end{figure}
+\newpage
+\paragraph{Creating the Overview Image}
+The program works by first scanning the whole 100mm x 100mm area of the motorized scanning table with the 2.5x nosepiece. By stitching the 2.5x images together we get an overview image of the whole scanned area (Figure \ref{overview}), this operation takes about 7 minutes.\\
+The next step it to extract the scannable area of the overview image in order to minimize the time to scan in order to not scan areas where there is no chip, this is done by thresholding the overview image and extracting a black and white mask of the chips (Figure \ref{masked_overview}).
+
+\begin{figure}[!h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{Overview Image}
+  \label{overview}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{Thresholded Overview}
+    \label{masked_overview}
+\end{minipage}
+\end{figure}
+
+\paragraph{Creating the Scan Area Map}
+Following the thresholding operation we add a grid to the thresholded overview (Figure \ref{overviewGrid}) to determine the possible 20x nosepiece positions in order to only take pictures of the chips and not the background. The chips on the resulting grid can be labelled to distinguish between different chips, the resulting scan area map can be seen in figure \ref{scanAreaMap}.
+
+\begin{figure}[!h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{Gridded Overview}
+  \label{overviewGrid}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{Scan Area Map}
+    \label{scanAreaMap}
+\end{minipage}
+\end{figure}
+
+\paragraph{Scanning the Chips in 20x}
+The previously created scan area map is now being parsed and used to scan all the chips with the 20x nosepiece, the detection algorithm (refer to section \ref{detectionAlgorithm}) is being executed on each image to mark possible flakes, if a flake is detected the position of the flake as well as metadata like size, thickness and the proximity is being saved.
+
+\begin{figure}[!h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+\end{minipage}
+\caption{Pictures of detected Flakes}
+\end{figure}
+
+\paragraph{Revisiting the Flakes}
+After scanning all chips, the position of all detected flakes is being read back by the program and revisited. This centres the flake on the images. This is being repeated in all nosepiece magnifications leading to images with 2.5x, 5x, 20x, 50x and 100x magnification.
+
+\begin{figure}[!h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{5x magnification}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{20x magnification}
+\end{minipage}
+
+\vspace{10px}
+
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{50x magnification}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{100x magnification}
+\end{minipage}
+\end{figure}
+
+\paragraph{Sending the Data}
+After completing the scan and revisiting all flakes with all magnifications the program is creating a zip-archive of all the flake images as well as the metadata, this archive is then being send to the database server (refer to section \ref{databaseInterface}) and handled there.

@@ -17,7 +17,7 @@ The entropy of the flake is determined by calculating the Shannon Entropy of the
 \end{figure}
 
 \paragraph{Proximity}
-The proximity metric of the flake is an indicator of the vicinity of the flake, its defined as the standard deviation of pixel values in a predefined area around the flake and returns a value based on the surroundings. Flakes which are close to, or stuck to other bigger flakes are not desirable for further use.\\
+The proximity metric of the flake is an indicator of the vicinity of the flake, its defined as the standard deviation of pixel values in a predefined area around the flake and returns a value based on the surroundings. Flakes which are close to, or stuck to other bigger flakes are not desirable for further usage.\\
 \begin{figure}[h!]
 \centering
 \begin{minipage}{.45\textwidth}
@@ -51,5 +51,6 @@ The Aspect Ratio of the flake is being approximated by fitting a rotated rectang
 \end{figure}
 
 \paragraph{Size}
-The size is a simple metric, it is easily calculated by multiplying the number of pixels of the mask by the size of a single pixel.
-
+The size is a simple metric, it is easily calculated by multiplying the number of pixels of the mask by the size of a single pixel.\\
+\\
+The algorithm then returns an array of all the found flakes within the image, the array consists of python dictionaries which hold key-value-pairs corresponding to data about the flake.

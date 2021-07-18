@@ -1,0 +1,27 @@
+To easily navigate the database and select good flakes we created an intuitive web interface to manage, delete, insert, filter and evaluate flakes. This also gives rise to new opportunities concerning quantitative comparison of exfoliation methods in order to improve flake yields and quality.
+
+
+\paragraph{Frontend Interface}
+The fontend interface seen by the user consists of the seperate websites.
+A Scan Manager and a Flake Manager.
+The Scan Manager provides a fast way to evaluate all flakes found during a full scan of multiple chips, while the Flake Manager serves an interface to sort and search for specific flakes with the added ability to filter by material, size, thickness, user and other keys.
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+  \caption{Scan Manager}
+\end{minipage}
+\begin{minipage}{.45\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{example-image-duck}
+    \caption{Labeled Mask}
+\end{minipage}
+\caption{The Flake Interface}
+\end{figure}
+
+\paragraph{Backend Server}
+The backend is used as the link between the database and the frontend by querying the database and providing formatted data to the frontend as well as to users requesting certain data from the database like metadata about scans.
+This type of access allows the database to stay consistent and minimizes the possibility of corruption as the database can only be queried by the server.\\
+The backend also serves as a gateway to the database for the program, after a full scan the program send the data to the backend which handles the insertion into the database, the database itself does not save the images but merely the metadata of the images and flakes, the images are being saved locally on the hard drive of the PC while the database saves the path to the image.

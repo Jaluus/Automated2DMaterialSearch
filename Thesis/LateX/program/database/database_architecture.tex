@@ -1,7 +1,13 @@
-Testing 
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width = 0.9\linewidth, height=15cm]{example-image-duck}
+    \includegraphics[width = 0.9\linewidth, height=10cm]{example-image-duck}
     \caption{The Architecture of the Database}
 \end{figure}
+
+The database consists of four tables, scan, chip, flake and image.
+A scan has multiple chips while chips have multiple flakes and flakes have multiple images.
+This modelling style gives us a great deal of flexibility and allows us to take an arbitrary number of images per flake as well as arbitrary amounts of chips per scan. This opens up the possibility to also take images of the flakes while using darkfield- or florescence-microscopy, an example would be the florescence of WS2.\\
+
+%It is also quite easy to query these one-to-many as a single query is enough to retrieve all the flakes of a certain scan.
+maybe add a table with the explanation of the keys?
