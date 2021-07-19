@@ -186,8 +186,8 @@ def create_scan_area_map_from_mask(
     pixel_resolution_y = height / overview_image_y_dimension
 
     # Real 20x area (0.7380 x 0.4613)
-    x_pixels = int(pixel_resolution_x * view_field_x)
-    y_pixels = int(pixel_resolution_y * view_field_y)
+    x_pixels = pixel_resolution_x * view_field_x
+    y_pixels = pixel_resolution_y * view_field_y
 
     # Create an array which saves the points where we can raster to
     scan_area = np.zeros(
@@ -196,14 +196,15 @@ def create_scan_area_map_from_mask(
             int(X_MOTOR_RANGE / view_field_x),
         )
     )
-
+    ctr = 0
     for i in range(scan_area.shape[1]):
         for j in range(scan_area.shape[0]):
+            ctr += 1
             # Crop to the part of the Image which would be seen by the 20x scope
-            x_start = i * x_pixels + int(x_offset * pixel_resolution_x)
-            y_start = j * y_pixels + int(y_offset * pixel_resolution_y)
-            x_end = (i + 1) * x_pixels + int(x_offset * pixel_resolution_x)
-            y_end = (j + 1) * y_pixels + int(y_offset * pixel_resolution_y)
+            x_start = int(i * x_pixels + x_offset * pixel_resolution_x)
+            y_start = int(j * y_pixels + y_offset * pixel_resolution_y)
+            x_end = int((i + 1) * x_pixels + x_offset * pixel_resolution_x)
+            y_end = int((j + 1) * y_pixels + y_offset * pixel_resolution_y)
             crop_arr = mask[y_start:y_end, x_start:x_end]
 
             non_zero_pixels = cv2.countNonZero(crop_arr)
