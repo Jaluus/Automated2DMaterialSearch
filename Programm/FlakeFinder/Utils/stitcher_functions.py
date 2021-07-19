@@ -210,7 +210,9 @@ def create_scan_area_map_from_mask(
             non_zero_pixels = cv2.countNonZero(crop_arr)
 
             # find the percentage of non background pixels
-            percentage_non_background = non_zero_pixels / (x_pixels * y_pixels)
+            percentage_non_background = non_zero_pixels / (
+                crop_arr.shape[0] * crop_arr.shape[1]
+            )
 
             # Save the Image only if a certain percantage of the image is not background
             if percentage_non_background >= percentage_threshold:
