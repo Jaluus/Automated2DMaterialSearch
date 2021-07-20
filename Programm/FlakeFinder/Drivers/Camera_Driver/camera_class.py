@@ -14,7 +14,6 @@ class camera_driver_class:
 
     def __init__(self, cam_name="DFK 33UX174 38020321"):
         self.camera = self.__init_camera(cam_name)
-        self.set_properties()
         self.DEFAULT_PROPERTIES = {
             1: {
                 "exposure": 0.07,
@@ -30,6 +29,39 @@ class camera_driver_class:
             },
             3: {
                 "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            4: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            5: {
+                "exposure": 0.03,
+                "gain": 100,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+        }
+
+        self.DEFAULT_PROPERTIES_hBN = {
+            1: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            2: {
+                "exposure": 0.07,
+                "gain": 0,
+                "white_balance": (127, 64, 90),
+                "gamma": 100,
+            },
+            3: {
+                "exposure": 0.03,
                 "gain": 0,
                 "white_balance": (127, 64, 90),
                 "gamma": 100,
@@ -91,7 +123,7 @@ class camera_driver_class:
             - 5 : 100x
         """
         try:
-            self.set_properties(**self.DEFAULT_PROPERTIES[magnification])
+            self.set_properties(**self.DEFAULT_PROPERTIES_hBN[magnification])
         except KeyError as keyerror:
             print("Wrong Magnification Number")
         except OSError as oserror:
