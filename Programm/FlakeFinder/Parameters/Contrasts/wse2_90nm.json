@@ -1,0 +1,39 @@
+// Werte stimmen noch nicht
+{
+    "monolayer": {
+        "contrast": {
+            "r": -0.1,
+            "g": -0.04,
+            "b": -0.03
+        },
+        "color_radius": {
+            "r": 0.04,
+            "g": 0.04,
+            "b": 0.04
+        }
+    },
+    "bilayer": {
+        "contrast": {
+            "r": -0.2,
+            "g": -0.04,
+            "b": -0.03
+        },
+        "color_radius": {
+            "r": 0.04,
+            "g": 0.04,
+            "b": 0.04
+        }
+    },
+    "trilayer": {
+        "contrast": {
+            "r": -0.3,
+            "g": -0.04,
+            "b": -0.03
+        },
+        "color_radius": {
+            "r": 0.04,
+            "g": 0.04,
+            "b": 0.04
+        }
+    }
+}

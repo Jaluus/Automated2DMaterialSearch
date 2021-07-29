@@ -17,10 +17,10 @@ import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-EXFOLIATED_MATERIAL = "empty"
-SCAN_NAME = "Dataset_EmptyChip_120721"
+EXFOLIATED_MATERIAL = "hBN"
+SCAN_NAME = "Dataset_hBN_200729"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "Jan"
+SCAN_USER = "taoufiq"
 EXFOLIATION_METHOD = ""
 
 META_DICT = {
@@ -86,6 +86,11 @@ masked_overview = cv2.imread(mask_path, 0)
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
 cv2.imwrite(scan_area_path, labeled_scan_area)
+
+labeled_scan_area = cv2.imread(
+    r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Dataset_hBN_200721\scan_area_map.png",
+    0,
+)
 
 print("Please Calibrate the 20x Scope")
 print("Use E and R to Swap the Scopes")
