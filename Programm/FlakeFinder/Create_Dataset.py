@@ -54,43 +54,41 @@ motor_driver = motor_driver_class()
 camera_driver = camera_driver_class()
 microscope_driver = microscope_driver_class()
 
-print("Starting to raster in 2.5x...")
-image_2_directory, meta_2_directory = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
-)
+# print("Starting to raster in 2.5x...")
+# image_2_directory, meta_2_directory = raster.raster_plate(
+#     scan_directory,
+#     motor_driver,
+#     microscope_driver,
+#     camera_driver,
+# )
 
-print("Compressing 2.5x Images...")
-compressed_images_2_directory = stitcher.compress_images(image_2_directory)
+# print("Compressing 2.5x Images...")
+# compressed_images_2_directory = stitcher.compress_images(image_2_directory)
 
-print("Stitching Images...")
-overview_image = stitcher.stitch_image(compressed_images_2_directory)
-cv2.imwrite(overview_path, overview_image)
+# print("Stitching Images...")
+# overview_image = stitcher.stitch_image(compressed_images_2_directory)
+# cv2.imwrite(overview_path, overview_image)
 
-print("Compressing Overview Image...")
-overview_image_compressed = cv2.resize(overview_image, (2000, 2000))
-cv2.imwrite(
-    overview_compressed_path,
-    overview_image_compressed,
-    [int(cv2.IMWRITE_JPEG_QUALITY), 80],
-)
+# print("Compressing Overview Image...")
+# overview_image_compressed = cv2.resize(overview_image, (2000, 2000))
+# cv2.imwrite(
+#     overview_compressed_path,
+#     overview_image_compressed,
+#     [int(cv2.IMWRITE_JPEG_QUALITY), 80],
+# )
 
-print("Creating mask...")
-masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
-cv2.imwrite(mask_path, masked_overview)
+# print("Creating mask...")
+# masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
+# cv2.imwrite(mask_path, masked_overview)
 
-masked_overview = cv2.imread(mask_path, 0)
+# masked_overview = cv2.imread(mask_path, 0)
 
-print("Creating scan area mask...")
-labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
-cv2.imwrite(scan_area_path, labeled_scan_area)
+# print("Creating scan area mask...")
+# labeled_scan_area = stitcher.create_scan_area_map_from_mask(masked_overview)
+# cv2.imwrite(scan_area_path, labeled_scan_area)
 
-labeled_scan_area = cv2.imread(
-    r"C:\Users\Transfersystem User\Desktop\Mic_bilder\Dataset_hBN_200721\scan_area_map.png",
-    0,
-)
+labeled_scan_area = cv2.imread(scan_area_path, 0)
+print(labeled_scan_area.shape)
 
 print("Please Calibrate the 20x Scope")
 print("Use E and R to Swap the Scopes")
