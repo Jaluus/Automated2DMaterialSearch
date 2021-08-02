@@ -4,3 +4,4 @@ opencv-python
 scikit-image
 pywin32
 requests
+numba

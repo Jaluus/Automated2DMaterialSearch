@@ -17,9 +17,10 @@ from Utils.marker_functions import *
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\duden\Desktop\Mikroskop Bilder"
 SCAN_NAME = "Dataset_Eike_050721"
-MATERIAL = "graphene"
+EXFOLIATED_MATERIAL = "graphene"
 CHIP_THICKNESS = "90nm"
-
+# -1 if you want to analyse all images
+NUM_ANALYSED_IMAGES = -1
 
 # Directory Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -45,17 +46,17 @@ flat_field_path = os.path.join(
     file_path,
     "Parameters",
     "Flatfields",
-    f"{CHIP_THICKNESS}.png",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
 )
 contrasts_path = os.path.join(
     file_path,
     "Parameters",
     "Contrasts",
-    f"{MATERIAL.lower()}_{CHIP_THICKNESS}.json",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
 )
 
-image_names = sorted_alphanumeric(os.listdir(image_dir))
-meta_names = sorted_alphanumeric(os.listdir(meta_dir))
+image_names = sorted_alphanumeric(os.listdir(image_dir))[:NUM_ANALYSED_IMAGES]
+meta_names = sorted_alphanumeric(os.listdir(meta_dir))[:NUM_ANALYSED_IMAGES]
 num_images = len(image_names)
 
 # Load the Overview Image
@@ -75,7 +76,8 @@ colors = {
     "trilayer": [0, 0, 255],  # red
 }
 
-# The Colors are getting flipped
+# The colors are getting flipped by CV2
+# Thats why lime cyan and blue
 plt_colors = {
     "monolayer": "lime",  # green
     "bilayer": "cyan",  # yellow
@@ -127,7 +129,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
         # mark the flake on overview map
         overview_image = mark_on_overview(
-            overview_image, current_image_number, meta_data["motor_pos"]
+            overview_image=overview_image, motor_pos=meta_data["motor_pos"]
         )
 
         # Operate on each Flake
@@ -137,14 +139,14 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             # Copy the Image to not Modify the Original
             # If you dont know why I do this, Google Mutable Types
             # In short, I will fuck up my Image if im not copying it as I just pass a reference
-            draw_image = image.copy()
+            # draw_image = image.copy()
 
             # Extract some data from the Dict
             (x, y) = flake["position_bbox"]
             w = flake["width_bbox"]
             h = flake["height_bbox"]
             cv2.rectangle(
-                draw_image,
+                image,
                 (x - 20, y - 20),
                 (x + w + 20, y + h + 20),
                 color=colors[flake["layer"]],
@@ -156,10 +158,10 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
 
             # Draw this border on the image
-            draw_image[outline_flake != 0] = colors[flake["layer"]]
+            image[outline_flake != 0] = colors[flake["layer"]]
 
             #### All this is just to draw some text on the image, opencv doesnt allow µ, so I had to improvise
-            img_pil = Image.fromarray(draw_image)
+            img_pil = Image.fromarray(image)
             draw = ImageDraw.Draw(img_pil)
             draw.text(
                 (x + w + 25, y - 35),
@@ -167,21 +169,22 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 fill=plt_colors[flake["layer"]],
                 font=font,
             )
-            draw_image = np.array(img_pil)
+            image = np.array(img_pil)
             #####
 
-            # Now save the Image to its new Home
-            cv2.imwrite(
-                os.path.join(save_dir, f"{current_flake_number}_{image_name}"),
-                draw_image,
-            )
+        # Now save the Image to its new Home
+        cv2.imwrite(
+            os.path.join(save_dir, f"{current_flake_number}_{image_name}"),
+            image,
+        )
 
-            del flake["mask"]
+        # Delete the mask from the dict as it is not json serializable
+        del flake["mask"]
 
-            with open(
-                os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
-            ) as f:
-                json.dump(flake, f, indent=4, sort_keys=True)
+        with open(
+            os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
+        ) as f:
+            json.dump(flake, f, indent=4, sort_keys=True)
 
 cv2.imwrite(marked_overview_path, overview_image)
 

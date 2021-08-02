@@ -47,7 +47,7 @@ flat_field_path = os.path.join(
     file_path,
     "Parameters",
     "Flatfields",
-    f"{META_DICT['chip_thickness']}.png",
+    f"{META_DICT['scan_exfoliated_material'].lower()}_{META_DICT['chip_thickness']}.png",
 )
 contrasts_path = os.path.join(
     file_path,
