@@ -17,6 +17,9 @@ from Utils.marker_functions import *
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\duden\Desktop\Mikroskop Bilder"
 SCAN_NAME = "Dataset_Eike_050721"
+MATERIAL = "graphene"
+CHIP_THICKNESS = "90nm"
+
 
 # Directory Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -42,13 +45,13 @@ flat_field_path = os.path.join(
     file_path,
     "Parameters",
     "Flatfields",
-    "90nm.png",
+    f"{CHIP_THICKNESS}.png",
 )
 contrasts_path = os.path.join(
     file_path,
     "Parameters",
     "Contrasts",
-    "graphene_90nm.json",
+    f"{MATERIAL.lower()}_{CHIP_THICKNESS}.json",
 )
 
 image_names = sorted_alphanumeric(os.listdir(image_dir))
