@@ -2,6 +2,7 @@
 .vscode
 __pycache__
 Presentation
+PDFs
 node_modules
 Pictures
 Meta
@@ -18,6 +19,7 @@ tango_dll_errlog.txt
 
 # Databank Driver ignores
 database.ini
+
 
 # Latex Ignore
 main.pdf
