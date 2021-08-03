@@ -60,7 +60,7 @@ class detector_class:
         # Check for layers
         self.searched_layers = which_layers
 
-    def mask_background(self, img, radius=7):
+    def mask_background(self, img, radius=7, blue_bg=0):
         """
         Maskes the Background\n
         The Values are standard values of 90nm SiO Chips with removed Vignette\n
@@ -71,13 +71,14 @@ class detector_class:
         img_b = img[:, :, 0]
 
         # A threshold which removes the Unwanted background of the non chip
-        # ret, threshed_b_background = cv2.threshold(
-        #     img_b, blue_bg, 255, cv2.THRESH_BINARY
-        # )
+        # Currently Unused
+        ret, threshed_b_background = cv2.threshold(
+            img_b, blue_bg, 255, cv2.THRESH_BINARY
+        )
 
-        hist_r = cv2.calcHist([img_r], [0], None, [256], [0, 256])
-        hist_g = cv2.calcHist([img_g], [0], None, [256], [0, 256])
-        hist_b = cv2.calcHist([img_b], [0], None, [256], [0, 256])
+        hist_r = cv2.calcHist([img_r], [0], threshed_b_background, [256], [0, 256])
+        hist_g = cv2.calcHist([img_g], [0], threshed_b_background, [256], [0, 256])
+        hist_b = cv2.calcHist([img_b], [0], threshed_b_background, [256], [0, 256])
 
         hist_max_r = np.argmax(hist_r)
         hist_max_g = np.argmax(hist_g)

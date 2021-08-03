@@ -15,12 +15,15 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\duden\Desktop\Mikroskop Bilder"
-SCAN_NAME = "Dataset_Eike_050721"
-EXFOLIATED_MATERIAL = "graphene"
+IMAGE_DIRECTORY = r"Z:\Taoufiq"
+SCAN_NAME = "Dataset_hBN_200729"
+EXFOLIATED_MATERIAL = "hBN"
 CHIP_THICKNESS = "90nm"
 # -1 if you want to analyse all images
-NUM_ANALYSED_IMAGES = -1
+NUM_ANALYSED_IMAGES = 1000
+ENTROPY_THRESHOLD = 3
+SIZE_THRESHOLD = 200
+
 
 # Directory Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -71,17 +74,16 @@ flat_field = cv2.imread(flat_field_path)
 
 # Defining colors and the Look of the Outline
 colors = {
-    "monolayer": [0, 255, 0],  # green
-    "bilayer": [0, 255, 255],  # yellow
-    "trilayer": [0, 0, 255],  # red
+    key: col
+    for (key, col) in zip(
+        contrast_params.keys(), [[0, 255, 0], [0, 255, 255], [0, 0, 255]]
+    )
 }
 
 # The colors are getting flipped by CV2
 # Thats why lime cyan and blue
 plt_colors = {
-    "monolayer": "lime",  # green
-    "bilayer": "cyan",  # yellow
-    "trilayer": "blue",  # red
+    key: col for (key, col) in zip(contrast_params.keys(), ["lime", "cyan", "blue"])
 }
 
 font_path = os.path.join(os.path.dirname(__file__), "Helvetica.ttf")
@@ -94,8 +96,8 @@ start_time = time.time()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     flat_field=flat_field,
-    entropy_threshold=1.7,
-    size_threshold=200,
+    entropy_threshold=ENTROPY_THRESHOLD,
+    size_threshold=SIZE_THRESHOLD,
 )
 
 # An indexing method for found flakes
