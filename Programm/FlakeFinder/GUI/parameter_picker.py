@@ -122,7 +122,7 @@ class parameter_picker_class:
 
         self.ServerURL_label = Label(self.parameter_picker, text="Server URL")
         self.ServerURL_input = Entry(self.parameter_picker, width=50, borderwidth=5)
-        self.ServerURL_input.insert(0, "localhost:5000/upload")
+        self.ServerURL_input.insert(0, "http://134.61.6.112:5000/upload")
 
         self.Exfoliation_method_label = Label(
             self.parameter_picker, text="Exfoliation Method"

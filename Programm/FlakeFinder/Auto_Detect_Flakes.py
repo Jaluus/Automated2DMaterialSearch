@@ -20,7 +20,7 @@ from Utils.etc_functions import *
 start = time.time()
 
 # Constants
-SERVER_URL = "localhost:5000/upload"
+SERVER_URL = "http://134.61.6.112:5000/upload"
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
 SCAN_NAME = "Eikes_Flocken_Full_Final"
 SCAN_USER = "Eike"
