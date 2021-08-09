@@ -142,8 +142,9 @@ def image_generator(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
-    x_step: float = 0.7380,
-    y_step: float = 0.4613,
+    view_field_x: float = 0.7380,
+    view_field_y: float = 0.4613,
+    magnification_idx: int = 3,
     wait_time: float = 0.1,
 ):
     """
@@ -156,8 +157,9 @@ def image_generator(
         motor_driver (motor_driver_class): The Motordriver
         microscope_driver (microscope_driver_class): The Microscope Driver
         camera_driver (camera_driver_class): The Camera Driver
-        x_step (float, optional): the x Dimension of the 20x Picture. Defaults to 0.7380.
-        y_step (float, optional): the y Dimension of the 20x Picture. Defaults to 0.4613.
+        view_field_x (float, optional): the x Dimension of the 20x Picture. Defaults to 0.7380.
+        view_field_y (float, optional): the y Dimension of the 20x Picture. Defaults to 0.4613.
+        magnification_idx (int, optional): the used magnification index to generate time images with, default is 3.
         wait_time (float, optional): The time to wait after moving before taking a picture in seconds. Defaults to 0.2.
 
     Yields:
@@ -178,10 +180,10 @@ def image_generator(
                 'chip_id' :  The Current Chip_id, starts at 1
     """
 
-    # go into the 20x scope
-    microscope_driver.set_mag(3)
+    # go into the MAGNIFCIATION scope
+    microscope_driver.set_mag(magnification_idx)
     microscope_driver.set_default_values()
-    camera_driver.set_default_properties(3)
+    camera_driver.set_default_properties(magnification_idx)
 
     # get the camera and microscope pros as these wont change
     cam_props = camera_driver.get_properties()
@@ -209,8 +211,8 @@ def image_generator(
             # Calculate the new Position on the plate
             # Round to get rid of floating point errors
             # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = x_step * x_idx
-            y_pos = y_step * y_idx
+            x_pos = view_field_x * x_idx
+            y_pos = view_field_y * y_idx
 
             if x_pos < 0 or y_pos < 0:
                 continue
@@ -254,9 +256,11 @@ def raster_scan_area_map(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
-    x_step: float = 0.7380,
-    y_step: float = 0.4613,
+    view_field_x: float = 0.7380,
+    view_field_y: float = 0.4613,
     wait_time: float = 0.2,
+    magnification: float = 20,
+    **kwargs,
 ):
     """
     Rasters the supplied scan Area Map\\
@@ -268,28 +272,38 @@ def raster_scan_area_map(
         motor_driver (motor_driver_class): The Motordriver
         microscope_driver (microscope_driver_class): The Microscope Driver
         camera_driver (camera_driver_class): The Camera Driver
-        x_step (float, optional): the x Dimension of the 20x Picture. Defaults to 0.7380.
-        y_step (float, optional): the y Dimension of the 20x Picture. Defaults to 0.4613.
+        view_field_x (float, optional): the x Dimension of the Picture. Defaults to 0.7380.
+        view_field_y (float, optional): the y Dimension of the Picture. Defaults to 0.4613.
         wait_time (float, optional): The time to wait after moving before taking a picture in seconds. Defaults to 0.2.
+        magnification (float, optional): The used magnification. Defaults to 20.
 
     Returns:
         Tuple: Returns the Picture Directory and the Meta Directorey where the Image data is saved
     """
 
-    MAGNIFICATION = 20
-
     # creating the folder structure
     magnification_dir, picture_dir, meta_dir = _create_folder_structure(
-        scan_directory, MAGNIFICATION
+        scan_directory, magnification
     )
+
+    mag_dir = {
+        2.5: 1,
+        5: 2,
+        20: 3,
+        50: 4,
+        100: 5,
+    }
+
+    mag_idx = mag_dir[magnification]
 
     image_gen = image_generator(
         area_map=area_map,
         motor_driver=motor_driver,
         microscope_driver=microscope_driver,
         camera_driver=camera_driver,
-        x_step=x_step,
-        y_step=y_step,
+        view_field_x=view_field_x,
+        view_field_y=view_field_y,
+        magnification_idx=mag_idx,
         wait_time=wait_time,
     )
 
@@ -354,8 +368,8 @@ def search_scan_area_map(
         motor_driver=motor_driver,
         microscope_driver=microscope_driver,
         camera_driver=camera_driver,
-        x_step=x_step,
-        y_step=y_step,
+        view_field_x=x_step,
+        view_field_y=y_step,
         wait_time=wait_time,
     )
 

@@ -123,7 +123,7 @@ class camera_driver_class:
             - 5 : 100x
         """
         try:
-            self.set_properties(**self.DEFAULT_PROPERTIES_hBN[magnification])
+            self.set_properties(**self.DEFAULT_PROPERTIES[magnification])
         except KeyError as keyerror:
             print("Wrong Magnification Number")
         except OSError as oserror:

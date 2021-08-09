@@ -148,12 +148,12 @@ def create_scan_area_map_from_mask(
     overview_mask,
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
-    percentage_threshold: float = 0.95,
-    overview_image_x_dimension: float = 105,
-    overview_image_y_dimension: float = 103.333,
-    erode_iterations: int = 0,
     x_offset: float = 2.6121,
     y_offset: float = 1.1672,
+    overview_image_y_dimension: float = 103.333,
+    overview_image_x_dimension: float = 105,
+    percentage_threshold: float = 0.95,
+    erode_iterations: int = 0,
 ):
     """
     Creates a Labeled Scan Area Map and returns it
