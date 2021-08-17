@@ -468,8 +468,8 @@ def read_meta_and_center_flakes(
         1: (0.0406, -0.4534),
         2: (0.0406, -0.2428),
         3: (0, 0),
-        4: (-0.0324, 0.0237),
-        5: (-0.0506, 0.1063),
+        4: (0.01, -0.01),
+        5: (-0.03, 0.03),
     }
 
     MAG_WAITTIME = {
@@ -559,7 +559,7 @@ def reformat_flake_dict(image_dict, flake_dict, flake_directory):
         Keys are:
         "flake": {
             "chip_id": image_chip_id,
-            "position_x": flake positon in mm
+            "position_x": flake positon in mm relative to the middle of the 20x objective
             "position_y": flake positon in mm
             "size": flake_size,
             "thickness": flake_thickness,
@@ -579,7 +579,7 @@ def reformat_flake_dict(image_dict, flake_dict, flake_directory):
     IMAGE_X_DIMENSION = 1920
     IMAGE_Y_DIMENSION = 1200
 
-    # Correcting the XY positions so the Flake is in the Middle, crrently really scuffed, gonna do it better later
+    # Correcting the XY positions so the Flake is in the Middle, currently really scuffed, gonna do it better later
     flake_position_x = round(
         image_dict["motor_pos"][0]
         + (flake_dict["center_rotated"][0] - IMAGE_X_DIMENSION / 2)
