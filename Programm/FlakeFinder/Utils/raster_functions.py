@@ -6,7 +6,7 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from Classes.detection_class import detector_class
+from Detector.detection_class import detector_class
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
@@ -41,12 +41,10 @@ def raster_plate(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
-    x_step: float = 5,
-    y_step: float = 3.333,
-    wait_time: float = 0.2,
 ):
     """
     scan_directory is the directory in which the scan is being saved\n
+    Only used to create the overview Image\n
     magnification is used for naming\n
     returns the picture and meta directory\n
 
@@ -58,6 +56,9 @@ def raster_plate(
     => 31 columns\n
     """
 
+    X_STEP = 5
+    Y_STEP = 3.333
+    WAIT_TIME = 0.2
     MAGNIFICATION = 2.5
 
     # creates the folder stucture
@@ -79,8 +80,8 @@ def raster_plate(
     time.sleep(1)
 
     # Checks if it is actually at 00
-    can_move_x = motor_driver.can_move(x_step, 0)
-    can_move_y = motor_driver.can_move(0, y_step)
+    can_move_x = motor_driver.can_move(X_STEP, 0)
+    can_move_y = motor_driver.can_move(0, Y_STEP)
 
     # get the properties as these dont change
     cam_props = camera_driver.get_properties()
@@ -121,19 +122,19 @@ def raster_plate(
                 json.dump(all_props, fp, sort_keys=True, indent=4)
 
             # Take image here wait 100ms to stabilze the camera
-            time.sleep(wait_time)
+            time.sleep(WAIT_TIME)
             img = camera_driver.get_image()
             picture_path = os.path.join(picture_dir, f"{curr_idx}.png")
             cv2.imwrite(picture_path, img)
 
-            can_move_y = motor_driver.rel_move(0, direction * y_step)
+            can_move_y = motor_driver.rel_move(0, direction * Y_STEP)
 
         # Switch direction
         direction = -1 * direction
         # Move one x unit over
-        can_move_x = motor_driver.rel_move(x_step, 0)
+        can_move_x = motor_driver.rel_move(X_STEP, 0)
         # Check if you can move
-        can_move_y = motor_driver.can_move(0, direction * y_step)
+        can_move_y = motor_driver.can_move(0, direction * Y_STEP)
     return picture_dir, meta_dir
 
 

@@ -5,10 +5,8 @@ import functools
 import json
 import os
 import re
-import time
 import sys
-
-sys.path.append(r"C:\Users\duden\Desktop\UniRepos\BachelorThesis\Programm\FlakeFinder")
+import time
 
 import cv2
 import matplotlib.pyplot as plt

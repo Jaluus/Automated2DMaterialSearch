@@ -1,3 +1,4 @@
+from Programm.FlakeFinder.Create_Dataset import MAGNIFICATION
 import os
 import cv2
 import time
@@ -11,7 +12,7 @@ from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
 from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Classes.detection_class import detector_class
+from Detector.detection_class import detector_class
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
@@ -26,6 +27,7 @@ SCAN_NAME = "Eikes_Flocken_Full_Final"
 SCAN_USER = "Eike"
 EXFOLIATED_MATERIAL = "Graphene"
 CHIP_THICKNESS = "90nm"
+MAGNIFICATION = 20
 
 # Filter Parameter
 ENTROPY_THRESHOLD = 2.4
@@ -36,9 +38,9 @@ SIGMA_THRESHOLD = 50
 META_DICT = {
     "scan_user": SCAN_USER,
     "scan_name": SCAN_NAME,
-    "chip_thickness": CHIP_THICKNESS,
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
     "scan_time": time.time(),
+    "chip_thickness": CHIP_THICKNESS,
 }
 
 # Directory Paths
@@ -91,6 +93,8 @@ myDetector = detector_class(
     flat_field=flat_field,
     size_threshold=SIZE_THRESHOLD,
     entropy_threshold=ENTROPY_THRESHOLD,
+    sigma_treshold=SIGMA_THRESHOLD,
+    magnification=MAGNIFICATION,
 )
 
 print("Starting to raster in 2.5x...")
@@ -136,7 +140,7 @@ print(
     f"Time to create overview Image: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
 )
 
-print("Please Calibrate the 20x Scope")
+print(f"Please Calibrate the {MAGNIFICATION}x Scope")
 print("Use E and R to Swap the Scopes")
 print("Use Q to finish the Calibration")
 print("Make sure to end the Calibration when in the 20x Scope")
@@ -148,7 +152,7 @@ calibrate_scope(
 
 local = time.time()
 
-print("Finding Flakes in 20x...")
+print(f"Finding Flakes in {MAGNIFICATION}x...")
 raster.search_scan_area_map(
     scan_directory=scan_directory,
     area_map=labeled_scan_area,
@@ -160,7 +164,7 @@ raster.search_scan_area_map(
 )
 
 print(
-    f"Time to search in 20x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
+    f"Time to search in {MAGNIFICATION}x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
 )
 local = time.time()
 
@@ -184,8 +188,8 @@ microscope_driver.lamp_off()
 print("Creating Histograms...")
 Create_Metahistograms(scan_directory)
 
-# print("Uploading the Scan Directory...")
-# uploader.upload_directory(scan_directory, SERVER_URL)
+print("Uploading the Scan Directory...")
+uploader.upload_directory(scan_directory, SERVER_URL)
 
 print(
     f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"

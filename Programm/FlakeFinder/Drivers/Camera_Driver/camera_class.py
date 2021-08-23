@@ -111,7 +111,7 @@ class camera_driver_class:
     def get_camera(self):
         return self.camera
 
-    def set_default_properties(self, magnification: int):
+    def eset_default_properties(self, magnification: int):
         """set default properties for each magnifiaction
 
         Args:

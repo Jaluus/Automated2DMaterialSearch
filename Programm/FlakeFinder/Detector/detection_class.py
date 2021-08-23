@@ -8,6 +8,8 @@ from skimage.morphology import disk
 import copy
 import matplotlib.pyplot as plt
 
+from Detector.detector_functions import remove_vignette
+
 
 class detector_class:
     """
@@ -28,24 +30,37 @@ class detector_class:
         self,
         contrast_dict: dict,
         flat_field=None,
-        size_threshold=200,
-        entropy_threshold=2.4,
+        size_threshold: int = 0,
+        entropy_threshold: float = np.inf,
+        sigma_treshold: float = np.inf,
+        magnification: float = 20,
     ):
         """Create the Detection Class
 
         Args:
             contrast_dict (dict): A Dictionary with the Keys "layers" and "color_radius"
             flat_field (NxMx1 Array, optional): The background Image, if none is given doesnt correct the Vignette, HIGHLY RECOMMENDED. Defaults to None.
+            size_treshold (int, optional): The minimum size of a detected Flake, in nm. Defaults to 0.
+            entropy_threshold (float, optional): The maxmimum Entropy of a detected Flake, good values are about 2.4. Defaults to Infinity.
+            sigma_treshold (float, optional): The maximum Sigma, aka the proximity values of a detected Flake good values aber abot 30 to 50. Defaults to Infinity.
+            magnification (float, optional): The Magnification of the Camera, used to calculate the size of the flakes. Defaults to 20.
         """
+        # these are some parameters for the calculation of flake size
+        self.micrometer_per_pixel = {
+            2.5: 3.0754,
+            5: 1.5377,
+            20: 0.3844,
+            50: 0.1538,
+            100: 0.0769,
+        }
 
         self.flat_field = flat_field.copy()
-
-        # make sure not to accidentally fuck up your dict
         self.contrast_dict = copy.deepcopy(contrast_dict)
         self.searched_layers = self.contrast_dict.keys()
-
         self.size_thresh = size_threshold
         self.entropy_thresh = entropy_threshold
+        self.sigma_thresh = sigma_treshold
+        self.magnification = magnification
 
     def set_searched_layers(
         self,
@@ -123,39 +138,6 @@ class detector_class:
                 image[:, :, i] - mean_background_values[i]
             ) / mean_background_values[i]
         return contrasts
-
-    def remove_vignette(self, image, flat_field):
-        """Removes the Vignette from the Image
-
-        Args:
-            image (NxMx3 Array): The Image with the Vignette
-            flat_field (NxMx3 Array): the Flat Field in RGB
-
-        Returns:
-            (NxMx3 Array): The Image without the Vignette
-        """
-        # convert to hsv and cast to 16bit, to be able to add more than 255
-        image_hsv = np.asarray(cv2.cvtColor(image, cv2.COLOR_BGR2HSV), dtype=np.uint16)
-        flat_field_hsv = np.asarray(
-            cv2.cvtColor(flat_field, cv2.COLOR_BGR2HSV), dtype=np.uint16
-        )
-
-        # get the filter and apply it to the image
-        image_hsv[:, :, 2] = (
-            image_hsv[:, :, 2]
-            / flat_field_hsv[:, :, 2]
-            * cv2.mean(flat_field_hsv[:, :, 2])[0]
-        )
-
-        # clip it back to 255
-        image_hsv[:, :, 2][image_hsv[:, :, 2] > 255] = 255
-
-        # Recast to uint8 as the color depth is 8bit per channel
-        image_hsv = np.asarray(image_hsv, dtype=np.uint8)
-
-        # reconvert to bgr
-        image_no_vigentte = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
-        return image_no_vigentte
 
     def mask_contrasted_image(
         self,
@@ -272,12 +254,12 @@ class detector_class:
         masks = {}
         num_pixels = {}
         detected_flakes = []
-        MICROMETER_PER_PIXEL = 0.3833
+        MICROMETER_PER_PIXEL = self.micrometer_per_pixel[self.magnification]
         BACKGROUND_THRESH = 0.2
 
         # Removing the Vignette from the Image
         if self.flat_field is not None:
-            image = self.remove_vignette(
+            image = remove_vignette(
                 image,
                 self.flat_field,
             )
@@ -478,20 +460,3 @@ class detector_class:
                 detected_flakes.append(flake_dict)
 
         return np.array(detected_flakes)
-
-
-if __name__ == "__main__":
-    import json
-
-    img = cv2.imread("9_112.png")
-
-    ff = cv2.imread("flat_fields/90nm.png")
-
-    img = cv2.GaussianBlur(img, (3, 3), 3)
-
-    with open("json/contrasts.json") as f:
-        json_data = json.load(f)
-
-    myDetector = detector_class(json_data)
-
-    arr = myDetector.detect_flakes(img, size_thresh=0)

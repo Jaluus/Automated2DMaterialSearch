@@ -9,7 +9,7 @@ import numpy as np
 from skimage.morphology import disk
 from PIL import ImageFont, ImageDraw, Image
 
-from Classes.detection_class import detector_class
+from Detector.detection_class import detector_class
 from Utils.etc_functions import *
 from Utils.marker_functions import *
 
@@ -19,10 +19,15 @@ IMAGE_DIRECTORY = r"Z:\Taoufiq"
 SCAN_NAME = "Dataset_hBN_200729"
 EXFOLIATED_MATERIAL = "hBN"
 CHIP_THICKNESS = "90nm"
-# -1 if you want to analyse all images
-NUM_ANALYSED_IMAGES = 1000
+MAGNIFICATION = 50
+
+# Some Threshold parameters
 ENTROPY_THRESHOLD = 3
 SIZE_THRESHOLD = 200
+SIGMA_THRESHOLD = 50
+
+# -1 if you want to analyse all images
+NUM_ANALYSED_IMAGES = 1000
 
 
 # Directory Paths
@@ -30,10 +35,10 @@ file_path = os.path.dirname(os.path.abspath(__file__))
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # Defining directorys
-save_dir = os.path.join(scan_directory, "20x", "Masked_Images")
-save_dir_meta = os.path.join(scan_directory, "20x", "Masked_Images_Meta")
-image_dir = os.path.join(scan_directory, "20x", "Pictures")
-meta_dir = os.path.join(scan_directory, "20x", "Meta")
+save_dir = os.path.join(scan_directory, f"{MAGNIFICATION}x", "Masked_Images")
+save_dir_meta = os.path.join(scan_directory, f"{MAGNIFICATION}x", "Masked_Images_Meta")
+image_dir = os.path.join(scan_directory, f"{MAGNIFICATION}x", "Pictures")
+meta_dir = os.path.join(scan_directory, f"{MAGNIFICATION}x", "Meta")
 overview_path = os.path.join(scan_directory, "overview.png")
 marked_overview_path = os.path.join(scan_directory, "overview_marked.png")
 scan_meta_data_path = os.path.join(scan_directory, "meta.json")
