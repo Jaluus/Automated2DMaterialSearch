@@ -14,15 +14,16 @@ from Drivers.Motor_Driver.tango_class import motor_driver_class
 from Utils.etc_functions import calibrate_scope
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
+from Classes import detection_class
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Documents\Mic_bilder"
 EXFOLIATED_MATERIAL = "WSe2"
-SCAN_NAME = "Dataset_Tiffi_210805"
+SCAN_NAME = "2021-08-18_Dataset_Timo_WSe2"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "tiffi"
-EXFOLIATION_METHOD = "SWT10plus"
-# Possibilities  20 , 50 , 100 , 5
+SCAN_USER = "Timo"
+EXFOLIATION_METHOD = "-"
+# Possibilities  20 , 50
 MAGNIFICATION = 50
 
 
@@ -51,7 +52,6 @@ magnificaiton_path = os.path.join(
     "Scan_Magnification",
     f"{MAGNIFICATION}x.json",
 )
-
 camera_param_path = os.path.join(
     file_path,
     "Parameters",
@@ -142,6 +142,9 @@ raster.raster_scan_area_map(
     magnification=MAGNIFICATION,
     **mag_params,
 )
+
+# Turns of the lamp to save lifetime
+microscope_driver.lamp_off()
 
 print(
     f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"

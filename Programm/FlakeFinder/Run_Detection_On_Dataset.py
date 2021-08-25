@@ -15,14 +15,14 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"Z:\Taoufiq"
-SCAN_NAME = "Dataset_hBN_200729"
-EXFOLIATED_MATERIAL = "hBN"
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Documents\Mic_bilder"
+SCAN_NAME = "2021-08-18_Dataset_Timo_WSe2"
+EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "90nm"
 # -1 if you want to analyse all images
-NUM_ANALYSED_IMAGES = 1000
-ENTROPY_THRESHOLD = 3
-SIZE_THRESHOLD = 200
+NUM_ANALYSED_IMAGES = -1
+ENTROPY_THRESHOLD = 10
+SIZE_THRESHOLD = 160
 
 
 # Directory Paths
@@ -30,10 +30,18 @@ file_path = os.path.dirname(os.path.abspath(__file__))
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # Defining directorys
-save_dir = os.path.join(scan_directory, "20x", "Masked_Images")
-save_dir_meta = os.path.join(scan_directory, "20x", "Masked_Images_Meta")
-image_dir = os.path.join(scan_directory, "20x", "Pictures")
-meta_dir = os.path.join(scan_directory, "20x", "Meta")
+save_dir = os.path.join(
+    scan_directory, "50x", "Masked_Images"
+)  # save_dir = os.path.join(scan_directory, "20x", "Masked_Images")
+save_dir_meta = os.path.join(
+    scan_directory, "50x", "Masked_Images_Meta"
+)  # save_dir_meta = os.path.join(scan_directory, "20x", "Masked_Images_Meta")
+image_dir = os.path.join(
+    scan_directory, "50x", "Pictures"
+)  # image_dir = os.path.join(scan_directory, "20x", "Pictures")
+meta_dir = os.path.join(
+    scan_directory, "50x", "Meta"
+)  # meta_dir = os.path.join(scan_directory, "20x", "Meta")
 overview_path = os.path.join(scan_directory, "overview.png")
 marked_overview_path = os.path.join(scan_directory, "overview_marked.png")
 scan_meta_data_path = os.path.join(scan_directory, "meta.json")
