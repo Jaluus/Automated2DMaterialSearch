@@ -12,13 +12,13 @@ A contrast-based approach to detect 2D Materials
 
 Without Anaconda you can use venv or virtualenv, Step 3 is still the same
 
-### Databank Driver
+<!-- ### Databank Driver
 
 Install MySQL by downloading it from [the official website](https://www.mysql.com/de/)
 
 __Used Version__ : 8.0.25
 
-<!-- ### Databank Interface on Windows
+### Databank Interface on Windows
 
 1. Download Apache Lounge form [here](<https://www.apachelounge.com/download/>). I used version `httpd-2.4.48-win64-VS16.zip`
 2. Unzip the file
@@ -29,7 +29,7 @@ __Used Version__ : 8.0.25
 7. Yeay, you now have a running webserver!
 8. (Optional) Run `ipconfig` in the CMD to find your Local IP address and access the server -->
 
-### Microscope Module
+### Microscope Driver
 
 Install the NikonLV SDK, which should be automatically installed when you install NIS-Elements
 
