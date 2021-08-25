@@ -1,4 +1,6 @@
-# Automated Flake search
+# Automated 2D Material Searching Algorithm
+
+A contrast-based approach to detect 2D Materials
 
 ## Installation
 
@@ -14,22 +16,36 @@ Without Anaconda you can use venv or virtualenv, Step 3 is still the same
 
 Install MySQL by downloading it from [the official website](https://www.mysql.com/de/)
 
-Current Version: 8.0.25
+__Used Version__ : 8.0.25
 
-### Databank Interface on Windows
+<!-- ### Databank Interface on Windows
 
-1. Download Apache Lounge form [here]{<https://www.apachelounge.com/download/>}. I used version `httpd-2.4.48-win64-VS16.zip`
+1. Download Apache Lounge form [here](<https://www.apachelounge.com/download/>). I used version `httpd-2.4.48-win64-VS16.zip`
 2. Unzip the file
 3. Move the `Apache24` folder to `C:\Apache24`
 4. Open the CMD __*with*__ admin rights
 5. Run `cd C:\Apache24\bin httpd -k install` to install the service and allow all communication
 6. Open Services on windows and search for Apache24 and start the service
 7. Yeay, you now have a running webserver!
-8. (Optional) Run `ipconfig` in the CMD to find your Local IP address and access the server
+8. (Optional) Run `ipconfig` in the CMD to find your Local IP address and access the server -->
 
 ### Microscope Module
 
 Install the NikonLV SDK, which should be automatically installed when you install NIS-Elements
+
+## TODO
+
+- Drivers
+  - Read camera parameters
+  - Interface with the autofocus
+- GUI
+  - Add the ability to choose the magnification the to UI
+  - Overhaul the UI?
+- General
+  - Add the front- and backend to the repo
+  - General Errorlogging into a txt
+  - Write more documentation
+  - Add a wiki
 
 ## Possible errors
 
