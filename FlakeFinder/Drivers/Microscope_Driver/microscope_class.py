@@ -67,22 +67,10 @@ class microscope_driver_class:
         4 : 50x 3900µm\n
         5 : 100x 3900µm\n
         """
-        height = 5500
-        if mag_idx == 1:
-            height = 5500
-        elif mag_idx == 2:
-            height = 4300
-        elif mag_idx == 3:
-            height = 3930
-        elif mag_idx == 4:
-            height = 3900
-        elif mag_idx == 5:
-            height = 3900
+        if 0 < mag_idx < 6:
+            self.micro.Nosepiece.Position = mag_idx
         else:
-            print("Wrong Idx, need values between 1 and 5")
-            return
-        self.micro.Nosepiece.Position = mag_idx
-        self.set_z_height(height)
+            print(f"Wrong Mag Idx, you gave {mag_idx}, needs to be 1 to 5")
 
     def set_lamp_aperture_stop(self, aperture_stop: float):
         self.micro.EpiApertureStop.ApertureStop = aperture_stop
