@@ -1,4 +1,3 @@
-from Programm.FlakeFinder.Create_Dataset import MAGNIFICATION
 import os
 import cv2
 import time
