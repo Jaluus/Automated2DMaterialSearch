@@ -7,12 +7,13 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from Detector.detection_class import detector_class
+from Detector.detector_functions import remove_vignette
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
 from skimage.morphology import disk
 
-from Utils.etc_functions import get_flake_directorys
+from Utils.etc_functions import get_flake_directorys, set_microscope_and_camera_settings
 from Utils.marker_functions import *
 
 
@@ -41,6 +42,8 @@ def raster_plate(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
+    camera_settings: dict,
+    microscope_settings: dict,
 ):
     """
     scan_directory is the directory in which the scan is being saved\n
@@ -69,21 +72,20 @@ def raster_plate(
     # Start at 00 and make sure to be in 2.5x Mag
     motor_driver.abs_move(0, 0)
 
-    # go into the 2.5x scope, wait for a secound for the setting to tkae effect
-    microscope_driver.set_mag(1)
-    time.sleep(1)
-
-    microscope_driver.set_default_values()
-    time.sleep(1)
-
-    camera_driver.set_default_properties(1)
-    time.sleep(1)
+    # Set the Camera Settings
+    set_microscope_and_camera_settings(
+        microscope_settings_dict=microscope_settings,
+        camera_settings_dict=camera_settings,
+        magnification=MAGNIFICATION,
+        camera_driver=camera_driver,
+        microscope_driver=microscope_driver,
+    )
 
     # Checks if it is actually at 00
     can_move_x = motor_driver.can_move(X_STEP, 0)
     can_move_y = motor_driver.can_move(0, Y_STEP)
 
-    # get the properties as these dont change
+    # get the properties as these dont change, Redundant?
     cam_props = camera_driver.get_properties()
     mic_props = microscope_driver.get_properties()
 
@@ -94,8 +96,12 @@ def raster_plate(
         while can_move_y:
             curr_idx += 1
 
+            # {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}
+
+            seconds_to_go = (651 - curr_idx) * (time.time() - start_time) / curr_idx
+
             print(
-                f"\r{curr_idx}/651 scanned | Time to go : {(651 - curr_idx) * (time.time() - start_time) / curr_idx :.0f}s\r",
+                f"\r{curr_idx}/651 scanned | Time to go : {seconds_to_go // 3600:02.0f}:{(seconds_to_go // 60 )% 60:02.0f}:{int(seconds_to_go) % 60:02.0f}\r",
                 end="",
                 flush=True,
             )
@@ -143,6 +149,8 @@ def image_generator(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
+    camera_settings: dict,
+    microscope_settings: dict,
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
     magnification_idx: int = 3,
@@ -158,6 +166,8 @@ def image_generator(
         motor_driver (motor_driver_class): The Motordriver
         microscope_driver (microscope_driver_class): The Microscope Driver
         camera_driver (camera_driver_class): The Camera Driver
+        microscope_settings (dict): The settings for the microscope.
+        camera_settings (dict): The settings for the camera.
         view_field_x (float, optional): the x Dimension of the 20x Picture. Defaults to 0.7380.
         view_field_y (float, optional): the y Dimension of the 20x Picture. Defaults to 0.4613.
         magnification_idx (int, optional): the used magnification index to generate time images with, default is 3.
@@ -181,10 +191,13 @@ def image_generator(
                 'chip_id' :  The Current Chip_id, starts at 1
     """
 
-    # go into the MAGNIFCIATION scope
-    microscope_driver.set_mag(magnification_idx)
-    microscope_driver.set_default_values()
-    camera_driver.set_default_properties(magnification_idx)
+    set_microscope_and_camera_settings(
+        microscope_settings_dict=microscope_settings,
+        camera_settings_dict=camera_settings,
+        magnification=magnification_idx,
+        camera_driver=camera_driver,
+        microscope_driver=microscope_driver,
+    )
 
     # get the camera and microscope pros as these wont change
     cam_props = camera_driver.get_properties()
@@ -196,6 +209,7 @@ def image_generator(
     curr_idx = 0
     image = None
     all_props = None
+    start_time = time.time()
 
     for y_idx in range(area_map.shape[0]):
 
@@ -209,9 +223,6 @@ def image_generator(
             if area_map[y_idx, x_idx] == 0:
                 continue
 
-            # Calculate the new Position on the plate
-            # Round to get rid of floating point errors
-            # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
             x_pos = view_field_x * x_idx
             y_pos = view_field_y * y_idx
 
@@ -226,8 +237,13 @@ def image_generator(
 
             # just for Logging
             curr_idx += 1
+
+            seconds_to_go = (
+                (num_images - curr_idx) * (time.time() - start_time) / curr_idx
+            )
+
             print(
-                f"\r{curr_idx}/{num_images} scanned\r",
+                f"\r{curr_idx}/{num_images} scanned | Time to go : ~ {seconds_to_go // 3600:02.0f}:{(seconds_to_go // 60 )% 60:02.0f}:{int(seconds_to_go) % 60:02.0f}\r",
                 end="",
                 flush=True,
             )
@@ -257,6 +273,7 @@ def raster_scan_area_map(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
+    flat_field=None,
     view_field_x: float = 0.7380,
     view_field_y: float = 0.4613,
     wait_time: float = 0.2,
@@ -315,6 +332,9 @@ def raster_scan_area_map(
         if image is None:
             continue
 
+        if flat_field is not None:
+            image = remove_vignette(image, flat_field=flat_field)
+
         # save the Image in its own Path
         picture_path = os.path.join(picture_dir, f"{idx}.png")
         cv2.imwrite(picture_path, image)
@@ -334,11 +354,14 @@ def search_scan_area_map(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
+    camera_settings: dict,
+    microscope_settings: dict,
     detector: detector_class,
-    x_step: float = 0.7380,
-    y_step: float = 0.4613,
-    wait_time: float = 0.2,
     overview=None,
+    view_field_x: float = 0.7380,
+    view_field_y: float = 0.4613,
+    wait_time: float = 0.2,
+    **kwargs,
 ):
     """
     Searches the supplied scan Area Map for Flakes\\
@@ -363,15 +386,17 @@ def search_scan_area_map(
     # 1. Scan the entire Area for flakes and save them in their respective folders
     # 2. Read back all the Metadata and retake images in 20x
 
-    # Initiating the Generator, we fetch images from it
+    # Initializing the Generator, we fetch images from it
     image_gen = image_generator(
         area_map=area_map,
         motor_driver=motor_driver,
         microscope_driver=microscope_driver,
         camera_driver=camera_driver,
-        view_field_x=x_step,
-        view_field_y=y_step,
+        view_field_x=view_field_x,
+        view_field_y=view_field_y,
         wait_time=wait_time,
+        microscope_settings=microscope_settings,
+        camera_settings=camera_settings,
     )
 
     # Autoincrementing Flake ID
@@ -445,7 +470,9 @@ def read_meta_and_center_flakes(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
-    magnification: int = 3,
+    camera_settings: dict,
+    microscope_settings: dict,
+    magnification_idx: int = 3,
 ):
     """[summary]
 
@@ -454,7 +481,7 @@ def read_meta_and_center_flakes(
         motor_driver (motor_driver_class): [description]
         microscope_driver (microscope_driver_class): [description]
         camera_driver (camera_driver_class): [description]
-        magnification (int, optional): [description]. Defaults to 3.
+        magnification_idx (int, optional): [description]. Defaults to 3.
     """
     IMAGE_KEYS = {
         1: "2.5x",
@@ -481,21 +508,13 @@ def read_meta_and_center_flakes(
         5: 0.3,
     }
 
-    print(f"setting mag to {magnification}")
-    microscope_driver.set_mag(magnification)
-
-    # Wait a short time to make sure the setting took over
-    time.sleep(1)
-
-    camera_driver.set_default_properties(magnification)
-
-    # Wait a short time to make sure the setting took over
-    time.sleep(1)
-
-    microscope_driver.set_default_values()
-
-    # Wait a short time to make sure the setting took over
-    time.sleep(1)
+    set_microscope_and_camera_settings(
+        microscope_settings_dict=microscope_settings,
+        camera_settings_dict=camera_settings,
+        magnification=magnification_idx,
+        camera_driver=camera_driver,
+        microscope_driver=microscope_driver,
+    )
 
     # get the properties relevant for the Image, these wont change
     cam_props = camera_driver.get_properties()
@@ -506,9 +525,9 @@ def read_meta_and_center_flakes(
     }
 
     try:
-        current_image_key = IMAGE_KEYS[magnification]
-        xy_offset = MAG_OFFSET[magnification]
-        wait_time = MAG_WAITTIME[magnification]
+        current_image_key = IMAGE_KEYS[magnification_idx]
+        xy_offset = MAG_OFFSET[magnification_idx]
+        wait_time = MAG_WAITTIME[magnification_idx]
     except KeyError as e:
         print("Wrong Magnification you need an int between 1 and 5, defaulting to 20x")
         current_image_key = IMAGE_KEYS[3]
@@ -548,7 +567,11 @@ def read_meta_and_center_flakes(
             json.dump(meta_data, f, sort_keys=True, indent=4)
 
 
-def reformat_flake_dict(image_dict, flake_dict, flake_directory):
+def reformat_flake_dict(
+    image_dict,
+    flake_dict,
+    flake_directory,
+):
     """Creates a Dict used to classify the Flakes from the Image dict, as well as from the Flake_dict, corrects the flake position for the 20x scope
 
     Args:
@@ -630,114 +653,3 @@ def reformat_flake_dict(image_dict, flake_dict, flake_directory):
     full_meta_dict = {"flake": new_flake_dict, "images": {}}
 
     return full_meta_dict, flake_dict["mask"]
-
-
-def raster_scan_area_map_legacy(
-    scan_directory: str,
-    area_map,
-    motor_driver: motor_driver_class,
-    microscope_driver: microscope_driver_class,
-    camera_driver: camera_driver_class,
-    x_dimension: float = 0.7380,
-    y_dimension: float = 0.4613,
-    x_offset: float = 0,
-    y_offset: float = 0,
-    magnification: float = 20,
-    wait_time: float = 0.2,
-):
-    """
-    Rasters the supplied scan Area Map\\
-    Used to Create a Dataset as it saves all the taken Images
-
-    Args:
-        scan_directory (str): The Directory where the Scan is Located
-        area_map (NxMx1 Array): A Map of the Chips with where to scan
-        motor_driver (motor_driver_class): The Motordriver
-        microscope_driver (microscope_driver_class): The Microscope Driver
-        camera_driver (camera_driver_class): The Camera Driver
-        x_dimension (float, optional): the x Dimension of the 20x Picture. Defaults to 0.7380.
-        y_dimension (float, optional): the y Dimension of the 20x Picture. Defaults to 0.4613.
-        x_offset (float, optional): The x offset of the Scan Area Map in mm. Defaults to 0.
-        y_offset (float, optional): The y offset of the Scan Area Map in mm. Defaults to 0.
-        magnification (float, optional): The Magification with which the Chips are getting scanned, only for File Naming. Defaults to 20.
-        wait_time (float, optional): The time to wait after moving before taking a picture in seconds. Defaults to 0.2.
-
-    Returns:
-        Tuple: Returns the Picture Directory and the Meta Directorey where the Image data is saved
-    """
-
-    # creating the folder structure
-    magnification_dir, picture_dir, meta_dir = _create_folder_structure(
-        scan_directory, magnification
-    )
-
-    # go into the 20x scope
-    microscope_driver.set_mag(3)
-    camera_driver.set_default_properties(3)
-    microscope_driver.set_default_values()
-
-    # get the camera and microscope pros as these wont change
-    cam_props = camera_driver.get_properties()
-    mic_props = microscope_driver.get_properties()
-
-    num_images = cv2.countNonZero(area_map)
-
-    curr_idx = 0
-
-    for y_idx in range(area_map.shape[0]):
-
-        # this implements a snake like pattern, its faster
-        row = range(area_map.shape[1])
-        if y_idx % 2 == 1:
-            row = reversed(row)
-
-        for x_idx in row:
-            # Dont scan anything is the areamap is 0 as only 1s are beeing scanned
-            if area_map[y_idx, x_idx] == 0:
-                continue
-
-            curr_idx += 1
-
-            print(
-                f"\r{curr_idx}/{num_images} scanned\r",
-                end="",
-                flush=True,
-            )
-
-            # Calculate the new Posiiton on the plate
-            # Round to get rid of floating point errors
-            # if you want check out https://www.youtube.com/watch?v=s9F8pu5KfyM
-            x_pos = round(x_dimension * x_idx - x_offset, 4)
-            y_pos = round(y_dimension * y_idx - y_offset, 4)
-
-            # move to the new Position
-            motor_driver.abs_move(x_pos, y_pos)
-
-            # get the motor props
-            motor_pos = motor_driver.get_pos()
-            all_props = {
-                **cam_props,
-                **mic_props,
-                "motor_pos": motor_pos,
-                "chip_id": int(area_map[y_idx, x_idx]),
-            }
-
-            # Take image here
-            if wait_time > 0:
-                time.sleep(wait_time)
-
-            image = camera_driver.get_image()
-
-            # Do all Loads of stuff with the image
-            # Run detection algorithm
-            # If it detects something save the Flake positions in a Metadata File
-            # as well as all metadate belonging to the image
-
-            picture_path = os.path.join(picture_dir, f"{x_idx}_{y_idx}.png")
-            cv2.imwrite(picture_path, image)
-
-            # Save all the metadata in a JSON file
-            json_path = os.path.join(meta_dir, f"{x_idx}_{y_idx}.json")
-            with open(json_path, "w") as fp:
-                json.dump(all_props, fp, sort_keys=True, indent=4)
-    return picture_dir, meta_dir

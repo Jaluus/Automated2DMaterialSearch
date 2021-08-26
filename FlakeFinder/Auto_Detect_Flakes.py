@@ -52,28 +52,48 @@ overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
 mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
+parameter_directory = os.path.join(file_path, "Parameters")
 
 flat_field_path = os.path.join(
-    file_path,
-    "Parameters",
+    parameter_directory,
     "Flatfields",
     f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
 )
-contrasts_path = os.path.join(
-    file_path,
-    "Parameters",
+contrast_params_path = os.path.join(
+    parameter_directory,
     "Contrasts",
     f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
 )
+camera_settings_path = os.path.join(
+    parameter_directory,
+    "Camera_Parameters",
+    f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
+)
+microscope_settings_path = os.path.join(
+    parameter_directory,
+    "Microscope_Parameters",
+    f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
+)
+magnification_params_path = os.path.join(
+    parameter_directory,
+    "Scan_Magnification",
+    f"{MAGNIFICATION}x.json",
+)
 
 # Open the Jsons and get the needed Data
-with open(contrasts_path) as f:
+with open(contrast_params_path) as f:
     contrast_params = json.load(f)
+with open(camera_settings_path) as f:
+    camera_settings = json.load(f)
+with open(microscope_settings_path) as f:
+    microscope_settings = json.load(f)
+with open(magnification_params_path) as f:
+    magnification_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
 
-# Creating Paths
+# Creating Directories for the Scan
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
 
@@ -98,10 +118,12 @@ myDetector = detector_class(
 
 print("Starting to raster in 2.5x...")
 image_2_directory, meta_2_directory = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
+    scan_directory=scan_directory,
+    motor_driver=motor_driver,
+    microscope_driver=microscope_driver,
+    camera_driver=camera_driver,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
 )
 
 print("Compressing 2.5x Images...")
@@ -128,6 +150,7 @@ print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
     masked_overview,
     erode_iterations=1,
+    **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
@@ -160,6 +183,9 @@ raster.search_scan_area_map(
     camera_driver=camera_driver,
     detector=myDetector,
     overview=overview_image_compressed,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
+    **magnification_params,
 )
 
 print(
@@ -174,7 +200,9 @@ for mag in [3, 4, 5, 1, 2]:
         motor_driver,
         microscope_driver,
         camera_driver,
-        magnification=mag,
+        magnification_idx=mag,
+        camera_settings=camera_settings,
+        microscope_settings=microscope_settings,
     )
 
 print(

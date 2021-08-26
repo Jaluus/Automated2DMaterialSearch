@@ -25,7 +25,6 @@ EXFOLIATION_METHOD = "SWT10plus"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 50
 
-
 META_DICT = {
     "scan_user": SCAN_USER,
     "scan_name": SCAN_NAME,
@@ -45,35 +44,47 @@ overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
 mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
-magnificaiton_path = os.path.join(
-    file_path,
-    "Parameters",
+parameter_directory = os.path.join(file_path, "Parameters")
+
+flat_field_path = os.path.join(
+    parameter_directory,
+    "Flatfields",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
+)
+magnification_params_path = os.path.join(
+    parameter_directory,
     "Scan_Magnification",
     f"{MAGNIFICATION}x.json",
 )
-
-camera_param_path = os.path.join(
-    file_path,
-    "Parameters",
+camera_settings_path = os.path.join(
+    parameter_directory,
     "Camera_Parameters",
     f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
 )
+microscope_settings_path = os.path.join(
+    parameter_directory,
+    "Microscope_Parameters",
+    f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
+)
+
+# Get the data from the json files
+with open(camera_settings_path) as f:
+    camera_settings = json.load(f)
+with open(microscope_settings_path) as f:
+    microscope_settings = json.load(f)
+with open(magnification_params_path) as f:
+    magnification_params = json.load(f)
 
 # Creating Paths
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
 
-# Dump the Scan Metadata into the folder
-with open(scan_meta_path, "w") as fp:
-    json.dump(META_DICT, fp, sort_keys=True, indent=4)
+# Dump the meta data
+with open(scan_meta_path, "w") as f:
+    json.dump(META_DICT, f, sort_keys=True, indent=4)
 
-# Read back to objective settings
-with open(magnificaiton_path, "r") as fp:
-    mag_params = json.load(fp)
-
-# Read back to Camera settings
-with open(camera_param_path, "r") as fp:
-    cam_params = json.load(fp)
+# Read the flat field
+flat_field = cv2.imread(flat_field_path)
 
 # Init the drivers
 motor_driver = motor_driver_class()
@@ -111,19 +122,18 @@ masked_overview = cv2.imread(mask_path, 0)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    masked_overview, **mag_params
+    masked_overview,
+    erode_iterations=1,
+    **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
-labeled_scan_area = cv2.imread(
-    scan_area_path,
-    0,
-)
-
-print(f"Please Calibrate the {MAGNIFICATION}x Scope")
+print("----------------------------")
+print(f"Please calibrate the {MAGNIFICATION}x Scope")
 print("Use E and R to Swap the Scopes")
 print("Use Q to finish the Calibration")
 print(f"Make sure to end the Calibration when in the {MAGNIFICATION}x Scope")
+print("----------------------------")
 calibrate_scope(
     motor_driver,
     microscope_driver,
@@ -140,7 +150,8 @@ raster.raster_scan_area_map(
     microscope_driver,
     camera_driver,
     magnification=MAGNIFICATION,
-    **mag_params,
+    flat_field=flat_field,
+    **magnification_params,
 )
 
 print(
