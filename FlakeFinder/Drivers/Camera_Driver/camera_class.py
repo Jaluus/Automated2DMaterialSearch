@@ -47,39 +47,6 @@ class camera_driver_class:
             },
         }
 
-        self.DEFAULT_PROPERTIES_hBN = {
-            1: {
-                "exposure": 0.07,
-                "gain": 0,
-                "white_balance": (127, 64, 90),
-                "gamma": 100,
-            },
-            2: {
-                "exposure": 0.07,
-                "gain": 0,
-                "white_balance": (127, 64, 90),
-                "gamma": 100,
-            },
-            3: {
-                "exposure": 0.03,
-                "gain": 0,
-                "white_balance": (127, 64, 90),
-                "gamma": 100,
-            },
-            4: {
-                "exposure": 0.07,
-                "gain": 0,
-                "white_balance": (127, 64, 90),
-                "gamma": 100,
-            },
-            5: {
-                "exposure": 0.03,
-                "gain": 100,
-                "white_balance": (127, 64, 90),
-                "gamma": 100,
-            },
-        }
-
     def __init_camera(self, cam_name):
         """
         Initiates the Camera Object and starts the Live Video\nreturns the Camera Object
@@ -111,7 +78,7 @@ class camera_driver_class:
     def get_camera(self):
         return self.camera
 
-    def eset_default_properties(self, magnification: int):
+    def set_default_properties(self, magnification: int):
         """set default properties for each magnifiaction
 
         Args:

@@ -45,6 +45,39 @@ def timer(func):
     return wrapper
 
 
+def set_microscope_and_camera_settings(
+    microscope_settings_dict: dict,
+    camera_settings_dict: dict,
+    magnification: int,
+    camera_driver: camera_driver_class,
+    microscope_driver: microscope_driver_class,
+):
+    """Sets the Microscrope and Camera Settings as well as the right Magnification\n
+    Checks if the settings have changed and updates them if they have not\n
+
+    Args:
+        microscope_settings_dict (dict): The settings for the microscope as a dict
+        camera_settings_dict (dict): The settings for the camera as a dict
+        magnification (int): The magnification of the Microscope as the Index\n
+        1: 2,5x, 2: 5x, 3: 20x, 4: 50x, 5: 100x
+        camera_driver (camera_driver_class): The camera driver
+        microscope_driver (microscope_driver_class): The microscope driver
+    """
+
+    # First sets the right Magnification
+    microscope_driver.set_mag(magnification)
+    time.sleep(1)
+
+    # Now set the Camera Settings
+    camera_driver.set_properties(**camera_settings_dict)
+    time.sleep(1)
+
+    # Now set the Microscope Settings
+    microscope_driver.set_lamp_voltage(microscope_settings_dict["lamp_voltage"])
+    microscope_driver.set_lamp_aperture_stop(microscope_settings_dict["aperture"])
+    time.sleep(1)
+
+
 def calibrate_scope(
     motor: motor_driver_class,
     microscope: microscope_driver_class,
