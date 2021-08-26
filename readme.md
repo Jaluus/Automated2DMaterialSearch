@@ -38,6 +38,8 @@ Install the NikonLV SDK, which should be automatically installed when you instal
 - Drivers
   - Read camera parameters
   - Interface with the autofocus
+- Program
+  - Improve centering of flakes
 - GUI
   - Add the ability to choose the magnification the to UI
   - Overhaul the UI?
