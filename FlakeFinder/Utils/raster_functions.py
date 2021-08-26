@@ -418,11 +418,11 @@ def search_scan_area_map(
 
             # Create the Chip Directory for the Flake
             chip_id = prop_dict["chip_id"]
-            chip_dir = os.path.join(scan_directory, f"Chip_{chip_id}")
+            chip_directory = os.path.join(scan_directory, f"Chip_{chip_id}")
 
             # Create A new Directory if it not already exists and initiate the key in the dictionary
-            if not os.path.exists(chip_dir):
-                os.makedirs(chip_dir)
+            if not os.path.exists(chip_directory):
+                os.makedirs(chip_directory)
                 flake_id[chip_id] = 0
 
             # Create a new folder for each flake
@@ -430,11 +430,13 @@ def search_scan_area_map(
                 flake_id[chip_id] += 1
 
                 # create the flake directory
-                flake_dir = os.path.join(chip_dir, f"Flake_{flake_id[chip_id]}")
+                flake_directory = os.path.join(
+                    chip_directory, f"Flake_{flake_id[chip_id]}"
+                )
 
-                print(flake_dir)
+                print(flake["layer"], flake["size_micro"])
 
-                os.makedirs(flake_dir)
+                os.makedirs(flake_directory)
 
                 # mark the Flake on the overview and save it
                 if overview is not None:
@@ -442,26 +444,26 @@ def search_scan_area_map(
                         overview, prop_dict["motor_pos"], flake_id[chip_id]
                     )
                     overview_marked_path = os.path.join(
-                        flake_dir, f"overview_marked.jpg"
+                        flake_directory, f"overview_marked.jpg"
                     )
                     cv2.imwrite(overview_marked_path, overview_marked)
 
                 # reformat the Flake dict to make it easier to save to the DB
                 flake_meta_data, flake_mask = reformat_flake_dict(
-                    prop_dict, flake, flake_dir
+                    prop_dict, flake, flake_directory
                 )
 
                 # Now save the Flake Metadata in the Directory
-                meta_path = os.path.join(flake_dir, "meta.json")
+                meta_path = os.path.join(flake_directory, "meta.json")
                 with open(meta_path, "w") as fp:
                     json.dump(flake_meta_data, fp, sort_keys=True, indent=4)
 
                 # Save the original Flake Mask
-                mask_path = os.path.join(flake_dir, f"flake_mask.png")
+                mask_path = os.path.join(flake_directory, f"flake_mask.png")
                 cv2.imwrite(mask_path, flake_mask)
 
                 # Save the Original eval Image
-                image_path = os.path.join(flake_dir, "eval_img.jpg")
+                image_path = os.path.join(flake_directory, "eval_img.jpg")
                 mark_flake_2(flake, image, image_path)
 
 
