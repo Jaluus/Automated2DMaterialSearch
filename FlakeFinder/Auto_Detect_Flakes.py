@@ -7,9 +7,7 @@ import sys
 
 # Custom imports
 from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import (
-    microscope_driver_class,
-)
+from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
 from Detector.detection_class import detector_class
 import Utils.raster_functions as raster
@@ -17,13 +15,13 @@ import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
 from Utils.etc_functions import *
 
-start = time.time()
+START_TIME = time.time()
 
 # Constants
 SERVER_URL = "http://134.61.6.112:5000/upload"
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-SCAN_NAME = "Eikes_Flocken_Full_Final"
-SCAN_USER = "Eike"
+SCAN_NAME = "Testing_Scan"
+SCAN_USER = "Jan"
 EXFOLIATED_MATERIAL = "Graphene"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 20
@@ -38,7 +36,7 @@ META_DICT = {
     "scan_user": SCAN_USER,
     "scan_name": SCAN_NAME,
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
-    "scan_time": time.time(),
+    "scan_time": START_TIME,
     "chip_thickness": CHIP_THICKNESS,
 }
 
@@ -57,7 +55,7 @@ parameter_directory = os.path.join(file_path, "Parameters")
 flat_field_path = os.path.join(
     parameter_directory,
     "Flatfields",
-    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}_{MAGNIFICATION}x.png",
 )
 contrast_params_path = os.path.join(
     parameter_directory,
@@ -140,7 +138,6 @@ cv2.imwrite(
     overview_image_compressed,
     [int(cv2.IMWRITE_JPEG_QUALITY), 80],
 )
-overview_image_compressed = cv2.imread(overview_compressed_path)
 
 print("Creating mask...")
 masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
@@ -159,13 +156,15 @@ dir_path = os.path.dirname(image_2_directory)
 shutil.rmtree(dir_path)
 
 print(
-    f"Time to create overview Image: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+    f"Time to create overview Image: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
 )
 
-print(f"Please Calibrate the {MAGNIFICATION}x Scope")
+print("----------------------------")
+print(f"Please calibrate the {MAGNIFICATION}x Scope")
 print("Use E and R to Swap the Scopes")
 print("Use Q to finish the Calibration")
-print("Make sure to end the Calibration when in the 20x Scope")
+print(f"Make sure to end the Calibration when in the {MAGNIFICATION}x Scope")
+print("----------------------------")
 calibrate_scope(
     motor_driver,
     microscope_driver,
@@ -219,5 +218,5 @@ print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)
 
 print(
-    f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+    f"Total elapsed Time: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
 )

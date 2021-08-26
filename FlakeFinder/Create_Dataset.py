@@ -18,10 +18,10 @@ import Utils.stitcher_functions as stitcher
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
 EXFOLIATED_MATERIAL = "WSe2"
-SCAN_NAME = "Dataset_Tiffi_210805"
+SCAN_NAME = "Dataset_Tiffi_210826"
 CHIP_THICKNESS = "90nm"
 SCAN_USER = "tiffi"
-EXFOLIATION_METHOD = "SWT10plus"
+EXFOLIATION_METHOD = "undefined"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 50
 
@@ -49,7 +49,7 @@ parameter_directory = os.path.join(file_path, "Parameters")
 flat_field_path = os.path.join(
     parameter_directory,
     "Flatfields",
-    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}_{MAGNIFICATION}x.png",
 )
 magnification_params_path = os.path.join(
     parameter_directory,
@@ -93,10 +93,12 @@ microscope_driver = microscope_driver_class()
 
 print("Starting to raster in 2.5x...")
 image_2_directory, meta_2_directory = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
+    scan_directory=scan_directory,
+    motor_driver=motor_driver,
+    microscope_driver=microscope_driver,
+    camera_driver=camera_driver,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
 )
 
 print("Compressing 2.5x Images...")
@@ -117,8 +119,6 @@ cv2.imwrite(
 print("Creating mask...")
 masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
 cv2.imwrite(mask_path, masked_overview)
-
-masked_overview = cv2.imread(mask_path, 0)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
@@ -150,6 +150,8 @@ raster.raster_scan_area_map(
     microscope_driver,
     camera_driver,
     magnification=MAGNIFICATION,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
     flat_field=flat_field,
     **magnification_params,
 )

@@ -48,7 +48,7 @@ def timer(func):
 def set_microscope_and_camera_settings(
     microscope_settings_dict: dict,
     camera_settings_dict: dict,
-    magnification: int,
+    magnification_idx: int,
     camera_driver: camera_driver_class,
     microscope_driver: microscope_driver_class,
 ):
@@ -65,16 +65,20 @@ def set_microscope_and_camera_settings(
     """
 
     # First sets the right Magnification
-    microscope_driver.set_mag(magnification)
+    microscope_driver.set_mag(magnification_idx)
     time.sleep(1)
 
     # Now set the Camera Settings
-    camera_driver.set_properties(**camera_settings_dict)
+    camera_driver.set_properties(**camera_settings_dict[str(magnification_idx)])
     time.sleep(1)
 
     # Now set the Microscope Settings
-    microscope_driver.set_lamp_voltage(microscope_settings_dict["lamp_voltage"])
-    microscope_driver.set_lamp_aperture_stop(microscope_settings_dict["aperture"])
+    microscope_driver.set_lamp_voltage(
+        microscope_settings_dict[str(magnification_idx)]["light_voltage"]
+    )
+    microscope_driver.set_lamp_aperture_stop(
+        microscope_settings_dict[str(magnification_idx)]["aperture"]
+    )
     time.sleep(1)
 
 

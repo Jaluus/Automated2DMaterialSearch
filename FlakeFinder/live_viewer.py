@@ -12,7 +12,7 @@ from Drivers.Motor_Driver.tango_class import motor_driver_class
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
-motor = motor_driver_class()
+# motor = motor_driver_class()
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
@@ -45,15 +45,15 @@ while True:
 
     # Save the Image
     elif key == ord("s"):
-        motor_pos = motor.get_pos()
-        print(motor_pos)
+        # motor_pos = motor.get_pos()
+        # print(motor_pos)
         # cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
         # all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
 
         print(mic_props)
-        # picture_path = os.path.join(file_path, f"{motor_pos}.png")
-        # cv2.imwrite(picture_path, img)
+        picture_path = os.path.join(file_path, f"{time.time()}.png")
+        cv2.imwrite(picture_path, img)
         # Save image to server and write the path and the metadata to DB
 
     elif key == ord("1"):

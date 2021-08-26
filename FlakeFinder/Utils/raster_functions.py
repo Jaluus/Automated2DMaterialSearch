@@ -76,7 +76,7 @@ def raster_plate(
     set_microscope_and_camera_settings(
         microscope_settings_dict=microscope_settings,
         camera_settings_dict=camera_settings,
-        magnification=MAGNIFICATION,
+        magnification_idx=1,
         camera_driver=camera_driver,
         microscope_driver=microscope_driver,
     )
@@ -194,7 +194,7 @@ def image_generator(
     set_microscope_and_camera_settings(
         microscope_settings_dict=microscope_settings,
         camera_settings_dict=camera_settings,
-        magnification=magnification_idx,
+        magnification_idx=magnification_idx,
         camera_driver=camera_driver,
         microscope_driver=microscope_driver,
     )
@@ -273,11 +273,13 @@ def raster_scan_area_map(
     motor_driver: motor_driver_class,
     microscope_driver: microscope_driver_class,
     camera_driver: camera_driver_class,
+    camera_settings: dict,
+    microscope_settings: dict,
+    view_field_x: float,
+    view_field_y: float,
+    magnification: float,
     flat_field=None,
-    view_field_x: float = 0.7380,
-    view_field_y: float = 0.4613,
     wait_time: float = 0.2,
-    magnification: float = 20,
     **kwargs,
 ):
     """
@@ -322,6 +324,8 @@ def raster_scan_area_map(
         view_field_x=view_field_x,
         view_field_y=view_field_y,
         magnification_idx=mag_idx,
+        camera_settings=camera_settings,
+        microscope_settings=microscope_settings,
         wait_time=wait_time,
     )
 
@@ -357,9 +361,10 @@ def search_scan_area_map(
     camera_settings: dict,
     microscope_settings: dict,
     detector: detector_class,
+    magnification_idx: int,
+    view_field_x: float,
+    view_field_y: float,
     overview=None,
-    view_field_x: float = 0.7380,
-    view_field_y: float = 0.4613,
     wait_time: float = 0.2,
     **kwargs,
 ):
@@ -394,9 +399,10 @@ def search_scan_area_map(
         camera_driver=camera_driver,
         view_field_x=view_field_x,
         view_field_y=view_field_y,
-        wait_time=wait_time,
-        microscope_settings=microscope_settings,
+        magnification_idx=mag_idx,
         camera_settings=camera_settings,
+        microscope_settings=microscope_settings,
+        wait_time=wait_time,
     )
 
     # Autoincrementing Flake ID
@@ -415,6 +421,8 @@ def search_scan_area_map(
 
         # this is just ordering flakes into their repective folders
         if len(detected_flakes) != 0:
+
+            print("")
 
             # Create the Chip Directory for the Flake
             chip_id = prop_dict["chip_id"]
@@ -513,7 +521,7 @@ def read_meta_and_center_flakes(
     set_microscope_and_camera_settings(
         microscope_settings_dict=microscope_settings,
         camera_settings_dict=camera_settings,
-        magnification=magnification_idx,
+        magnification_idx=magnification_idx,
         camera_driver=camera_driver,
         microscope_driver=microscope_driver,
     )
