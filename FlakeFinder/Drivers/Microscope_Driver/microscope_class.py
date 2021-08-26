@@ -101,7 +101,7 @@ class microscope_driver_class:
         Returns the current properties of the microscope\n
         dict keys:
         'nosepiece' : positon of the nosepiece
-        'aparture'  : current ApertureStop of the EpiLamp
+        'aperture'  : current ApertureStop of the EpiLamp
         'voltage'   : current Voltage of the EpiLamp in Volts
         """
         val_dict = {}

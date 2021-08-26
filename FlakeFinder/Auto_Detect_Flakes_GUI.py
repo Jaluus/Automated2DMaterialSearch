@@ -163,7 +163,7 @@ for mag in [3, 4, 5, 1, 2]:
         motor_driver,
         microscope_driver,
         camera_driver,
-        magnification=mag,
+        magnification_idx=mag,
     )
 
 print(
