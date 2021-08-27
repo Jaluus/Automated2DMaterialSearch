@@ -14,9 +14,13 @@ class microscope_driver_class:
         self.set_default_values()
 
     def set_default_values(self):
-        """Sets the Default values\n
+        """Sets the Default values (graphene and thin WSe2)\n
         Lamp Volatge: 6.4V\n
         Aperture: 2.3\n
+
+        values for thin hBN (monolayer)\n
+        Lamp Volatge: 10.5V\n
+        Aperture: 1.2\n
         """
         self.lamp_on()
         self.set_lamp_voltage(6.4)

@@ -15,9 +15,9 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"Z:\Taoufiq"
-SCAN_NAME = "Dataset_hBN_200729"
-EXFOLIATED_MATERIAL = "hBN"
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Documents\Mic_bilder"
+SCAN_NAME = "2021-08-18_Dataset_Timo_WSe2"
+EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 50
 
