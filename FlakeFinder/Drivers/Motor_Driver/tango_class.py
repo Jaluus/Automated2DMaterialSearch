@@ -52,7 +52,7 @@ class motor_driver_class:
         error = self.m_Tango.LSX_ConnectSimple(self.LSID, -1, "", 57600, 0)
         if error > 0:
             print("Error: LSX_ConnectSimple " + str(error))
-            print("Try Restarting the XY-Plate")
+            print("Try Restarting the XY-Plate, if this does not help, restart the PC")
             sys.exit(0)
 
         print("TANGO is now successfully connected to DLL")
@@ -139,7 +139,7 @@ class motor_driver_class:
         print("Starting calibration...")
         self._calibrate()
         self._range_measure()
-        self.maxX, self.maxY = self.get_pos()
+        self.max_x, self.max_y = self.get_pos()
         self.abs_move(x, y)
         print("Calibration complete")
 
