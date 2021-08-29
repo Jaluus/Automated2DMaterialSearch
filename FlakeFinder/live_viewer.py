@@ -29,6 +29,7 @@ while True:
         color=[255, 0, 0],
         thickness=3,
     )
+
     # status = microscope.get_af_status()
 
     # print(status)
@@ -37,6 +38,7 @@ while True:
     #     microscope.find_af()
 
     # print(all_props)
+
     cv2.imshow("test", img_small)
 
     key = cv2.waitKey(1)
@@ -47,11 +49,11 @@ while True:
     elif key == ord("s"):
         # motor_pos = motor.get_pos()
         # print(motor_pos)
-        # cam_props = camera.get_properties()
+        cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
-        # all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
+        all_props = {**cam_props, **mic_props}
 
-        print(mic_props)
+        print(all_props)
         picture_path = os.path.join(file_path, f"{time.time()}.png")
         cv2.imwrite(picture_path, img)
         # Save image to server and write the path and the metadata to DB
