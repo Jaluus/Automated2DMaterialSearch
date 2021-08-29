@@ -318,6 +318,7 @@ class parameter_picker_class:
             - scan_name
             - scan_exfoliated_material
             - scan_exfoliation_method
+            - scan_magnification
             - chip_thickness
             - entropy_threshold
             - size_threshold
