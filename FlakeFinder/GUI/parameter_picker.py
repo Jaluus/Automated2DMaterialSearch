@@ -6,6 +6,11 @@ import sys
 
 class parameter_picker_class:
     def __init__(self):
+        self.MAGNIFICATIONS = [
+            20,
+            50,
+        ]
+
         self.MATERIALS = [
             "Graphene",
             "hBN",
@@ -24,14 +29,16 @@ class parameter_picker_class:
         self.user_closed = False
 
         self.image_dir = None
-        self.serverURL = None
+        self.serverURL = "http://134.61.6.112:5000/upload"
         self.scan_name = None
         self.scan_user = None
-        self.scan_exfoliated_material = None
-        self.chip_thickness = None
-        self.entropy_threshold = None
-        self.size_threshold = None
-        self.sigma_threshold = None
+        self.scan_exfoliated_material = self.MATERIALS[0]
+        self.scan_exfoliation_method = "unspecified"
+        self.scan_magnification = self.MAGNIFICATIONS[1]
+        self.chip_thickness = self.CHIP_THICKNESSES[1]
+        self.entropy_threshold = "2.4"
+        self.size_threshold = "200"
+        self.sigma_threshold = "50"
 
         self.__create_parameter_picker()
 
@@ -56,15 +63,27 @@ class parameter_picker_class:
         )
 
         self.chosen_material = StringVar()
-        self.chosen_material.set(self.MATERIALS[0])
+        self.chosen_material.set(self.scan_exfoliated_material)
         self.Scan_exfoliated_material_dropdown = OptionMenu(
-            self.parameter_picker, self.chosen_material, *self.MATERIALS
+            self.parameter_picker,
+            self.chosen_material,
+            *self.MATERIALS,
         )
 
         self.chosen_chip_thicknesses = StringVar()
-        self.chosen_chip_thicknesses.set(self.CHIP_THICKNESSES[1])
+        self.chosen_chip_thicknesses.set(self.chip_thickness)
         self.chip_thickness_dropdown = OptionMenu(
-            self.parameter_picker, self.chosen_chip_thicknesses, *self.CHIP_THICKNESSES
+            self.parameter_picker,
+            self.chosen_chip_thicknesses,
+            *self.CHIP_THICKNESSES,
+        )
+
+        self.chosen_scan_magnification = StringVar()
+        self.chosen_scan_magnification.set(self.scan_magnification)
+        self.scan_magnification_dropdown = OptionMenu(
+            self.parameter_picker,
+            self.chosen_scan_magnification,
+            *self.MAGNIFICATIONS,
         )
 
         self.Scan_parameters_label = Label(
@@ -73,6 +92,9 @@ class parameter_picker_class:
 
         self.Scan_name_label = Label(self.parameter_picker, text="Scan name")
         self.Scan_user_label = Label(self.parameter_picker, text="Scan user")
+        self.Scan_magnification_label = Label(
+            self.parameter_picker, text="Scan magnification"
+        )
         self.Scan_exfoliated_material_label = Label(
             self.parameter_picker, text="Exfoliated Material"
         )
@@ -83,15 +105,15 @@ class parameter_picker_class:
         self.Entropy_threshold_input = Entry(
             self.parameter_picker, width=50, borderwidth=5
         )
-        self.Entropy_threshold_input.insert(0, "2.4")
+        self.Entropy_threshold_input.insert(0, self.entropy_threshold)
         self.Size_threshold_input = Entry(
             self.parameter_picker, width=50, borderwidth=5
         )
-        self.Size_threshold_input.insert(0, "200")
+        self.Size_threshold_input.insert(0, self.size_threshold)
         self.Sigma_threshold_input = Entry(
             self.parameter_picker, width=50, borderwidth=5
         )
-        self.Sigma_threshold_input.insert(0, "50")
+        self.Sigma_threshold_input.insert(0, self.sigma_threshold)
 
         self.Filter_parameters_label = Label(
             self.parameter_picker, text="--- Filter Parameters ---"
@@ -122,7 +144,7 @@ class parameter_picker_class:
 
         self.ServerURL_label = Label(self.parameter_picker, text="Server URL")
         self.ServerURL_input = Entry(self.parameter_picker, width=50, borderwidth=5)
-        self.ServerURL_input.insert(0, "http://134.61.6.112:5000/upload")
+        self.ServerURL_input.insert(0, self.serverURL)
 
         self.Exfoliation_method_label = Label(
             self.parameter_picker, text="Exfoliation Method"
@@ -130,7 +152,7 @@ class parameter_picker_class:
         self.Exfoliation_method_input = Entry(
             self.parameter_picker, width=50, borderwidth=5
         )
-        self.Exfoliation_method_input.insert(0, "unspecified")
+        self.Exfoliation_method_input.insert(0, self.scan_exfoliation_method)
 
         ### Start Button
 
@@ -142,51 +164,71 @@ class parameter_picker_class:
         )
 
         ### Layout
+        # i is a counter for the grid layout
+        i = 1
+
         self.Scan_parameters_label.grid(
-            row=1, columnspan=2, sticky="ew", padx=10, pady=10
+            row=i, columnspan=2, sticky="ew", padx=10, pady=10
         )
+        i += 1
 
-        self.Scan_name_label.grid(row=2, column=0, padx=10)
-        self.Scan_name_input.grid(row=2, column=1, sticky="ew", padx=10)
+        self.Scan_name_label.grid(row=i, column=0, padx=10)
+        self.Scan_name_input.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
-        self.Scan_user_label.grid(row=3, column=0, padx=10)
-        self.Scan_user_input.grid(row=3, column=1, sticky="ew", padx=10)
+        self.Scan_user_label.grid(row=i, column=0, padx=10)
+        self.Scan_user_input.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
-        self.Scan_exfoliated_material_label.grid(row=4, column=0)
+        self.Scan_exfoliated_material_label.grid(row=i, column=0)
         self.Scan_exfoliated_material_dropdown.grid(
-            row=4, column=1, sticky="ew", padx=10
+            row=i, column=1, sticky="ew", padx=10
         )
+        i += 1
 
-        self.chip_thickness_label.grid(row=5, column=0, padx=10)
-        self.chip_thickness_dropdown.grid(row=5, column=1, sticky="ew", padx=10)
+        self.chip_thickness_label.grid(row=i, column=0, padx=10)
+        self.chip_thickness_dropdown.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
+
+        self.Scan_magnification_label.grid(row=i, column=0, padx=10)
+        self.scan_magnification_dropdown.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
         self.Filter_parameters_label.grid(
-            row=6, columnspan=2, sticky="ew", padx=10, pady=10
+            row=i, columnspan=2, sticky="ew", padx=10, pady=10
         )
+        i += 1
 
-        self.Entropy_threshold_label.grid(row=7, column=0, padx=10)
-        self.Entropy_threshold_input.grid(row=7, column=1, sticky="ew", padx=10)
+        self.Entropy_threshold_label.grid(row=i, column=0, padx=10)
+        self.Entropy_threshold_input.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
-        self.Size_threshold_label.grid(row=8, column=0, padx=10)
-        self.Size_threshold_input.grid(row=8, column=1, sticky="ew", padx=10)
+        self.Size_threshold_label.grid(row=i, column=0, padx=10)
+        self.Size_threshold_input.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
-        self.Sigma_threshold_material_label.grid(row=9, column=0, padx=10)
-        self.Sigma_threshold_input.grid(row=9, column=1, sticky="ew", padx=10)
+        self.Sigma_threshold_material_label.grid(row=i, column=0, padx=10)
+        self.Sigma_threshold_input.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
         self.etc_parameters_label.grid(
-            row=10, columnspan=2, sticky="ew", padx=10, pady=10
+            row=i, columnspan=2, sticky="ew", padx=10, pady=10
         )
+        i += 1
 
-        self.Directory_label.grid(row=11, column=0, padx=10)
-        self.Directory_button.grid(row=11, column=1, sticky="ew", padx=10)
+        self.Directory_label.grid(row=i, column=0, padx=10)
+        self.Directory_button.grid(row=i, column=1, sticky="ew", padx=10)
+        i += 1
 
-        self.ServerURL_label.grid(row=12, column=0, padx=10)
-        self.ServerURL_input.grid(row=12, column=1, padx=10)
+        self.ServerURL_label.grid(row=i, column=0, padx=10)
+        self.ServerURL_input.grid(row=i, column=1, padx=10)
+        i += 1
 
-        self.Exfoliation_method_label.grid(row=13, column=0, padx=10)
-        self.Exfoliation_method_input.grid(row=13, column=1, padx=10)
+        self.Exfoliation_method_label.grid(row=i, column=0, padx=10)
+        self.Exfoliation_method_input.grid(row=i, column=1, padx=10)
+        i += 1
 
-        self.start_button.grid(row=14, columnspan=2, sticky="ew", padx=10, pady=10)
+        self.start_button.grid(row=i, columnspan=2, sticky="ew", padx=10, pady=10)
 
     def on_close(self):
         self.user_closed = True
@@ -200,6 +242,7 @@ class parameter_picker_class:
         self.scan_user = self.Scan_user_input.get().lower().strip()
         self.scan_exfoliated_material = self.chosen_material.get()
         self.chip_thickness = self.chosen_chip_thicknesses.get()
+        self.scan_magnification = self.chosen_scan_magnification.get()
 
         self.entropy_threshold = self.Entropy_threshold_input.get()
         self.size_threshold = self.Size_threshold_input.get()
@@ -241,6 +284,7 @@ class parameter_picker_class:
             "\n--- Scan Parameters ---\n"
             f"Current User : {self.scan_user}\n"
             f"Scan Name : {self.scan_name}\n"
+            f"Scan Magnification : {self.scan_magnification}\n"
             f"Exfoliated Material : {self.scan_exfoliated_material}\n"
             f"Chip Thickness : {self.chip_thickness}\n"
             "\n--- Filter Parameters ---\n"
@@ -298,6 +342,7 @@ class parameter_picker_class:
             "entropy_threshold": self.entropy_threshold,
             "size_threshold": self.size_threshold,
             "sigma_threshold": self.sigma_threshold,
+            "scan_magnification": int(self.scan_magnification),
         }
 
 
@@ -307,3 +352,6 @@ if __name__ == "__main__":
         input_dict = mygui.take_input()
     except RuntimeError:
         sys.exit(0)
+
+    for item in input_dict.items():
+        print(item)
