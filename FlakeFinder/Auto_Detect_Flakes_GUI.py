@@ -23,47 +23,81 @@ try:
 except:
     sys.exit(0)
 
+START_TIME = time.time()
+
+# Constants
+# These are getting defined for better readablity
+SERVER_URL = parameter_dict["server_url"]
+IMAGE_DIRECTORY = parameter_dict["image_directory"]
+SCAN_NAME = parameter_dict["scan_name"]
+SCAN_USER = parameter_dict["scan_user"]
+EXFOLIATED_MATERIAL = parameter_dict["scan_exfoliated_material"]
+CHIP_THICKNESS = parameter_dict["chip_thickness"]
+MAGNIFICATION = parameter_dict["scan_magnification"]
+
+# Filter Parameter
+ENTROPY_THRESHOLD = parameter_dict["entropy_threshold"]
+SIZE_THRESHOLD = parameter_dict["size_threshold"]
+SIGMA_THRESHOLD = parameter_dict["sigma_threshold"]
+
 # Created Metadict
 META_DICT = {
     **parameter_dict,
-    "scan_time": time.time(),
+    "scan_time": START_TIME,
 }
 
-
 # Directory Paths
-scan_directory = os.path.join(META_DICT["image_directory"], META_DICT["scan_name"])
+scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
 
 # File Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
-print(file_path)
-
 scan_meta_path = os.path.join(scan_directory, "meta.json")
 overview_path = os.path.join(scan_directory, "overview.png")
 overview_compressed_path = os.path.join(scan_directory, "overview_compressed.jpg")
 mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
+parameter_directory = os.path.join(file_path, "Parameters")
 
 flat_field_path = os.path.join(
-    file_path,
-    "Parameters",
+    parameter_directory,
     "Flatfields",
-    f"{META_DICT['scan_exfoliated_material'].lower()}_{META_DICT['chip_thickness']}.png",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}_{MAGNIFICATION}x.png",
 )
-contrasts_path = os.path.join(
-    file_path,
-    "Parameters",
+contrast_params_path = os.path.join(
+    parameter_directory,
     "Contrasts",
-    f"{META_DICT['scan_exfoliated_material'].lower()}_{META_DICT['chip_thickness']}.json",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
+)
+camera_settings_path = os.path.join(
+    parameter_directory,
+    "Camera_Parameters",
+    f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
+)
+microscope_settings_path = os.path.join(
+    parameter_directory,
+    "Microscope_Parameters",
+    f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
+)
+magnification_params_path = os.path.join(
+    parameter_directory,
+    "Scan_Magnification",
+    f"{MAGNIFICATION}x.json",
 )
 
 # Open the Jsons and get the needed Data
-with open(contrasts_path) as f:
+with open(contrast_params_path) as f:
     contrast_params = json.load(f)
+with open(camera_settings_path) as f:
+    camera_settings = json.load(f)
+with open(microscope_settings_path) as f:
+    microscope_settings = json.load(f)
+with open(magnification_params_path) as f:
+    magnification_params = json.load(f)
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
 
-# Creating Paths
+# Creating Directories for the Scan
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
 
@@ -80,17 +114,20 @@ microscope_driver = microscope_driver_class()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     flat_field=flat_field,
-    size_threshold=META_DICT["size_threshold"],
-    entropy_threshold=META_DICT["entropy_threshold"],
+    size_threshold=SIZE_THRESHOLD,
+    entropy_threshold=ENTROPY_THRESHOLD,
+    sigma_treshold=SIGMA_THRESHOLD,
+    magnification=MAGNIFICATION,
 )
 
-start = time.time()
 print("Starting to raster in 2.5x...")
 image_2_directory, meta_2_directory = raster.raster_plate(
-    scan_directory,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
+    scan_directory=scan_directory,
+    motor_driver=motor_driver,
+    microscope_driver=microscope_driver,
+    camera_driver=camera_driver,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
 )
 
 print("Compressing 2.5x Images...")
@@ -107,7 +144,6 @@ cv2.imwrite(
     overview_image_compressed,
     [int(cv2.IMWRITE_JPEG_QUALITY), 80],
 )
-overview_image_compressed = cv2.imread(overview_compressed_path)
 
 print("Creating mask...")
 masked_overview = stitcher.create_mask_from_stitched_image(overview_image)
@@ -117,6 +153,7 @@ print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
     masked_overview,
     erode_iterations=1,
+    **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
@@ -125,13 +162,15 @@ dir_path = os.path.dirname(image_2_directory)
 shutil.rmtree(dir_path)
 
 print(
-    f"Time to create overview Image: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+    f"Time to create overview Image: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
 )
 
-print("Please Calibrate the 20x Scope")
+print("----------------------------")
+print(f"Please calibrate the {MAGNIFICATION}x Scope")
 print("Use E and R to Swap the Scopes")
 print("Use Q to finish the Calibration")
-print("Make sure to end the Calibration when in the 20x Scope")
+print(f"Make sure to end the Calibration when in the {MAGNIFICATION}x Scope")
+print("----------------------------")
 calibrate_scope(
     motor_driver,
     microscope_driver,
@@ -140,7 +179,7 @@ calibrate_scope(
 
 local = time.time()
 
-print("Finding Flakes in 20x...")
+print(f"Finding Flakes in {MAGNIFICATION}x...")
 raster.search_scan_area_map(
     scan_directory=scan_directory,
     area_map=labeled_scan_area,
@@ -149,10 +188,13 @@ raster.search_scan_area_map(
     camera_driver=camera_driver,
     detector=myDetector,
     overview=overview_image_compressed,
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
+    **magnification_params,
 )
 
 print(
-    f"Time to search in 20x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
+    f"Time to search in {MAGNIFICATION}x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
 )
 local = time.time()
 
@@ -164,6 +206,8 @@ for mag in [3, 4, 5, 1, 2]:
         microscope_driver,
         camera_driver,
         magnification_idx=mag,
+        camera_settings=camera_settings,
+        microscope_settings=microscope_settings,
     )
 
 print(
@@ -177,8 +221,8 @@ print("Creating Histograms...")
 Create_Metahistograms(scan_directory)
 
 print("Uploading the Scan Directory...")
-uploader.upload_directory(scan_directory, META_DICT["server_url"])
+uploader.upload_directory(scan_directory, SERVER_URL)
 
 print(
-    f"Total elapsed Time: {(time.time() - start) // 3600:02.0f}:{((time.time() - start) // 60 )% 60:02.0f}:{int(time.time() - start) % 60:02.0f}"
+    f"Total elapsed Time: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
 )
