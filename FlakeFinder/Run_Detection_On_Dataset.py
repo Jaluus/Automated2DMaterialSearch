@@ -77,23 +77,6 @@ with open(contrasts_path) as f:
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
 
-# Defining colors and the Look of the Outline
-colors = {
-    key: col
-    for (key, col) in zip(
-        contrast_params.keys(), [[0, 255, 0], [0, 255, 255], [0, 0, 255]]
-    )
-}
-
-# The colors are getting flipped by CV2
-# Thats why lime cyan and blue
-plt_colors = {
-    key: col for (key, col) in zip(contrast_params.keys(), ["lime", "cyan", "blue"])
-}
-
-font_path = os.path.join(os.path.dirname(__file__), "Helvetica.ttf")
-font = ImageFont.truetype(font_path, 40)
-
 # Define the start time
 start_time = time.time()
 
@@ -103,6 +86,8 @@ myDetector = detector_class(
     flat_field=flat_field,
     entropy_threshold=ENTROPY_THRESHOLD,
     size_threshold=SIZE_THRESHOLD,
+    sigma_treshold=SIGMA_THRESHOLD,
+    magnification=MAGNIFICATION,
 )
 
 # An indexing method for found flakes
@@ -156,7 +141,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 image,
                 (x - 20, y - 20),
                 (x + w + 20, y + h + 20),
-                color=colors[flake["layer"]],
+                color="black",
                 thickness=2,
             )
 
@@ -165,33 +150,32 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
 
             # Draw this border on the image
-            image[outline_flake != 0] = colors[flake["layer"]]
+            image[outline_flake != 0] = [0, 0, 0]
 
-            #### All this is just to draw some text on the image, opencv doesnt allow µ, so I had to improvise
-            img_pil = Image.fromarray(image)
-            draw = ImageDraw.Draw(img_pil)
-            draw.text(
+            cv2.putText(
+                image,
+                f"{flake['layer']}\nFlake-Nr.: {current_flake_number}",
                 (x + w + 25, y - 35),
-                f"{flake['num_pixels'] * 0.15:.0f} µm²\nS = {flake['entropy']:.2f}\nσ = {flake['proximity_stddev']:.2f}",
-                fill=plt_colors[flake["layer"]],
-                font=font,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                thickness=2,
+                color=(0, 0, 0),
             )
-            image = np.array(img_pil)
             #####
 
         # Now save the Image to its new Home
         cv2.imwrite(
-            os.path.join(save_dir, f"{current_flake_number}_{image_name}"),
+            os.path.join(save_dir, f"{image_name}"),
             image,
         )
 
         # Delete the mask from the dict as it is not json serializable
-        del flake["mask"]
+        for flake in detected_flakes:
+            del flake["mask"]
 
-        with open(
-            os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
-        ) as f:
-            json.dump(flake, f, indent=4, sort_keys=True)
+            with open(
+                os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
+            ) as f:
+                json.dump(flake, f, indent=4, sort_keys=True)
 
 cv2.imwrite(marked_overview_path, overview_image)
 
