@@ -31,6 +31,15 @@ ENTROPY_THRESHOLD = 2.4
 SIZE_THRESHOLD = 200
 SIGMA_THRESHOLD = 50
 
+# Convert to Magnification index
+MAG_IDX_DICT = {
+    2.5: 1,
+    5: 2,
+    20: 3,
+    50: 4,
+    100: 5,
+}
+
 # Created Metadict
 META_DICT = {
     "scan_user": SCAN_USER,
@@ -181,6 +190,7 @@ raster.search_scan_area_map(
     microscope_driver=microscope_driver,
     camera_driver=camera_driver,
     detector=myDetector,
+    magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
     overview=overview_image_compressed,
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,

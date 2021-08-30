@@ -399,7 +399,7 @@ def search_scan_area_map(
         camera_driver=camera_driver,
         view_field_x=view_field_x,
         view_field_y=view_field_y,
-        magnification_idx=mag_idx,
+        magnification_idx=magnification_idx,
         camera_settings=camera_settings,
         microscope_settings=microscope_settings,
         wait_time=wait_time,
