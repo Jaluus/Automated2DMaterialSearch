@@ -15,8 +15,8 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-SCAN_NAME = "Dataset_Tiffi_210826"
+IMAGE_DIRECTORY = r"Z:\Taoufiq"
+SCAN_NAME = "Dataset_Tiffi_210805"
 EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 50

@@ -46,6 +46,7 @@ class detector_class:
             magnification (float, optional): The Magnification of the Camera, used to calculate the size of the flakes. Defaults to 20.
         """
         # these are some parameters for the calculation of flake size
+        # Need to change this later
         self.micrometer_per_pixel = {
             2.5: 3.0754,
             5: 1.5377,
@@ -53,8 +54,12 @@ class detector_class:
             50: 0.1538,
             100: 0.0769,
         }
-        if flat_field != None:
+
+        if flat_field is not None:
             self.flat_field = flat_field.copy()
+        else:
+            self.flat_field = None
+
         self.contrast_dict = copy.deepcopy(contrast_dict)
         self.searched_layers = self.contrast_dict.keys()
         self.size_thresh = size_threshold

@@ -31,15 +31,6 @@ ENTROPY_THRESHOLD = 2.4
 SIZE_THRESHOLD = 200
 SIGMA_THRESHOLD = 50
 
-# Convert to Magnification index
-MAG_IDX_DICT = {
-    2.5: 1,
-    5: 2,
-    20: 3,
-    50: 4,
-    100: 5,
-}
-
 # Created Metadict
 META_DICT = {
     "scan_user": SCAN_USER,
@@ -47,6 +38,15 @@ META_DICT = {
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
     "scan_time": START_TIME,
     "chip_thickness": CHIP_THICKNESS,
+}
+
+# Convert to Magnification index
+MAG_IDX_DICT = {
+    2.5: 1,
+    5: 2,
+    20: 3,
+    50: 4,
+    100: 5,
 }
 
 # Directory Paths
@@ -180,8 +180,7 @@ calibrate_scope(
     camera_driver,
 )
 
-local = time.time()
-
+scan_area_time_start = time.time()
 print(f"Finding Flakes in {MAGNIFICATION}x...")
 raster.search_scan_area_map(
     scan_directory=scan_directory,
@@ -196,26 +195,28 @@ raster.search_scan_area_map(
     microscope_settings=microscope_settings,
     **magnification_params,
 )
+scan_area_time_duration = time.time() - scan_area_time_start
 
 print(
-    f"Time to search in {MAGNIFICATION}x: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
+    f"Time to search in {MAGNIFICATION}x: {scan_area_time_duration // 3600:02.0f}:{(scan_area_time_duration // 60 )% 60:02.0f}:{int(scan_area_time_duration) % 60:02.0f}"
 )
-local = time.time()
 
+revisit_time_start = time.time()
 print("Revisiting each Flake to take Pictures...")
-for mag in [3, 4, 5, 1, 2]:
+for current_magnification_index in [3, 4, 5, 1, 2]:
     raster.read_meta_and_center_flakes(
         scan_directory,
         motor_driver,
         microscope_driver,
         camera_driver,
-        magnification_idx=mag,
+        magnification_idx=current_magnification_index,
         camera_settings=camera_settings,
         microscope_settings=microscope_settings,
     )
+revisit_time_duration = time.time() - revisit_time_start
 
 print(
-    f"Elapsed Time during revisiting: {(time.time() - local) // 3600:02.0f}:{((time.time() - local) // 60 )% 60:02.0f}:{int(time.time() - local) % 60:02.0f}"
+    f"Elapsed Time during revisiting: {revisit_time_duration // 3600:02.0f}:{(revisit_time_duration // 60 )% 60:02.0f}:{int(revisit_time_duration) % 60:02.0f}"
 )
 
 print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
@@ -227,6 +228,7 @@ Create_Metahistograms(scan_directory)
 print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)
 
+full_scan_duration = time.time() - START_TIME
 print(
-    f"Total elapsed Time: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
+    f"Total elapsed Time: {full_scan_duration // 3600:02.0f}:{(full_scan_duration // 60 )% 60:02.0f}:{int(full_scan_duration) % 60:02.0f}"
 )
