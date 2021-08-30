@@ -54,7 +54,7 @@ flat_field_path = os.path.join(
     file_path,
     "Parameters",
     "Flatfields",
-    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.png",
+    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}_{MAGNIFICATION}x.png",
 )
 contrasts_path = os.path.join(
     file_path,

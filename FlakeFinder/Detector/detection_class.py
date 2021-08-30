@@ -53,8 +53,8 @@ class detector_class:
             50: 0.1538,
             100: 0.0769,
         }
-
-        self.flat_field = flat_field.copy()
+        if flat_field != None:
+            self.flat_field = flat_field.copy()
         self.contrast_dict = copy.deepcopy(contrast_dict)
         self.searched_layers = self.contrast_dict.keys()
         self.size_thresh = size_threshold
