@@ -15,9 +15,9 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"Z:\Taoufiq"
-SCAN_NAME = "Dataset_hBN_200729"
-EXFOLIATED_MATERIAL = "hBN"
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
+SCAN_NAME = "Dataset_Tiffi_210826"
+EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 50
 
@@ -27,7 +27,7 @@ SIZE_THRESHOLD = 200
 SIGMA_THRESHOLD = 50
 
 # -1 if you want to analyse all images
-NUM_ANALYSED_IMAGES = 1000
+NUM_ANALYSED_IMAGES = -1
 
 
 # Directory Paths
