@@ -16,12 +16,12 @@ import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-EXFOLIATED_MATERIAL = "WSe2"
-SCAN_NAME = "Dataset_Tiffi_210826"
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
+EXFOLIATED_MATERIAL = "cri3"
+SCAN_NAME = "cri3_dataset_alex"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "tiffi"
-EXFOLIATION_METHOD = "undefined"
+SCAN_USER = "Rothstein"
+EXFOLIATION_METHOD = "CrI3_AR_1"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 50
 

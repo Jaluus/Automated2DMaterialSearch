@@ -15,16 +15,16 @@ from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"Z:\Taoufiq"
-SCAN_NAME = "Dataset_Tiffi_210805"
-EXFOLIATED_MATERIAL = "wse2"
-CHIP_THICKNESS = "90nm"
-MAGNIFICATION = 50
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
+SCAN_NAME = "hbn_2109"
+EXFOLIATED_MATERIAL = "hBNml"
+CHIP_THICKNESS = "70nm"
+MAGNIFICATION = 20
 
 # Some Threshold parameters
-ENTROPY_THRESHOLD = 3
-SIZE_THRESHOLD = 200
-SIGMA_THRESHOLD = 50
+ENTROPY_THRESHOLD = 4
+SIZE_THRESHOLD = 20
+SIGMA_THRESHOLD = 500
 
 # -1 if you want to analyse all images
 NUM_ANALYSED_IMAGES = -1
@@ -141,7 +141,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 image,
                 (x - 20, y - 20),
                 (x + w + 20, y + h + 20),
-                color="black",
+                color=[0, 0, 0],
                 thickness=2,
             )
 
@@ -158,6 +158,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
                 (x + w + 25, y - 35),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 thickness=2,
+                fontScale=2,
                 color=(0, 0, 0),
             )
             #####
