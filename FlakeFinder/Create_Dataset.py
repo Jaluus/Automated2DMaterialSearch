@@ -17,13 +17,13 @@ import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
-EXFOLIATED_MATERIAL = "cri3"
-SCAN_NAME = "cri3_dataset_alex"
-CHIP_THICKNESS = "90nm"
-SCAN_USER = "Rothstein"
-EXFOLIATION_METHOD = "CrI3_AR_1"
+EXFOLIATED_MATERIAL = "hbnml"
+SCAN_NAME = "hBN_2109"
+CHIP_THICKNESS = "100nm"
+SCAN_USER = "david"
+EXFOLIATION_METHOD = "2min_100deg_scotchtape"
 # Possibilities  20 , 50 , 100 , 5
-MAGNIFICATION = 50
+MAGNIFICATION = 20
 
 META_DICT = {
     "scan_user": SCAN_USER,
