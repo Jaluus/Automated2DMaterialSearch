@@ -16,6 +16,23 @@ file_path = os.path.dirname(os.path.abspath(__file__))
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
+cam_params = {
+    "exposure": 0.05,
+    "gain": 1,
+    "white_balance": (127, 64, 90),
+    "gamma": 100,
+}
+
+microscope.set_lamp_voltage(6.3)
+microscope.set_lamp_aperture_stop(3)
+
+camera.set_properties(
+    exposure=0.05,
+    gain=100,
+    white_balance=(127, 64, 90),
+    gamma=100,
+)
+
 while True:
 
     img = camera.get_image()
