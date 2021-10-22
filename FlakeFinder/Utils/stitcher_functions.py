@@ -118,8 +118,8 @@ def stitch_image(
 
 def create_mask_from_stitched_image(
     overview_image,
-    threshold_value: int = 45,
-    blur_kernel: int = 11,
+    threshold_value: int = 25,
+    blur_kernel: int = 5,
     blur_strength: int = 100,
 ):
     """
@@ -135,7 +135,7 @@ def create_mask_from_stitched_image(
     )
 
     ret, mask = cv2.threshold(
-        overview_image_grey, threshold_value, 255, cv2.THRESH_BINARY_INV
+        overview_image_grey, threshold_value, 255, cv2.THRESH_BINARY
     )
 
     mask = cv2.erode(mask, np.ones((5, 5)), iterations=4)
