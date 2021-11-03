@@ -19,9 +19,11 @@ START_TIME = time.time()
 
 # Constants
 SERVER_URL = "http://134.61.6.112:5000/upload"
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Desktop\Mic_bilder"
-SCAN_NAME = "Testing_Scan"
-SCAN_USER = "Jan"
+IMAGE_DIRECTORY = (
+    r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\automatic_search"
+)
+SCAN_NAME = "graphene_for_bubble_push"
+SCAN_USER = "sunaja"
 EXFOLIATED_MATERIAL = "Graphene"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 20
@@ -223,7 +225,10 @@ print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
 microscope_driver.lamp_off()
 
 print("Creating Histograms...")
-Create_Metahistograms(scan_directory)
+try:
+    Create_Metahistograms(scan_directory)
+except:
+    print("error during hist creation, continuing")
 
 print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)

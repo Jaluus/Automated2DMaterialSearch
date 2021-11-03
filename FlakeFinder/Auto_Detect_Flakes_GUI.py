@@ -228,7 +228,10 @@ print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
 microscope_driver.lamp_off()
 
 print("Creating Histograms...")
-Create_Metahistograms(scan_directory)
+try:
+    Create_Metahistograms(scan_directory)
+except:
+    print("error during hist creation, continuing")
 
 print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)
