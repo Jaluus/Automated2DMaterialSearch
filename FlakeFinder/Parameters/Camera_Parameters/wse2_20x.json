@@ -1,7 +1,7 @@
 {
     "1": {
-        "exposure": 0.07,
-        "gain": 0,
+        "exposure": 0.05,
+        "gain": 100,
         "white_balance": [
             127,
             64,
@@ -10,8 +10,8 @@
         "gamma": 100
     },
     "2": {
-        "exposure": 0.07,
-        "gain": 0,
+        "exposure": 0.05,
+        "gain": 100,
         "white_balance": [
             127,
             64,
@@ -20,8 +20,8 @@
         "gamma": 100
     },
     "3": {
-        "exposure": 0.07,
-        "gain": 0,
+        "exposure": 0.05,
+        "gain": 100,
         "white_balance": [
             127,
             64,
@@ -30,8 +30,8 @@
         "gamma": 100
     },
     "4": {
-        "exposure": 0.07,
-        "gain": 0,
+        "exposure": 0.05,
+        "gain": 100,
         "white_balance": [
             127,
             64,
@@ -40,7 +40,7 @@
         "gamma": 100
     },
     "5": {
-        "exposure": 0.03,
+        "exposure": 0.05,
         "gain": 100,
         "white_balance": [
             127,
