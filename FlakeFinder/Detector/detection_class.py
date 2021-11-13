@@ -1,4 +1,3 @@
-import time
 import cv2
 import numpy as np
 from numba import jit
@@ -30,6 +29,7 @@ class detector_class:
         self,
         contrast_dict: dict,
         flat_field=None,
+        custom_background_values=None,
         size_threshold: int = 0,
         entropy_threshold: float = np.inf,
         sigma_treshold: float = np.inf,
@@ -60,7 +60,11 @@ class detector_class:
         else:
             self.flat_field = None
 
-        self.custom_background_values = None
+        if custom_background_values is not None:
+            self.custom_background_values = custom_background_values.copy()
+        else:
+            self.custom_background_values = None
+
         self.contrast_dict = copy.deepcopy(contrast_dict)
         self.searched_layers = self.contrast_dict.keys()
         self.size_thresh = size_threshold
