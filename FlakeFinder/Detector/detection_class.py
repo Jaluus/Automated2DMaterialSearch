@@ -60,6 +60,7 @@ class detector_class:
         else:
             self.flat_field = None
 
+        self.custom_background_values = None
         self.contrast_dict = copy.deepcopy(contrast_dict)
         self.searched_layers = self.contrast_dict.keys()
         self.size_thresh = size_threshold
@@ -80,7 +81,7 @@ class detector_class:
         # Check for layers
         self.searched_layers = which_layers
 
-    def mask_background(self, img, radius=7, blue_bg=0):
+    def mask_background(self, img, radius=7):
         """
         Maskes the Background\n
         The Values are standard values of 90nm SiO Chips with removed Vignette\n
@@ -92,13 +93,10 @@ class detector_class:
 
         # A threshold which removes the Unwanted background of the non chip
         # Currently Unused
-        ret, threshed_b_background = cv2.threshold(
-            img_b, blue_bg, 255, cv2.THRESH_BINARY
-        )
 
-        hist_r = cv2.calcHist([img_r], [0], threshed_b_background, [256], [0, 256])
-        hist_g = cv2.calcHist([img_g], [0], threshed_b_background, [256], [0, 256])
-        hist_b = cv2.calcHist([img_b], [0], threshed_b_background, [256], [0, 256])
+        hist_r = cv2.calcHist([img_r], [0], [256], [0, 256])
+        hist_g = cv2.calcHist([img_g], [0], [256], [0, 256])
+        hist_b = cv2.calcHist([img_b], [0], [256], [0, 256])
 
         hist_max_r = np.argmax(hist_r)
         hist_max_g = np.argmax(hist_g)
@@ -144,7 +142,7 @@ class detector_class:
             ) / mean_background_values[i]
         return contrasts
 
-    def mask_contrasted_image(
+    def mask_contrasted_image_rectangle(
         self,
         contrasts,
         current_layer,
@@ -197,15 +195,24 @@ class detector_class:
 
         return mask
 
-    def mask_contrasted_image_new(
+    def mask_contrasted_image_ellipsoid(
         self,
         contrasts,
         current_layer,
     ):
+        """Findes contrasts of pixels within a ellipsoid around the given contrast values
+
+        Args:
+            contrasts (XxYx3 Array): The contrast of each pixel, in BGR
+            current_layer (Dict): A Dict with the Keys "contrast" and "color_radius", each with a Dict with the Keys "r", "g", "b"
+
+        Returns:
+            XxY Array : a mask of pixels with the threshold
+        """
         # for more information
         # https://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse
 
-        ## we had to write this warper function to not give jit the dict, it can handle dicts
+        ## we had to write this wrapper function to not give jit the dict, it cant handle dicts
         mask = detector_class.mask_contrasted_image_new_inner(
             contrasts,
             current_layer["contrast"]["r"],
@@ -273,32 +280,30 @@ class detector_class:
         # The Conversion in the 20x scope is 1 px = 0.15 μm²
         pixel_threshold = self.size_thresh // (MICROMETER_PER_PIXEL ** 2)
 
-        # get the Background of the image ~15 ms
-        image_background, background_mask = self.mask_background(image)
+        # Check if we already supplied pre-calculated background values
+        if self.custom_background_values is None:
+            # get the Background of the image ~15 ms
+            image_background, background_mask = self.mask_background(image)
 
-        # Counting the number of background pixels
-        # if its to low, we most likely have to much dirt or non chip on the image
-        background_pixels = cv2.countNonZero(background_mask)
-        if background_pixels / (image.shape[0] * image.shape[1]) < BACKGROUND_THRESH:
-            return np.array(detected_flakes)
-
-        # find the mean b g r values of the background ~2 ms
-        mean_background_values = cv2.mean(
-            image_background,
-            mask=background_mask,
-        )[:-1]
+            # find the mean b g r values of the background ~2 ms
+            mean_background_values = cv2.mean(
+                image_background,
+                mask=background_mask,
+            )[:-1]
+        else:
+            mean_background_values = self.custom_background_values
 
         # calculate the contrast ~50ms with numba
         contrasts = self.calc_contrast(image, mean_background_values)
 
-        # go through all layers
+        # go through all the layers we selected
         for layer_name in self.searched_layers:
 
             # Set the current layer by getting the value using the key 'layer'
             current_layer = self.contrast_dict[layer_name]
 
             # masks the contrasted Image, it marks all the parts of the image within a certain RGB contrast range
-            mask = self.mask_contrasted_image_new(
+            mask = self.mask_contrasted_image_ellipsoid(
                 contrasts=contrasts,
                 current_layer=current_layer,
             )

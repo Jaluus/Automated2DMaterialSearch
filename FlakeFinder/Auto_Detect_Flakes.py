@@ -170,17 +170,18 @@ print(
     f"Time to create overview Image: {(time.time() - START_TIME) // 3600:02.0f}:{((time.time() - START_TIME) // 60 )% 60:02.0f}:{int(time.time() - START_TIME) % 60:02.0f}"
 )
 
-print("----------------------------")
-print(f"Please calibrate the {MAGNIFICATION}x Scope")
-print("Use E and R to Swap the Scopes")
-print("Use Q to finish the Calibration")
-print(f"Make sure to end the Calibration when in the {MAGNIFICATION}x Scope")
-print("----------------------------")
-calibrate_scope(
+new_flatfield, new_background_values = calibrate_scope(
     motor_driver,
     microscope_driver,
     camera_driver,
+    MAG_IDX_DICT[MAGNIFICATION],
 )
+
+# Assigning the new flatfield and Background Values if they were used
+if new_flatfield is not None:
+    myDetector.flat_field = new_flatfield
+if new_background_values is not None:
+    myDetector.custom_background_values = new_background_values
 
 scan_area_time_start = time.time()
 print(f"Finding Flakes in {MAGNIFICATION}x...")
