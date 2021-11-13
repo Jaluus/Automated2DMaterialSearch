@@ -86,8 +86,19 @@ def calibrate_scope(
     motor: motor_driver_class,
     microscope: microscope_driver_class,
     camera: camera_driver_class,
+    needed_magnification_idx: int,
 ):
+    """Starts the scope calibration process
 
+    Args:
+        motor (motor_driver_class):
+        microscope (microscope_driver_class):
+        camera (camera_driver_class):
+        needed_magnification_idx (int): The Magnificaiton which is needed to be calibrated
+
+    Returns:
+        (IMAGE , 3-Tuple ): The new Flatfield Image and the background Values, can also return None, None if none is selected
+    """
     MAG_KEYS = {
         1: "2.5x",
         2: "5x",
@@ -95,6 +106,21 @@ def calibrate_scope(
         4: "50x",
         5: "100x",
     }
+
+    new_flatfield = None
+    new_background_values = None
+
+    print("----------------------------")
+    print(f"Please calibrate the {MAG_KEYS[needed_magnification_idx]}x Scope")
+    print("Use E and R to Swap the Scopes")
+    print("Use Q to finish the Calibration")
+    print(
+        "Use F to select a new Flatfield image to use ase Background reference, if none is selected the default is used"
+    )
+    print(
+        f"Make sure to end the Calibration when in the {MAG_KEYS[needed_magnification_idx]}x Scope"
+    )
+    print("----------------------------")
 
     cv2.namedWindow("Calibration Window")
     curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
@@ -117,7 +143,17 @@ def calibrate_scope(
 
         key = cv2.waitKey(1)
         if key == ord("q"):
-            break
+            # Check if the scope is actually in the right magnification
+            if microscope.get_properties()["nosepiece"] == needed_magnification_idx:
+                break
+            else:
+                print(
+                    f"Please calibrate the microscope to the {MAG_KEYS[needed_magnification_idx]} Scope, you are currently in the {MAG_KEYS[microscope.get_properties()['nosepiece']]} Scope"
+                )
+
+        elif key == ord("f"):
+            new_flatfield = img.copy()
+            new_background_values = cv2.mean(new_flatfield)[:-1]
 
         elif key == ord("e"):
             microscope.rotate_nosepiece_forward()
@@ -130,6 +166,7 @@ def calibrate_scope(
             cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
 
     cv2.destroyAllWindows()
+    return new_flatfield, new_background_values
 
 
 def get_chip_directorys(scan_directory):
@@ -256,10 +293,3 @@ def Create_Metahistograms(
     flake_meta_path = os.path.join(scan_directory, "flake_histogram_data.json")
     with open(flake_meta_path, "w") as f:
         json.dump(meta_dict, f, sort_keys=True, indent=4)
-
-
-if __name__ == "__main__":
-
-    Create_Metahistograms(
-        r"C:\Users\duden\Desktop\Mikroskop Bilder\Eikes_Flocken_Full_Final"
-    )
