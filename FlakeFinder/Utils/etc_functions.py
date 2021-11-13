@@ -111,14 +111,15 @@ def calibrate_scope(
     new_background_values = None
 
     print("----------------------------")
-    print(f"Please calibrate the {MAG_KEYS[needed_magnification_idx]}x Scope")
-    print("Use E and R to Swap the Scopes")
-    print("Use Q to finish the Calibration")
+    print(f"Please calibrate the {MAG_KEYS[needed_magnification_idx]} scope")
+    print("Use E and R to swap the scopes")
+    print("Use Q to finish the calibration")
     print(
-        "Use F to select a new Flatfield image to use ase Background reference, if none is selected the default is used"
+        "Use F to select a new Flatfield image, if none is selected the default is used"
     )
+    print("Use B to select an area to use as a background reference")
     print(
-        f"Make sure to end the Calibration when in the {MAG_KEYS[needed_magnification_idx]}x Scope"
+        f"Make sure to end the calibration when in the {MAG_KEYS[needed_magnification_idx]} scope"
     )
     print("----------------------------")
 
@@ -148,12 +149,21 @@ def calibrate_scope(
                 break
             else:
                 print(
-                    f"Please calibrate the microscope to the {MAG_KEYS[needed_magnification_idx]} Scope, you are currently in the {MAG_KEYS[microscope.get_properties()['nosepiece']]} Scope"
+                    f"Please calibrate the microscope to the {MAG_KEYS[needed_magnification_idx]} Scope, you are currently in the {MAG_KEYS[microscope.get_properties()['nosepiece']]} scope"
                 )
 
         elif key == ord("f"):
             new_flatfield = img.copy()
-            new_background_values = cv2.mean(new_flatfield)[:-1]
+
+        elif key == ord("b"):
+            roi = cv2.selectROI(
+                "ROI Selector, press SPACE or ENTER to end selection", img
+            )
+            roi_cropped = img[
+                int(roi[1]) : int(roi[1] + roi[3]), int(roi[0]) : int(roi[0] + roi[2])
+            ]
+            cv2.destroyWindow("ROI Selector, press SPACE or ENTER to end selection")
+            new_background_values = cv2.mean(roi_cropped)[:-1]
 
         elif key == ord("e"):
             microscope.rotate_nosepiece_forward()
@@ -236,7 +246,7 @@ def get_flake_directorys(scan_directory: str):
             yield flake_directory
 
 
-def Create_Metahistograms(
+def create_metahistograms(
     scan_directory,
     layers=["monolayer", "bilayer", "trilayer"],
 ):

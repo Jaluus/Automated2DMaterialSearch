@@ -1,13 +1,11 @@
 import json
 import os
 import time
-import sys
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
 from skimage.morphology import disk
-from PIL import ImageFont, ImageDraw, Image
 
 from Detector.detection_class import detector_class
 from Utils.etc_functions import *
@@ -20,6 +18,8 @@ SCAN_NAME = "hbn_2109"
 EXFOLIATED_MATERIAL = "hBNml"
 CHIP_THICKNESS = "70nm"
 MAGNIFICATION = 20
+CUSTOM_BACKGROUND_VALUES = None  # can be [B,G,R] or None
+
 
 # Some Threshold parameters
 ENTROPY_THRESHOLD = 4
@@ -84,6 +84,7 @@ start_time = time.time()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     flat_field=flat_field,
+    custom_background_values=CUSTOM_BACKGROUND_VALUES,
     entropy_threshold=ENTROPY_THRESHOLD,
     size_threshold=SIZE_THRESHOLD,
     sigma_treshold=SIGMA_THRESHOLD,

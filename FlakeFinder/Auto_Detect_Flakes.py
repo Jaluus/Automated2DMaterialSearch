@@ -227,7 +227,7 @@ microscope_driver.lamp_off()
 
 print("Creating Histograms...")
 try:
-    Create_Metahistograms(scan_directory)
+    create_metahistograms(scan_directory)
 except:
     print("error during hist creation, continuing")
 
