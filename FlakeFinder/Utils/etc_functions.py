@@ -81,6 +81,20 @@ def set_microscope_and_camera_settings(
     )
     time.sleep(1)
 
+    microscope_props = microscope_driver.get_properties()
+    camera_props = camera_driver.get_properties()
+
+    print("Current Microscope Properties")
+    print(microscope_props)
+    print("Requested Microscope Properties")
+    print(microscope_settings_dict[str(magnification_idx)])
+    print("")
+    print("Current Camera Properties")
+    print(camera_props)
+    print("Requested Camera Properties")
+    print(camera_settings_dict[str(magnification_idx)])
+    print("")
+
 
 def calibrate_scope(
     motor: motor_driver_class,

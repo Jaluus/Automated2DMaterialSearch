@@ -3,6 +3,8 @@ import os
 import matplotlib.pyplot as plt
 import cv2
 import time
+
+import numpy as np
 from Detector.detector_functions import remove_vignette
 
 from Drivers.Camera_Driver.camera_class import camera_driver_class
@@ -10,6 +12,7 @@ from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
 from Drivers.Motor_Driver.tango_class import motor_driver_class
+from Utils.etc_functions import calibrate_scope, set_microscope_and_camera_settings
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 ff_path = r"FlakeFinder\Parameters\Flatfields\wse2_90nm_50x.png"
@@ -18,15 +21,13 @@ ff_path = r"FlakeFinder\Parameters\Flatfields\wse2_90nm_50x.png"
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
-cam_params = {
-    "exposure": 0.05,
-    "gain": 100,
-    "white_balance": [127, 64, 90],
-    "gamma": 100,
-}
-
 VOLTAGE = 6.3
 APERTURE = 3
+EXPOSURE = 0.05
+GAIN = 100
+WHITE_BALANCE = (127, 64, 90)
+GAMMA = 100
+CALIBRATION_TARGET_GRAY_VALUE = 213
 
 MAG_KEYS = {
     1: "2.5x",
@@ -42,10 +43,10 @@ microscope.set_lamp_voltage(VOLTAGE)
 microscope.set_lamp_aperture_stop(APERTURE)
 
 camera.set_properties(
-    exposure=0.05,
-    gain=100,
-    white_balance=(127, 64, 90),
-    gamma=100,
+    exposure=EXPOSURE,
+    gain=GAIN,
+    white_balance=WHITE_BALANCE,
+    gamma=GAMMA,
 )
 
 cv2.namedWindow("Calibration Window")
@@ -74,16 +75,20 @@ while True:
     if key == ord("q"):
         break
 
-    # Save the Image
+    # Get the current information about the image
     elif key == ord("i"):
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
         all_props = {**cam_props, **mic_props}
+        print("Properties of the camera and microscope")
         print(all_props)
+        new_img = camera.get_image()
+        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
+        mean = cv2.mean(value_img)
+        print("Mean gray value of image")
+        print(round(mean[0], 2))
 
     elif key == ord("s"):
-        # motor_pos = motor.get_pos()
-        # print(motor_pos)
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
         all_props = {**cam_props, **mic_props}
@@ -98,6 +103,55 @@ while True:
         microscope.set_lamp_aperture_stop(APERTURE)
         curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
         cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+
+    elif key == ord("c"):
+        time.sleep(0.5)
+        current_iteration = 0
+        max_iter = 40
+
+        # get an image and check the current Gray Value
+        new_img = camera.get_image()
+        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
+        mean_gray_value = round(cv2.mean(value_img)[0], 0)
+
+        while (
+            mean_gray_value != CALIBRATION_TARGET_GRAY_VALUE
+            and current_iteration < max_iter
+        ):
+            current_iteration += 1
+            delta_gray = round(CALIBRATION_TARGET_GRAY_VALUE - mean_gray_value, 0)
+            print(
+                f"The current graydelta is {delta_gray} after {current_iteration} steps"
+            )
+            # Scale the steps acording to the delta of the target and the current values
+            # This leads to an incremental approach
+            EXPOSURE += 0.0001 * delta_gray  # * (1.1 - current_iteration / max_iter)
+            camera.set_properties(exposure=EXPOSURE)
+            time.sleep(0.5)
+
+            new_img = camera.get_image()
+            value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
+            mean_gray_value = round(cv2.mean(value_img)[0], 0)
+
+        print(f"Finished | Calibrated Exposure: {round(EXPOSURE,4)}s")
+
+    elif key == ord("o"):
+        EXPOSURE += 0.01
+        camera.set_properties(exposure=EXPOSURE)
+        time.sleep(0.5)
+        new_img = camera.get_image()
+        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
+        mean = cv2.mean(value_img)
+        print(mean)
+
+    elif key == ord("l"):
+        EXPOSURE -= 0.01
+        camera.set_properties(exposure=EXPOSURE)
+        time.sleep(0.5)
+        new_img = camera.get_image()
+        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
+        mean = cv2.mean(value_img)
+        print(mean)
 
     elif key == ord("r"):
         microscope.rotate_nosepiece_backward()

@@ -98,10 +98,10 @@ class camera_driver_class:
 
     def set_properties(
         self,
-        exposure: float = 0.07,
-        gain: int = 0,
-        white_balance: tuple = (127, 64, 90),
-        gamma: int = 100,
+        exposure: float = None,
+        gain: int = None,
+        white_balance: tuple = None,
+        gamma: int = None,
     ):
         """
         Sets camera values\n
@@ -117,24 +117,27 @@ class camera_driver_class:
 
         # Disable all automatic changes
         # "0" is off, "1" is on.
-        self.camera.SetPropertySwitch("Exposure", "Auto", 0)
-        self.camera.SetPropertySwitch("Gain", "Auto", 0)
-        self.camera.SetPropertySwitch("WhiteBalance", "Auto", 0)
-
         # Set an absolute exposure time
-        self.camera.SetPropertyAbsoluteValue("Exposure", "Value", exposure)
-        self.camera.SetPropertyValue("Gain", "Value", gain)
-        self.camera.SetPropertyValue("Gamma", "Value", gamma)
+        if exposure is not None:
+            self.camera.SetPropertySwitch("Exposure", "Auto", 0)
+            self.camera.SetPropertyAbsoluteValue("Exposure", "Value", exposure)
+        if gain is not None:
+            self.camera.SetPropertySwitch("Gain", "Auto", 0)
+            self.camera.SetPropertyValue("Gain", "Value", gain)
+        if gamma is not None:
+            self.camera.SetPropertySwitch("WhiteBalance", "Auto", 0)
+            self.camera.SetPropertyValue("Gamma", "Value", gamma)
 
-        self.camera.SetPropertyValue(
-            "WhiteBalance", "White Balance Red", white_balance[0]
-        )
-        self.camera.SetPropertyValue(
-            "WhiteBalance", "White Balance Green", white_balance[1]
-        )
-        self.camera.SetPropertyValue(
-            "WhiteBalance", "White Balance Blue", white_balance[2]
-        )
+        if white_balance is not None:
+            self.camera.SetPropertyValue(
+                "WhiteBalance", "White Balance Red", white_balance[0]
+            )
+            self.camera.SetPropertyValue(
+                "WhiteBalance", "White Balance Green", white_balance[1]
+            )
+            self.camera.SetPropertyValue(
+                "WhiteBalance", "White Balance Blue", white_balance[2]
+            )
 
     def get_properties(self):
         """
