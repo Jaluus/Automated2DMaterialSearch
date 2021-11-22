@@ -171,6 +171,7 @@ print(
 )
 
 new_flatfield, new_background_values = calibrate_scope(
+    flat_field,
     motor_driver,
     microscope_driver,
     camera_driver,

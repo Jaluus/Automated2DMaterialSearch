@@ -7,6 +7,7 @@ import os
 import re
 import sys
 import time
+from Detector.detector_functions import remove_vignette
 
 import cv2
 import matplotlib.pyplot as plt
@@ -97,6 +98,7 @@ def set_microscope_and_camera_settings(
 
 
 def calibrate_scope(
+    current_flatfield,
     motor: motor_driver_class,
     microscope: microscope_driver_class,
     camera: camera_driver_class,
@@ -170,10 +172,20 @@ def calibrate_scope(
             new_flatfield = img.copy()
 
         elif key == ord("b"):
+            if new_flatfield is None and current_flatfield is not None:
+                no_vignette = remove_vignette(img, current_flatfield)
+            elif current_flatfield is None and new_flatfield is not None:
+                no_vignette = remove_vignette(img, new_flatfield)
+            else:
+                print(
+                    "Please select a Flatfield Image first by pressing F over a suitable image"
+                )
+                continue
+
             roi = cv2.selectROI(
-                "ROI Selector, press SPACE or ENTER to end selection", img
+                "ROI Selector, press SPACE or ENTER to end selection", no_vignette
             )
-            roi_cropped = img[
+            roi_cropped = no_vignette[
                 int(roi[1]) : int(roi[1] + roi[3]), int(roi[0]) : int(roi[0] + roi[2])
             ]
             cv2.destroyWindow("ROI Selector, press SPACE or ENTER to end selection")
