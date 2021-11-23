@@ -18,10 +18,10 @@ import Utils.stitcher_functions as stitcher
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
 EXFOLIATED_MATERIAL = "hbnml"
-SCAN_NAME = "hBN_2109"
-CHIP_THICKNESS = "100nm"
-SCAN_USER = "david"
-EXFOLIATION_METHOD = "2min_100deg_scotchtape"
+SCAN_NAME = "Jans_test_set"
+CHIP_THICKNESS = "90nm"
+SCAN_USER = "David"
+EXFOLIATION_METHOD = "unspecified"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 20
 
@@ -32,6 +32,15 @@ META_DICT = {
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
     "scan_exfoliation_method": EXFOLIATION_METHOD,
     "scan_magnificaiton": MAGNIFICATION,
+}
+
+# Convert to Magnification index
+MAG_IDX_DICT = {
+    2.5: 1,
+    5: 2,
+    20: 3,
+    50: 4,
+    100: 5,
 }
 
 # Directory Paths
@@ -128,17 +137,19 @@ labeled_scan_area = stitcher.create_scan_area_map_from_mask(
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
-print("----------------------------")
-print(f"Please calibrate the {MAGNIFICATION}x Scope")
-print("Use E and R to Swap the Scopes")
-print("Use Q to finish the Calibration")
-print(f"Make sure to end the Calibration when in the {MAGNIFICATION}x Scope")
-print("----------------------------")
-calibrate_scope(
-    motor_driver,
-    microscope_driver,
-    camera_driver,
+new_flatfield, _ = calibrate_scope(
+    current_flatfield=flat_field,
+    motor=motor_driver,
+    microscope=microscope_driver,
+    camera=camera_driver,
+    needed_magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
 )
+
+# Assigning the new flatfield and Background Values if they were used
+if new_flatfield is not None:
+    flat_field = new_flatfield.copy()
 
 start = time.time()
 

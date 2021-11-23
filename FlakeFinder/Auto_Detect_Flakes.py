@@ -171,16 +171,18 @@ print(
 )
 
 new_flatfield, new_background_values = calibrate_scope(
-    flat_field,
-    motor_driver,
-    microscope_driver,
-    camera_driver,
-    MAG_IDX_DICT[MAGNIFICATION],
+    current_flatfield=flat_field,
+    motor=motor_driver,
+    microscope=microscope_driver,
+    camera=camera_driver,
+    needed_magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
+    camera_settings=camera_settings,
+    microscope_settings=microscope_settings,
 )
 
 # Assigning the new flatfield and Background Values if they were used
 if new_flatfield is not None:
-    myDetector.flat_field = new_flatfield
+    myDetector.flat_field = new_flatfield.copy()
 if new_background_values is not None:
     myDetector.custom_background_values = new_background_values
 

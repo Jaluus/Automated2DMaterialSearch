@@ -103,6 +103,8 @@ def calibrate_scope(
     microscope: microscope_driver_class,
     camera: camera_driver_class,
     needed_magnification_idx: int,
+    camera_settings=None,
+    microscope_settings=None,
 ):
     """Starts the scope calibration process
 
@@ -122,6 +124,16 @@ def calibrate_scope(
         4: "50x",
         5: "100x",
     }
+
+    if camera_settings is not None and microscope_settings is not None:
+        # Sets the initial Camera and microscpoe Settings
+        set_microscope_and_camera_settings(
+            microscope_settings_dict=microscope_settings,
+            camera_settings_dict=camera_settings,
+            magnification_idx=microscope.get_properties()["nosepiece"],
+            camera_driver=camera,
+            microscope_driver=microscope,
+        )
 
     new_flatfield = None
     new_background_values = None
@@ -144,11 +156,11 @@ def calibrate_scope(
     cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
 
     while True:
-
         img = camera.get_image()
-
+        # resize the image so it fits onto the screen
         img_small = cv2.resize(img, (960, 600))
 
+        # Add a small calibration circle for the middle
         cv2.circle(
             img_small,
             (480, 300),
@@ -159,6 +171,8 @@ def calibrate_scope(
         cv2.imshow("Calibration Window", img_small)
 
         key = cv2.waitKey(1)
+
+        # Press Q to end the calibration
         if key == ord("q"):
             # Check if the scope is actually in the right magnification
             if microscope.get_properties()["nosepiece"] == needed_magnification_idx:
@@ -168,13 +182,15 @@ def calibrate_scope(
                     f"Please calibrate the microscope to the {MAG_KEYS[needed_magnification_idx]} Scope, you are currently in the {MAG_KEYS[microscope.get_properties()['nosepiece']]} scope"
                 )
 
+        # Press F to set the new flatfield
         elif key == ord("f"):
             new_flatfield = img.copy()
 
+        # Press B to select an area to use as background reference
         elif key == ord("b"):
             if new_flatfield is None and current_flatfield is not None:
                 no_vignette = remove_vignette(img, current_flatfield)
-            elif current_flatfield is None and new_flatfield is not None:
+            elif new_flatfield is not None:
                 no_vignette = remove_vignette(img, new_flatfield)
             else:
                 print(
@@ -191,15 +207,35 @@ def calibrate_scope(
             cv2.destroyWindow("ROI Selector, press SPACE or ENTER to end selection")
             new_background_values = cv2.mean(roi_cropped)[:-1]
 
+        # Press E to reotate the Nosepiece and readjust the microscope and Camera params
         elif key == ord("e"):
             microscope.rotate_nosepiece_forward()
             curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
             cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+            # Set the Camera and microscope Settings
+            if camera_settings is not None and microscope_settings is not None:
+                set_microscope_and_camera_settings(
+                    microscope_settings_dict=microscope_settings,
+                    camera_settings_dict=camera_settings,
+                    magnification_idx=microscope.get_properties()["nosepiece"],
+                    camera_driver=camera,
+                    microscope_driver=microscope,
+                )
 
+        # Press R to rotate the Nosepiece and readjust the microscope and Camera params
         elif key == ord("r"):
             microscope.rotate_nosepiece_backward()
             curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
             cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+            # Set the Camera and microscope Settings
+            if camera_settings is not None and microscope_settings is not None:
+                set_microscope_and_camera_settings(
+                    microscope_settings_dict=microscope_settings,
+                    camera_settings_dict=camera_settings,
+                    magnification_idx=microscope.get_properties()["nosepiece"],
+                    camera_driver=camera,
+                    microscope_driver=microscope,
+                )
 
     cv2.destroyAllWindows()
     return new_flatfield, new_background_values

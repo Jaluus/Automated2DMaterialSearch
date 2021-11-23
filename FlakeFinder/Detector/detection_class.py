@@ -98,9 +98,9 @@ class detector_class:
         # A threshold which removes the Unwanted background of the non chip
         # Currently Unused
 
-        hist_r = cv2.calcHist([img_r], [0], [256], [0, 256])
-        hist_g = cv2.calcHist([img_g], [0], [256], [0, 256])
-        hist_b = cv2.calcHist([img_b], [0], [256], [0, 256])
+        hist_r = cv2.calcHist([img_r], [0], None, [256], [0, 256])
+        hist_g = cv2.calcHist([img_g], [0], None, [256], [0, 256])
+        hist_b = cv2.calcHist([img_b], [0], None, [256], [0, 256])
 
         hist_max_r = np.argmax(hist_r)
         hist_max_g = np.argmax(hist_g)

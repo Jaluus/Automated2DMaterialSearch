@@ -118,12 +118,11 @@ def stitch_image(
 
 def create_mask_from_stitched_image(
     overview_image,
-    threshold_value: int = 25,
     blur_kernel: int = 5,
     blur_strength: int = 100,
 ):
     """
-    Creates a mask form a given stitched image
+    Creates a mask form a given stitched image, using OTSUs binarization
     """
 
     # copy the image to make sure not to fuck up a reference
@@ -134,9 +133,7 @@ def create_mask_from_stitched_image(
         overview_image_grey, (blur_kernel, blur_kernel), blur_strength
     )
 
-    ret, mask = cv2.threshold(
-        overview_image_grey, threshold_value, 255, cv2.THRESH_BINARY
-    )
+    ret, mask = cv2.threshold(overview_image_grey, 127, 255, cv2.THRESH_OTSU)
 
     mask = cv2.erode(mask, np.ones((5, 5)), iterations=4)
     mask = cv2.dilate(mask, np.ones((5, 5)), iterations=4)

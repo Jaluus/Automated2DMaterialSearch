@@ -1,18 +1,13 @@
-import sys
 import os
-import matplotlib.pyplot as plt
 import cv2
 import time
 
-import numpy as np
 from Detector.detector_functions import remove_vignette
 
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
-from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Utils.etc_functions import calibrate_scope, set_microscope_and_camera_settings
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 ff_path = r"FlakeFinder\Parameters\Flatfields\wse2_90nm_50x.png"
@@ -21,10 +16,10 @@ ff_path = r"FlakeFinder\Parameters\Flatfields\wse2_90nm_50x.png"
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
-VOLTAGE = 6.3
-APERTURE = 3
-EXPOSURE = 0.05
-GAIN = 100
+VOLTAGE = 10.5
+APERTURE = 1.2
+EXPOSURE = 0.1
+GAIN = 0
 WHITE_BALANCE = (127, 64, 90)
 GAMMA = 100
 CALIBRATION_TARGET_GRAY_VALUE = 213
@@ -49,15 +44,15 @@ camera.set_properties(
     gamma=GAMMA,
 )
 
-cv2.namedWindow("Calibration Window")
+cv2.namedWindow("Live Viewer Window")
 curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
-cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
 while True:
 
     img = camera.get_image()
 
-    img = remove_vignette(img, flat_field)
+    # img = remove_vignette(img, flat_field)
 
     img_small = cv2.resize(img, (960, 600))
 
@@ -69,7 +64,7 @@ while True:
         thickness=3,
     )
 
-    cv2.imshow("Calibration Window", img_small)
+    cv2.imshow("Live Viewer Window", img_small)
 
     key = cv2.waitKey(1)
     if key == ord("q"):
@@ -102,7 +97,7 @@ while True:
         microscope.set_lamp_voltage(VOLTAGE)
         microscope.set_lamp_aperture_stop(APERTURE)
         curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
-        cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+        cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
     elif key == ord("c"):
         time.sleep(0.5)
@@ -121,8 +116,10 @@ while True:
             current_iteration += 1
             delta_gray = round(CALIBRATION_TARGET_GRAY_VALUE - mean_gray_value, 0)
             print(
-                f"The current graydelta is {delta_gray} after {current_iteration} steps"
+                f"\r\x1b[KThe current graydelta is {delta_gray} after {current_iteration} steps",
+                end="",
             )
+
             # Scale the steps acording to the delta of the target and the current values
             # This leads to an incremental approach
             EXPOSURE += 0.0001 * delta_gray  # * (1.1 - current_iteration / max_iter)
@@ -133,7 +130,7 @@ while True:
             value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
             mean_gray_value = round(cv2.mean(value_img)[0], 0)
 
-        print(f"Finished | Calibrated Exposure: {round(EXPOSURE,4)}s")
+        print(f"\r\x1b[KFinished | Calibrated Exposure: {round(EXPOSURE,4)}s")
 
     elif key == ord("o"):
         EXPOSURE += 0.01
@@ -158,7 +155,7 @@ while True:
         microscope.set_lamp_voltage(VOLTAGE)
         microscope.set_lamp_aperture_stop(APERTURE)
         curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
-        cv2.setWindowTitle("Calibration Window", f"Calibration Window: {curr_mag}")
+        cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
 
 cv2.destroyAllWindows()
