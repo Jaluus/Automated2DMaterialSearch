@@ -473,7 +473,7 @@ def search_scan_area_map(
                 # Save the Original eval Image
                 image_path = os.path.join(flake_directory, "eval_img.jpg")
                 raw_image_path = os.path.join(flake_directory, "raw_img.png")
-                cv2.imwrite(image,raw_image_path)
+                cv2.imwrite(raw_image_path, image)
                 mark_flake_2(flake, image, image_path)
 
 
