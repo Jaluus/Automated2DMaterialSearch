@@ -10,16 +10,16 @@ from Drivers.Microscope_Driver.microscope_class import (
 )
 
 file_path = os.path.dirname(os.path.abspath(__file__))
-ff_path = r"FlakeFinder\Parameters\Flatfields\wse2_90nm_50x.png"
+ff_path = r"FlakeFinder\Parameters\Flatfields\graphene_90nm_20x.png"
 
 # motor = motor_driver_class()
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
-VOLTAGE = 10.5
-APERTURE = 1.2
-EXPOSURE = 0.1
-GAIN = 0
+VOLTAGE = 6.3
+APERTURE = 3
+EXPOSURE = 0.05
+GAIN = 100
 WHITE_BALANCE = (127, 64, 90)
 GAMMA = 100
 CALIBRATION_TARGET_GRAY_VALUE = 213
@@ -48,11 +48,14 @@ cv2.namedWindow("Live Viewer Window")
 curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
 cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
+use_ff = True
+
 while True:
 
     img = camera.get_image()
 
-    # img = remove_vignette(img, flat_field)
+    if use_ff:
+        img = remove_vignette(img, flat_field)
 
     img_small = cv2.resize(img, (960, 600))
 
@@ -83,13 +86,19 @@ while True:
         print("Mean gray value of image")
         print(round(mean[0], 2))
 
+    elif key == ord("k"):
+        use_ff = not use_ff
+
     elif key == ord("s"):
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
         all_props = {**cam_props, **mic_props}
         print(all_props)
 
-        picture_path = os.path.join(file_path, f"{time.time()}.png")
+        picture_path = os.path.join(
+            file_path,
+            f"{VOLTAGE:.1f}_{APERTURE:.1f}_{EXPOSURE:.2f}_{GAIN:.0f}_{int(time.time())}.png",
+        )
         cv2.imwrite(picture_path, img)
 
     elif key == ord("e"):
