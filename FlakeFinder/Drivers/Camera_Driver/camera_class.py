@@ -12,8 +12,19 @@ class camera_driver_class:
     eays to use microscope cam class
     """
 
-    def __init__(self, cam_name="DFK 33UX174 38020321"):
+    def __init__(
+        self,
+        cam_name="DFK 33UX174 38020321",
+        NULL_R=14,
+        NULL_G=14,
+        NULL_B=14,
+    ):
         self.camera = self.__init_camera(cam_name)
+
+        self.null_image = np.full(
+            (1200, 1920, 3), np.array([NULL_B, NULL_G, NULL_R], dtype=np.uint8)
+        )
+
         self.DEFAULT_PROPERTIES = {
             1: {
                 "exposure": 0.07,
@@ -74,6 +85,11 @@ class camera_driver_class:
         # Start the live video stream, but show no own live video window. We will use OpenCV for this.
         Camera.StartLive(0)
         return Camera
+
+    def set_new_null_image(self, NULL_R, NULL_G, NULL_B):
+        self.null_image = np.full(
+            (1200, 1920, 3), np.array([NULL_B, NULL_G, NULL_R], dtype=np.uint8)
+        )
 
     def get_camera(self):
         return self.camera
@@ -173,6 +189,8 @@ class camera_driver_class:
     def get_image(self):
         """
         returns an image taken by the camera with the corrosponding metadata dict\n
+        Subtracts the null ("DUNKELSTROM") values from the image\n
+
         dictkeys:\n
         'gain' : the current gain, 0 means normal gain\n
         'exposure' : the current exposure time in seconds\n
@@ -186,6 +204,9 @@ class camera_driver_class:
 
         # flip the image to get the correct orientation
         image = cv2.flip(image, 0)
+
+        # Remove the null activation of the camera
+        image = cv2.subtract(image, self.null_image)
 
         return image
 
