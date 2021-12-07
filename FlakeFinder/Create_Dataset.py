@@ -16,6 +16,7 @@ import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 
 # Constants
+<<<<<<< HEAD
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
 EXFOLIATED_MATERIAL = "hbnml"
 SCAN_NAME = "Jans_test_set"
@@ -24,6 +25,16 @@ SCAN_USER = "David"
 EXFOLIATION_METHOD = "unspecified"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 20
+=======
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Documents\Mic_bilder"
+EXFOLIATED_MATERIAL = "WSe2"
+SCAN_NAME = "Dataset_Tiffi_210826"
+CHIP_THICKNESS = "90nm"
+SCAN_USER = "tiffi"
+EXFOLIATION_METHOD = "undefined"
+# Possibilities  20 , 50 , 100 , 5
+MAGNIFICATION = 50
+>>>>>>> 38ced889d13608ffeccf7c1f726e5d344d6a15a4
 
 META_DICT = {
     "scan_user": SCAN_USER,

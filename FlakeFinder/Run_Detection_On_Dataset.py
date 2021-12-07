@@ -13,6 +13,7 @@ from Utils.marker_functions import *
 
 
 # Constants
+<<<<<<< HEAD
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
 SCAN_NAME = "hbn_2109"
 EXFOLIATED_MATERIAL = "hBNml"
@@ -20,6 +21,13 @@ CHIP_THICKNESS = "70nm"
 MAGNIFICATION = 20
 CUSTOM_BACKGROUND_VALUES = None  # can be [B,G,R] or None
 
+=======
+IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Documents\Mic_bilder"
+SCAN_NAME = "2021-08-18_Dataset_Timo_WSe2"
+EXFOLIATED_MATERIAL = "wse2"
+CHIP_THICKNESS = "90nm"
+MAGNIFICATION = 50
+>>>>>>> 38ced889d13608ffeccf7c1f726e5d344d6a15a4
 
 # Some Threshold parameters
 ENTROPY_THRESHOLD = 4
@@ -27,7 +35,11 @@ SIZE_THRESHOLD = 20
 SIGMA_THRESHOLD = 500
 
 # -1 if you want to analyse all images
+<<<<<<< HEAD
 NUM_ANALYSED_IMAGES = -1
+=======
+NUM_ANALYSED_IMAGES = 1000
+>>>>>>> 38ced889d13608ffeccf7c1f726e5d344d6a15a4
 
 
 # Directory Paths

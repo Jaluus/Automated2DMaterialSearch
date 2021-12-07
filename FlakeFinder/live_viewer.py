@@ -77,6 +77,7 @@ while True:
     elif key == ord("i"):
         cam_props = camera.get_properties()
         mic_props = microscope.get_properties()
+<<<<<<< HEAD
         all_props = {**cam_props, **mic_props}
         print("Properties of the camera and microscope")
         print(all_props)
@@ -88,6 +89,23 @@ while True:
 
     elif key == ord("k"):
         use_ff = not use_ff
+=======
+        # all_props = {**cam_props, **mic_props, "motor_pos": motor_pos}
+
+        print(mic_props)
+        picture_path = os.path.join(file_path, f"{time.time()}.png")
+        cv2.imwrite(picture_path, img)
+        # Save image to server and write the path and the metadata to DB
+
+    elif key == ord("1"):
+        microscope.set_mag(1)
+
+    elif key == ord("2"):
+        microscope.set_mag(2)
+
+    elif key == ord("3"):
+        microscope.set_mag(3)
+>>>>>>> 38ced889d13608ffeccf7c1f726e5d344d6a15a4
 
     elif key == ord("s"):
         cam_props = camera.get_properties()
