@@ -1,6 +1,6 @@
 {
     "1": {
-        "exposure": 0.05,
+        "exposure": 0.1,
         "gain": 100,
         "white_balance": [
             127,
