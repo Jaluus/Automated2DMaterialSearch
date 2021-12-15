@@ -20,7 +20,7 @@
         "gamma": 100
     },
     "3": {
-        "exposure": 0.09,
+        "exposure": 0.1,
         "gain": 0,
         "white_balance": [
             127,
