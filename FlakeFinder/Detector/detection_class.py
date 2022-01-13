@@ -61,7 +61,7 @@ class detector_class:
             self.flat_field = None
 
         if custom_background_values is not None:
-            self.custom_background_values = custom_background_values.copy()
+            self.custom_background_values = np.array(custom_background_values.copy())
         else:
             self.custom_background_values = None
 
@@ -131,19 +131,16 @@ class detector_class:
     @staticmethod
     @jit(nopython=True)
     def calc_contrast(
-        image,
-        mean_background_values,
+        image: np.ndarray,
+        mean_background_values: np.ndarray,
     ):
         """
         calculates the contrasts of the image with the given mean background values\n
+        These need to be given in the order of BGR and as a numpy array\n
         Implemented with Numba for better performance\n
         Returned in B G R
         """
-        contrasts = np.zeros_like(image, dtype=np.float32)
-        for i in range(3):
-            contrasts[:, :, i] = (
-                image[:, :, i] - mean_background_values[i]
-            ) / mean_background_values[i]
+        contrasts = image / mean_background_values - 1
         return contrasts
 
     def mask_contrasted_image_rectangle(
@@ -201,8 +198,8 @@ class detector_class:
 
     def mask_contrasted_image_ellipsoid(
         self,
-        contrasts,
-        current_layer,
+        contrasts: np.ndarray,
+        current_layer: dict,
     ):
         """Findes contrasts of pixels within a ellipsoid around the given contrast values
 
@@ -271,7 +268,6 @@ class detector_class:
         num_pixels = {}
         detected_flakes = []
         MICROMETER_PER_PIXEL = self.micrometer_per_pixel[self.magnification]
-        BACKGROUND_THRESH = 0.2
 
         # Removing the Vignette from the Image
         if self.flat_field is not None:
