@@ -8,22 +8,23 @@ import numpy as np
 from skimage.morphology import disk
 
 from Detector.detection_class import detector_class
+from Detector.detector_functions import remove_vignette
 from Utils.etc_functions import *
 from Utils.marker_functions import *
 
 
 # Constants
-IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
-SCAN_NAME = "hbn_2109"
-EXFOLIATED_MATERIAL = "hBNml"
+IMAGE_DIRECTORY = r"E:\Datasets"
+SCAN_NAME = "Jan_70nm_Initial_scan"
+EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "70nm"
-MAGNIFICATION = 20
-CUSTOM_BACKGROUND_VALUES = None  # can be [B,G,R] or None
+MAGNIFICATION = 50
+CUSTOM_BACKGROUND_VALUES = [151, 151, 169]  # can be [B,G,R] or None
 
 
 # Some Threshold parameters
 ENTROPY_THRESHOLD = 4
-SIZE_THRESHOLD = 20
+SIZE_THRESHOLD = 5
 SIGMA_THRESHOLD = 500
 
 # -1 if you want to analyse all images
@@ -134,6 +135,8 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
             # In short, I will fuck up my Image if im not copying it as I just pass a reference
             # draw_image = image.copy()
 
+            image = remove_vignette(image, flat_field)
+
             # Extract some data from the Dict
             (x, y) = flake["position_bbox"]
             w = flake["width_bbox"]
@@ -166,8 +169,7 @@ for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
         # Now save the Image to its new Home
         cv2.imwrite(
-            os.path.join(save_dir, f"{image_name}"),
-            image,
+            os.path.join(save_dir, f"{image_name}"), image,
         )
 
         # Delete the mask from the dict as it is not json serializable
