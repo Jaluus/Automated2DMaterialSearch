@@ -1,13 +1,11 @@
 import cv2
 import numpy as np
-from numba import jit
-from skimage import measure
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
 import copy
-import matplotlib.pyplot as plt
 
-from Detector.detector_functions import remove_vignette
+
+from Detector_V2.detector_functions import remove_vignette
 
 
 class detector_class:
@@ -74,10 +72,12 @@ class detector_class:
 
         # detection parameters
         self.sharpen_kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
-        self.upper_thresh_canny = 100
-        self.lower_thresh_canny = 50
-        self.median_blur_kernel_size = 7
+        self.upper_thresh_canny = 220
+        self.lower_thresh_canny = 130
+        self.median_blur_kernel_size = 3
         self.min_candidate_size = 200
+        self.max_candidate_brightness = 230
+        self.convex_hull_to_contour_ratio = 0.6
 
     def set_searched_layers(
         self,
@@ -135,103 +135,164 @@ class detector_class:
 
         return masked_image, mask
 
-    @staticmethod
-    @jit(nopython=True)
-    def calc_contrast(
-        image: np.ndarray,
-        mean_background_values: np.ndarray,
-    ):
-        """
-        calculates the contrasts of the image with the given mean background values\n
-        These need to be given in the order of BGR and as a numpy array\n
-        Implemented with Numba for better performance\n
-        Returned in B G R
-        """
-        contrasts = image / mean_background_values - 1
-        return contrasts
-
-    def mask_contrasted_image_rectangle(
+    def evaluate_candidate(
         self,
-        contrasts,
-        current_layer,
+        candidate,
+        image,
+        image_preprocessed,
+        mean_background_values,
+        detected_flakes,
     ):
 
-        ## Threshing the contrasted Images only for Mono ~30ms
-        contrast_b_threshed = cv2.inRange(
-            contrasts[:, :, 0],
-            current_layer["contrast"]["b"] - current_layer["color_radius"]["b"],
-            current_layer["contrast"]["b"] + current_layer["color_radius"]["b"],
-        )
-        contrast_g_threshed = cv2.inRange(
-            contrasts[:, :, 1],
-            current_layer["contrast"]["g"] - current_layer["color_radius"]["g"],
-            current_layer["contrast"]["g"] + current_layer["color_radius"]["g"],
-        )
-        contrast_r_threshed = cv2.inRange(
-            contrasts[:, :, 2],
-            current_layer["contrast"]["r"] - current_layer["color_radius"]["r"],
-            current_layer["contrast"]["r"] + current_layer["color_radius"]["r"],
-        )
+        # get the mask of the candidate
+        candidate_mask = np.zeros(image_preprocessed.shape[:-1], dtype=np.uint8)
+        cv2.drawContours(candidate_mask, [candidate], -1, 255, -1)
 
-        # finding the intersection of the Masks (mask_a ∩ mask_b ∩ mask_c)
-        mask = cv2.bitwise_and(contrast_r_threshed, contrast_g_threshed)
-        mask = cv2.bitwise_and(mask, contrast_b_threshed)
-        return mask
+        # Extract the mean color of the candidate
+        color = cv2.mean(image_preprocessed, candidate_mask)[:-1]
 
-    @staticmethod
-    @jit(nopython=True)
-    def mask_contrasted_image_new_inner(
-        contrasts,
-        contrast_r,
-        contrast_g,
-        contrast_b,
-        radius_r,
-        radius_g,
-        radius_b,
-    ):
-        mask = np.zeros(shape=(contrasts.shape[0], contrasts.shape[1]), dtype=np.uint8)
-        for i in range(mask.shape[0]):
-            for j in range(mask.shape[1]):
-                pixel = contrasts[i, j]
+        # dont check the candidate if it is too bright
+        if np.sum(color) / 3 > self.max_candidate_brightness:
+            return None
 
-                dist_b = ((pixel[0] - contrast_b) / radius_b) ** 2
-                dist_g = ((pixel[1] - contrast_g) / radius_g) ** 2
-                dist_r = ((pixel[2] - contrast_r) / radius_r) ** 2
+        # calculate the weber contrast
+        contrast = color / mean_background_values - 1
 
-                if (dist_b + dist_g + dist_r) <= 1:
-                    mask[i, j] = 255
+        # check if the contrast is within any of the ellipsoids
+        # go through all the layers we selected
+        for layer_name in self.searched_layers:
 
-        return mask
+            # Set the current layer by getting the value using the key 'layer'
+            current_layer = self.contrast_dict[layer_name]
 
-    def mask_contrasted_image_ellipsoid(
-        self,
-        contrasts: np.ndarray,
-        current_layer: dict,
-    ):
-        """Findes contrasts of pixels within a ellipsoid around the given contrast values
+            # define variables for later use and easier reading
+            layer_contrast_array = np.array(
+                [
+                    current_layer["contrast"]["b"],
+                    current_layer["contrast"]["g"],
+                    current_layer["contrast"]["r"],
+                ]
+            )
+            layer_color_radius_array = np.array(
+                [
+                    current_layer["color_radius"]["b"],
+                    current_layer["color_radius"]["g"],
+                    current_layer["color_radius"]["r"],
+                ]
+            )
 
-        Args:
-            contrasts (XxYx3 Array): The contrast of each pixel, in BGR
-            current_layer (Dict): A Dict with the Keys "contrast" and "color_radius", each with a Dict with the Keys "r", "g", "b"
+            # check if the contrast is within the ellipsoid
+            dist = np.linalg.norm(
+                (contrast - layer_contrast_array) / layer_color_radius_array
+            )
 
-        Returns:
-            XxY Array : a mask of pixels with the threshold
-        """
-        # for more information
-        # https://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse
+            # if the contrast is outside the ellipsoid, skip this candidate
+            # Else we might have a flake!
+            if dist > 1:
+                continue
 
-        ## we had to write this wrapper function to not give jit the dict, it cant handle dicts
-        mask = detector_class.mask_contrasted_image_new_inner(
-            contrasts,
-            current_layer["contrast"]["r"],
-            current_layer["contrast"]["g"],
-            current_layer["contrast"]["b"],
-            current_layer["color_radius"]["r"],
-            current_layer["color_radius"]["g"],
-            current_layer["color_radius"]["b"],
-        )
+            # now we characterize the Flake
+            # You can do a lot of stuff here, like filter for Entropy or other metrics
+            # im just gonna call it a day for now and just do basic stuff
+            #################
 
-        return mask
+            #### Calculate the Contrast of the Flakes
+            mean_contrast = list(contrast)
+
+            color_mean, color_stddev = cv2.meanStdDev(
+                image_preprocessed, candidate_mask
+            )
+            stddev_contrast = list(color_stddev[:, 0].tolist() / mean_background_values)
+
+            #### count the number of pixels belonging to the flake
+            flake_pixel_number = cv2.countNonZero(candidate_mask)
+
+            #### Calculate a Bounding Box
+            x, y, w, h = cv2.boundingRect(candidate)
+
+            # add this later
+            (
+                (center_x, center_y),
+                (width_r, height_r),
+                rotation,
+            ) = cv2.minAreaRect(candidate)
+
+            aspect_ratio = float(w) / h
+
+            #### Calculate the Entropy
+
+            # Do the entropy function, really quit as we only use a small part
+            entropied_image_area = entropy(
+                cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
+                selem=disk(2),
+                mask=candidate_mask,
+            )
+
+            # Get the max entropy of the flake, maybe use a different Metric -> Not so good for big flakes
+            # flake_entropy = np.max(
+            #     entropied_image_area,
+            # )
+            flake_entropy = cv2.mean(
+                entropied_image_area,
+                mask=candidate_mask,
+            )[0]
+
+            # Filter High entropy Flakes, aka dirt
+            if flake_entropy > self.entropy_thresh:
+                continue
+
+            #### Find the Close Proximity of the Flake
+
+            # Dilate the Flake mask
+            proximity_mask = cv2.dilate(candidate_mask, disk(7), iterations=6)
+
+            # dilate the Flake mask to remove the edges
+            dilated_masked_flake = cv2.dilate(candidate_mask, disk(4), iterations=4)
+
+            # Xor the mask to only get the surroundings
+            proximity_mask = cv2.bitwise_xor(dilated_masked_flake, proximity_mask)
+
+            _, proximity_stddev = cv2.meanStdDev(
+                cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
+                mask=proximity_mask,
+            )
+            #################
+
+            flake_dict = {
+                "mask": candidate_mask,
+                "layer": layer_name,
+                "num_pixels": int(flake_pixel_number),
+                "size_micro": round(
+                    flake_pixel_number
+                    * (self.micrometer_per_pixel[self.magnification] ** 2),
+                    1,
+                ),
+                "mean_contrast": [round(c, 3) for c in mean_contrast],
+                "stddev_contrast": [round(c, 3) for c in stddev_contrast],
+                "mean_background": [round(c, 3) for c in mean_background_values],
+                "position_bbox": (int(x), int(y)),
+                "width_bbox": int(w),
+                "height_bbox": int(h),
+                "center_rotated": (int(center_x), int(center_y)),
+                "width_rotated": int(width_r),
+                "height_rotated": int(height_r),
+                "rotation": round(rotation, 3),
+                "aspect_ratio": round(aspect_ratio, 2),
+                "position_micro": (
+                    round(center_x * self.micrometer_per_pixel[self.magnification], 0),
+                    round(center_y * self.micrometer_per_pixel[self.magnification], 0),
+                ),
+                "proximity_stddev": round(proximity_stddev[0][0], 2),
+                "entropy": round(flake_entropy, 2),
+            }
+
+            # Dont check the other layers
+            # A flake cant be in more than one layer
+            detected_flakes.append(flake_dict)
+
+            return None
+
+        return None
 
     def detect_flakes(
         self,
@@ -271,9 +332,7 @@ class detector_class:
             - 'size_micro' (float): The Size of the Flake in μm²
         """
         # Define some Default Vars
-        num_pixels = {}
         detected_flakes = []
-        MICROMETER_PER_PIXEL = self.micrometer_per_pixel[self.magnification]
 
         # Removing the Vignette from the Image
         if self.flat_field is not None:
@@ -284,7 +343,9 @@ class detector_class:
 
         # Conversion to the right format, internaly im working with Pixel thresholds
         # The Conversion in the 20x scope is 1 px = 0.15 μm²
-        pixel_threshold = self.size_thresh // (MICROMETER_PER_PIXEL ** 2)
+        pixel_threshold = self.size_thresh // (
+            self.micrometer_per_pixel[self.magnification] ** 2
+        )
 
         # Check if we already supplied pre-calculated background values
         if self.custom_background_values is None:
@@ -299,181 +360,60 @@ class detector_class:
         else:
             mean_background_values = self.custom_background_values
 
-        image_sharpened = cv2.filter2D(image, -1, self.sharpen_kernel)
-        image_preprocessed = cv2.medianBlur(
-            image_sharpened, self.median_blur_kernel_size
-        )
+        # Testing showed that its better to first median filter the image the then sharpen it
+        # This is better at keepiing fine details and removing noise
 
-        edges = cv2.Canny(image_preprocessed, 50, 150)
+        # getting rid of noise
+        # 200 ms impact for the 5x5 filter!
+        image_denoised = cv2.medianBlur(image, self.median_blur_kernel_size)
+
+        # filtering takes negligible time
+        image_preprocessed = cv2.filter2D(image_denoised, -1, self.sharpen_kernel)
+
+        # Finding edges in the image
+        # about 10 - 20 ms
+        edges = cv2.Canny(
+            image_preprocessed, self.lower_thresh_canny, self.upper_thresh_canny
+        )
         edges = cv2.dilate(edges, None, iterations=1)
 
         # find contours
+        # Neglegable performance impact
         contours, hierarchy = cv2.findContours(
             edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE
         )
 
         # generate flake candidates
+        # 1. Make sure the contour is not a top level (root) contour
+        # 2. Make sure the parent of the contour is a root contour (only take the first inner contour)
+        # 3. Make sure the contour does not have children!, currently unused
+        # 4. Dont use too small contours, as they are not flake candidates
+        # Neglegable performance impact
+        # We need to cull the candidates even further
         candidates = [
             contours[i]
             for i in range(len(contours))
             if hierarchy[0, i, 3] != -1
             and hierarchy[0, hierarchy[0, i, 3], 3] == -1
+            and hierarchy[0, i, 2] == -1
             and cv2.contourArea(contours[i]) > pixel_threshold
+            and cv2.arcLength(cv2.convexHull(contours[i]), True)
+            / cv2.arcLength(contours[i], True)
+            > self.convex_hull_to_contour_ratio
         ]
 
+        # Highly parallelizable
+        # No idea how much of a performance impact this has
+        # About 2 ms per candidate
         for candidate in candidates:
 
-            # get the mask of the candidate
-            candidate_mask = np.zeros(image.shape[:-1], dtype=np.uint8)
-            cv2.drawContours(candidate_mask, [candidate], -1, 255, -1)
-
-            # Extract the mean color of the candidate
-            color = cv2.mean(image_preprocessed, candidate_mask)[:-1]
-            contrast = color / mean_background_values - 1
-
-            # check if the contrast is within any of the ellipsoids
-            # go through all the layers we selected
-            for layer_name in self.searched_layers:
-
-                # Set the current layer by getting the value using the key 'layer'
-                current_layer = self.contrast_dict[layer_name]
-
-                # define variables for later use and easier reading
-                layer_contrast_array = np.array(
-                    [
-                        current_layer["contrast"]["b"],
-                        current_layer["contrast"]["g"],
-                        current_layer["contrast"]["r"],
-                    ]
-                )
-                layer_color_radius_array = np.array(
-                    [
-                        current_layer["color_radius"]["b"],
-                        current_layer["color_radius"]["g"],
-                        current_layer["color_radius"]["r"],
-                    ]
-                )
-
-                # check if the contrast is within the ellipsoid
-                dist = np.linalg.norm(
-                    (contrast - layer_contrast_array) / layer_color_radius_array
-                )
-
-                # if the contrast is outside the ellipsoid, skip this candidate
-                # Else we might have a flake!
-                if dist > 1:
-                    continue
-
-                # now we characterize the Flake
-                # You can do a lot of stuff here, like filter for Entropy or other metrics
-                # im just gonna call it a day for now and just do basic stuff
-                #################
-
-                #### Calculate the Contrast of the Flakes
-                mean_contrast = list(contrast)
-                stddev_contrast = [0, 0, 0]
-
-                #### count the number of pixels belonging to the flake
-                flake_pixel_number = cv2.countNonZero(candidate_mask)
-
-                #### Calculate a Bounding Box
-                x, y, w, h = cv2.boundingRect(candidate)
-
-                # add this later
-                ((center_x, center_y), (width_r, height_r), rotation) = cv2.minAreaRect(
-                    candidate
-                )
-
-                aspect_ratio = float(w) / h
-
-                #### Calculate the Entropy
-
-                # Expand the Bounding Box
-                x_min = max(x - 20, 0)
-                x_max = min(x + w + 20, image.shape[1])
-                y_min = max(y - 20, 0)
-                y_max = min(y + h + 20, image.shape[0])
-                # Cut out the Bounding boxes
-                cut_out_flake = image[
-                    y_min:y_max,
-                    x_min:x_max,
-                ]
-                cut_out_flake_mask = candidate_mask[
-                    y_min:y_max,
-                    x_min:x_max,
-                ]
-
-                # Erode the mask to not accidentally have the Edges in the mean
-                cut_out_flake_mask = cv2.erode(
-                    cut_out_flake_mask, disk(2), iterations=2
-                )
-
-                # go to Gray as we only need the gray Entropy
-                entropy_area_gray = cv2.cvtColor(cut_out_flake, cv2.COLOR_BGR2GRAY)
-
-                # Do the entropy function, really quit as we only use a small part
-                entropied_image_area = entropy(
-                    entropy_area_gray,
-                    selem=disk(2),
-                    mask=cut_out_flake_mask,
-                )
-
-                # Get the max entropy of the flake, maybe use a different Metric -> Not so good for big flakes
-                # flake_entropy = np.max(
-                #     entropied_image_area,
-                # )
-                flake_entropy = cv2.mean(
-                    entropied_image_area,
-                    mask=cut_out_flake_mask,
-                )[0]
-
-                # Filter High entropy Flakes, aka dirt
-                if flake_entropy > self.entropy_thresh:
-                    continue
-
-                #### Find the Close Proximity of the Flake
-
-                # Dilate the Flake mask
-                proximity_mask = cv2.dilate(candidate_mask, disk(7), iterations=6)
-
-                # dilate the Flake mask to remove the edges
-                dilated_masked_flake = cv2.dilate(candidate_mask, disk(4), iterations=4)
-
-                # Xor the mask to only get the surroundings
-                proximity_mask = cv2.bitwise_xor(dilated_masked_flake, proximity_mask)
-
-                _, proximity_stddev = cv2.meanStdDev(
-                    cv2.cvtColor(image, cv2.COLOR_BGR2GRAY),
-                    mask=proximity_mask,
-                )
-                #################
-                flake_dict = {
-                    "mask": candidate_mask,
-                    "layer": layer_name,
-                    "num_pixels": flake_pixel_number,
-                    "size_micro": round(
-                        flake_pixel_number * (MICROMETER_PER_PIXEL ** 2), 1
-                    ),
-                    "mean_contrast": [round(c, 3) for c in mean_contrast],
-                    "stddev_contrast": [round(c, 3) for c in stddev_contrast],
-                    "mean_background": [round(c, 3) for c in mean_background_values],
-                    "position_bbox": (x, y),
-                    "width_bbox": int(w),
-                    "height_bbox": int(h),
-                    "center_rotated": (int(center_x), int(center_y)),
-                    "width_rotated": int(width_r),
-                    "height_rotated": int(height_r),
-                    "rotation": round(rotation, 3),
-                    "aspect_ratio": round(aspect_ratio, 2),
-                    "position_micro": (
-                        round(center_x * MICROMETER_PER_PIXEL, 0),
-                        round(center_y * MICROMETER_PER_PIXEL, 0),
-                    ),
-                    "proximity_stddev": round(proximity_stddev[0][0], 2),
-                    "entropy": round(flake_entropy, 2),
-                }
-
-                detected_flakes.append(flake_dict)
+            self.evaluate_candidate(
+                candidate,
+                image,
+                image_preprocessed,
+                mean_background_values,
+                detected_flakes,
+            )
 
         # Finally, return all the detected flakes
         return np.array(detected_flakes)

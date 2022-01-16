@@ -7,10 +7,17 @@ import numpy as np
 
 from skimage.morphology import disk
 
-from Detector.detection_class import detector_class
-from Detector.detector_functions import remove_vignette
+from Detector_V2.detection_class import detector_class
+from Detector_V2.detector_functions import remove_vignette
 from Utils.etc_functions import *
 from Utils.marker_functions import *
+
+
+# Converter fallback for json
+def convert(o):
+    if isinstance(o, np.generic):
+        return o.item()
+    raise TypeError
 
 
 # Constants
@@ -29,7 +36,6 @@ SIGMA_THRESHOLD = 500
 
 # -1 if you want to analyse all images
 NUM_ANALYSED_IMAGES = -1
-
 
 # Directory Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -81,108 +87,121 @@ flat_field = cv2.imread(flat_field_path)
 # Define the start time
 start_time = time.time()
 
-# Detector Init
-myDetector = detector_class(
-    contrast_dict=contrast_params,
-    flat_field=flat_field,
-    custom_background_values=CUSTOM_BACKGROUND_VALUES,
-    entropy_threshold=ENTROPY_THRESHOLD,
-    size_threshold=SIZE_THRESHOLD,
-    sigma_treshold=SIGMA_THRESHOLD,
-    magnification=MAGNIFICATION,
-)
-
 # An indexing method for found flakes
 current_flake_number = 0
 current_image_number = 0
 
-for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
+# Run the program in the main shell
+# For multiprocessing puroposes
+if __name__ == "__main__":
 
-    # Logging where we are
-    if idx % (num_images // 100) == 1:
-        curr_used_time = time.time() - start_time
-        print(
-            f"{idx} / {num_images} ({idx / num_images * 100 :.0f}%) | Time to go: {curr_used_time / idx * (num_images-idx):.0f}s | Time per Image {curr_used_time / idx * 1000:.0f}ms"
-        )
+    # Detector Init
+    myDetector = detector_class(
+        contrast_dict=contrast_params,
+        flat_field=flat_field,
+        custom_background_values=CUSTOM_BACKGROUND_VALUES,
+        entropy_threshold=ENTROPY_THRESHOLD,
+        size_threshold=SIZE_THRESHOLD,
+        sigma_treshold=SIGMA_THRESHOLD,
+        magnification=MAGNIFICATION,
+    )
 
-    # just read the image ~37ms
-    image_path = os.path.join(image_dir, image_name)
-    image = cv2.imread(image_path)
+    for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
-    # ~120ms
-    detected_flakes = myDetector.detect_flakes(image)
+        # Logging where we are
+        if idx % (num_images // 100) == 1:
+            curr_used_time = time.time() - start_time
+            print(
+                f"{idx} / {num_images} ({idx / num_images * 100 :.0f}%) | Time to go: {curr_used_time / idx * (num_images-idx):.0f}s | Time per Image {curr_used_time / idx * 1000:.0f}ms"
+            )
 
-    # Operation on the flakes
-    if len(detected_flakes) != 0:
-        current_image_number += 1
-        print(image_name, meta_name)
+        # just read the image ~37ms
+        image_path = os.path.join(image_dir, image_name)
+        image = cv2.imread(image_path)
 
-        # load the Metadata
-        meta_path = os.path.join(meta_dir, meta_name)
-        meta_data = json.load(open(meta_path, "r"))
+        # ~120ms
+        detected_flakes = myDetector.detect_flakes(image)
 
-        # mark the flake on overview map
-        overview_image = mark_on_overview(
-            overview_image=overview_image, motor_pos=meta_data["motor_pos"]
-        )
+        # Operation on the flakes
+        if len(detected_flakes) != 0:
+            current_image_number += 1
+            print(
+                f"A total of {len(detected_flakes)} flakes were found in image {image_name}"
+            )
 
-        # Operate on each Flake
-        for flake in detected_flakes:
-            current_flake_number += 1
+            # load the Metadata
+            meta_path = os.path.join(meta_dir, meta_name)
+            meta_data = json.load(open(meta_path, "r"))
 
-            # Copy the Image to not Modify the Original
-            # If you dont know why I do this, Google Mutable Types
-            # In short, I will fuck up my Image if im not copying it as I just pass a reference
-            # draw_image = image.copy()
+            # mark the flake on overview map
+            overview_image = mark_on_overview(
+                overview_image=overview_image, motor_pos=meta_data["motor_pos"]
+            )
 
+            # remove the vignette
             image = remove_vignette(image, flat_field)
 
-            # Extract some data from the Dict
-            (x, y) = flake["position_bbox"]
-            w = flake["width_bbox"]
-            h = flake["height_bbox"]
-            cv2.rectangle(
+            # Operate on each Flake
+            for flake in detected_flakes:
+                current_flake_number += 1
+
+                # Copy the Image to not Modify the Original
+                # If you dont know why I do this, Google Mutable Types
+                # In short, I will fuck up my Image if im not copying it as I just pass a reference
+                # draw_image = image.copy()
+
+                # # Extract some data from the Dict
+                (x, y) = flake["position_bbox"]
+                w = flake["width_bbox"]
+                h = flake["height_bbox"]
+                # cv2.rectangle(
+                #     image,
+                #     (x - 20, y - 20),
+                #     (x + w + 20, y + h + 20),
+                #     color=[0, 0, 0],
+                #     thickness=2,
+                # )
+
+                # Dilate the flake outline and get the gradient to get a nice border
+                # outline_flake = cv2.dilate(flake["mask"], disk(2))
+                outline_flake = cv2.morphologyEx(
+                    flake["mask"],
+                    cv2.MORPH_GRADIENT,
+                    disk(1),
+                )
+
+                # Draw this border on the image
+                image[outline_flake != 0] = [0, 0, 255]
+
+                cv2.putText(
+                    image,
+                    f"{flake['layer']}",
+                    (x + w + 10, y - 35),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    thickness=1,
+                    fontScale=1,
+                    color=(0, 0, 0),
+                )
+                #####
+
+            # Now save the Image to its new Home
+            cv2.imwrite(
+                os.path.join(save_dir, f"{image_name}"),
                 image,
-                (x - 20, y - 20),
-                (x + w + 20, y + h + 20),
-                color=[0, 0, 0],
-                thickness=2,
             )
 
-            # Dilate the flake outline and get the gradient to get a nice border
-            outline_flake = cv2.dilate(flake["mask"], disk(3))
-            outline_flake = cv2.morphologyEx(outline_flake, cv2.MORPH_GRADIENT, disk(2))
+            # Delete the mask from the dict as it is not json serializable
+            for flake in detected_flakes:
+                del flake["mask"]
 
-            # Draw this border on the image
-            image[outline_flake != 0] = [0, 0, 0]
+                with open(
+                    os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"),
+                    "w",
+                ) as f:
+                    json.dump(flake, f, indent=4, sort_keys=True, default=convert)
 
-            cv2.putText(
-                image,
-                f"{flake['layer']}\nFlake-Nr.: {current_flake_number}",
-                (x + w + 25, y - 35),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                thickness=2,
-                fontScale=2,
-                color=(0, 0, 0),
-            )
-            #####
+    cv2.imwrite(marked_overview_path, overview_image)
 
-        # Now save the Image to its new Home
-        cv2.imwrite(
-            os.path.join(save_dir, f"{image_name}"), image,
-        )
-
-        # Delete the mask from the dict as it is not json serializable
-        for flake in detected_flakes:
-            del flake["mask"]
-
-            with open(
-                os.path.join(save_dir_meta, f"{current_flake_number}_{meta_name}"), "w"
-            ) as f:
-                json.dump(flake, f, indent=4, sort_keys=True)
-
-cv2.imwrite(marked_overview_path, overview_image)
-
-print(
-    f"Total Elapsed Time: {(time.time() - start_time) // 3600:02.0f}:{((time.time() - start_time) // 60 )% 60:02.0f}:{int(time.time() - start_time) % 60:02.0f}"
-)
+    print(
+        f"Total Elapsed Time: {(time.time() - start_time) // 3600:02.0f}:{((time.time() - start_time) // 60 )% 60:02.0f}:{int(time.time() - start_time) % 60:02.0f}"
+    )
