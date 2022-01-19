@@ -1,9 +1,7 @@
-import json
 import os
 import shutil
 import time
 
-import cv2
 import requests
 
 from Utils.raster_functions import get_flake_directorys

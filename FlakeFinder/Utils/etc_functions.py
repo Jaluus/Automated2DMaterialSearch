@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import time
-from Detector.detector_functions import remove_vignette
+from Detector_V2.detector_functions import remove_vignette
 
 import cv2
 import matplotlib.pyplot as plt

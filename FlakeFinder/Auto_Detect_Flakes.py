@@ -9,7 +9,7 @@ import sys
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Detector.detection_class import detector_class
+from Detector_V2.detection_class import detector_class
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
