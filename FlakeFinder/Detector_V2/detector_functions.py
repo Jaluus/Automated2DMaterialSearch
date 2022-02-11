@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 
-def remove_vignette(image, flat_field):
+def remove_vignette_legecy(image, flat_field):
     """Removes the Vignette from the Image
 
     Args:
@@ -34,3 +34,26 @@ def remove_vignette(image, flat_field):
     # reconvert to bgr
     image_no_vigentte = cv2.cvtColor(image_hsv, cv2.COLOR_HSV2BGR)
     return image_no_vigentte
+
+
+def remove_vignette(
+    image,
+    flat_field,
+    max_background_value: int = 241,
+):
+    """Removes the Vignette from the Image
+
+    Args:
+        image (NxMx3 Array): The Image with the Vignette
+        flat_field (NxMx3 Array): the Flat Field in RGB
+        max_background_value (int): the maximum value of the background
+
+    Returns:
+        (NxMx3 Array): The Image without the Vignette
+    """
+
+    image_no_vigentte = image / flat_field * cv2.mean(flat_field)[:-1]
+
+    image_no_vigentte[image_no_vigentte > max_background_value] = max_background_value
+
+    return np.asarray(image_no_vigentte, dtype=np.uint8)

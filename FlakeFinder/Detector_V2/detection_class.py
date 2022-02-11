@@ -72,12 +72,14 @@ class detector_class:
 
         # detection parameters
         self.sharpen_kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
+        # 70nm SiO2 Upper Threshold = 220
+        # Lower Threshold = 130
         self.upper_thresh_canny = 220
         self.lower_thresh_canny = 130
         self.median_blur_kernel_size = 3
-        self.min_candidate_size = 200
-        self.max_candidate_brightness = 230
-        self.convex_hull_to_contour_ratio = 0.6
+        self.min_candidate_size = 100
+        self.max_candidate_brightness = 255
+        self.convex_hull_to_contour_ratio = 0
 
     def set_searched_layers(
         self,
@@ -375,7 +377,7 @@ class detector_class:
         edges = cv2.Canny(
             image_preprocessed, self.lower_thresh_canny, self.upper_thresh_canny
         )
-        edges = cv2.dilate(edges, None, iterations=1)
+        edges = cv2.dilate(edges, disk(1), iterations=1)
 
         # find contours
         # Neglegable performance impact
@@ -388,6 +390,7 @@ class detector_class:
         # 2. Make sure the parent of the contour is a root contour (only take the first inner contour)
         # 3. Make sure the contour does not have children!, currently unused
         # 4. Dont use too small contours, as they are not flake candidates
+        # 5. UNUSED: Remove inner contours, as they are not flake candidates (and hierarchy[0, i, 2] == -1)
         # Neglegable performance impact
         # We need to cull the candidates even further
         candidates = [
@@ -395,11 +398,7 @@ class detector_class:
             for i in range(len(contours))
             if hierarchy[0, i, 3] != -1
             and hierarchy[0, hierarchy[0, i, 3], 3] == -1
-            and hierarchy[0, i, 2] == -1
             and cv2.contourArea(contours[i]) > pixel_threshold
-            and cv2.arcLength(cv2.convexHull(contours[i]), True)
-            / cv2.arcLength(contours[i], True)
-            > self.convex_hull_to_contour_ratio
         ]
 
         # Highly parallelizable
