@@ -1,6 +1,7 @@
 import os
 import cv2
 import time
+import numpy as np
 
 from Detector.detector_functions import remove_vignette
 
@@ -10,16 +11,16 @@ from Drivers.Microscope_Driver.microscope_class import (
 )
 
 file_path = os.path.dirname(os.path.abspath(__file__))
-ff_path = r"FlakeFinder\Parameters\Flatfields\graphene_90nm_20x.png"
+ff_path = "FlakeFinder\Parameters\Flatfields\test.png"
 
 # motor = motor_driver_class()
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
-VOLTAGE = 6.3
-APERTURE = 3
-EXPOSURE = 0.05
-GAIN = 100
+VOLTAGE = 6
+APERTURE = 4.3
+EXPOSURE = 0.1
+GAIN = 0
 WHITE_BALANCE = (127, 64, 90)
 GAMMA = 100
 CALIBRATION_TARGET_GRAY_VALUE = 213
@@ -48,7 +49,7 @@ cv2.namedWindow("Live Viewer Window")
 curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
 cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
-use_ff = True
+use_ff = False
 
 while True:
 
@@ -83,8 +84,8 @@ while True:
         new_img = camera.get_image()
         value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
         mean = cv2.mean(value_img)
-        print("Mean gray value of image")
-        print(round(mean[0], 2))
+        print(f"Mean gray value of image: {round(mean[0], 2)}")
+        print(f"Max gray value of image: {np.max(value_img)}")
 
     elif key == ord("k"):
         use_ff = not use_ff
@@ -142,22 +143,16 @@ while True:
         print(f"\r\x1b[KFinished | Calibrated Exposure: {round(EXPOSURE,4)}s")
 
     elif key == ord("o"):
-        EXPOSURE += 0.01
-        camera.set_properties(exposure=EXPOSURE)
+        APERTURE += 0.1
+        microscope.set_lamp_aperture_stop(APERTURE)
         time.sleep(0.5)
-        new_img = camera.get_image()
-        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-        mean = cv2.mean(value_img)
-        print(mean)
+        print(APERTURE)
 
     elif key == ord("l"):
-        EXPOSURE -= 0.01
-        camera.set_properties(exposure=EXPOSURE)
+        APERTURE -= 0.1
+        microscope.set_lamp_aperture_stop(APERTURE)
         time.sleep(0.5)
-        new_img = camera.get_image()
-        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-        mean = cv2.mean(value_img)
-        print(mean)
+        print(APERTURE)
 
     elif key == ord("r"):
         microscope.rotate_nosepiece_backward()

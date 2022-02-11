@@ -17,31 +17,13 @@ import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
-EXFOLIATED_MATERIAL = "hbnml"
-SCAN_NAME = "Jans_test_set"
+EXFOLIATED_MATERIAL = "wse2_AU"
+SCAN_NAME = "WSe2_on_Au-SiO2-grid_2_AUparam"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "David"
-EXFOLIATION_METHOD = "unspecified"
-# Possibilities  20 , 50 , 100 , 5
+SCAN_USER = "Jo"
+EXFOLIATION_METHOD = "undefined"
+# Possibilities  20 , 50 , 100 , not defined 5
 MAGNIFICATION = 20
-
-META_DICT = {
-    "scan_user": SCAN_USER,
-    "scan_name": SCAN_NAME,
-    "chip_thickness": CHIP_THICKNESS,
-    "scan_exfoliated_material": EXFOLIATED_MATERIAL,
-    "scan_exfoliation_method": EXFOLIATION_METHOD,
-    "scan_magnificaiton": MAGNIFICATION,
-}
-
-# Convert to Magnification index
-MAG_IDX_DICT = {
-    2.5: 1,
-    5: 2,
-    20: 3,
-    50: 4,
-    100: 5,
-}
 
 # Directory Paths
 scan_directory = os.path.join(IMAGE_DIRECTORY, SCAN_NAME)
@@ -87,6 +69,26 @@ with open(magnification_params_path) as f:
 # Creating Paths
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
+
+META_DICT = {
+    "scan_user": SCAN_USER,
+    "scan_name": SCAN_NAME,
+    "chip_thickness": CHIP_THICKNESS,
+    "scan_exfoliated_material": EXFOLIATED_MATERIAL,
+    "scan_exfoliation_method": EXFOLIATION_METHOD,
+    "scan_magnificaiton": MAGNIFICATION,
+    "microscope_parameters": microscope_settings,
+    "camera_parameters": camera_settings,
+}
+
+# Convert to Magnification index
+MAG_IDX_DICT = {
+    2.5: 1,
+    5: 2,
+    20: 3,
+    50: 4,
+    100: 5,
+}
 
 # Dump the meta data
 with open(scan_meta_path, "w") as f:
@@ -163,7 +165,7 @@ raster.raster_scan_area_map(
     magnification=MAGNIFICATION,
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,
-    flat_field=flat_field,
+    # flat_field=flat_field,
     **magnification_params,
 )
 
