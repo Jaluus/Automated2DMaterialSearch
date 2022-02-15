@@ -16,13 +16,12 @@ ff_path = r"FlakeFinder\Parameters\Flatfields\graphene_90nm_20x.png"
 microscope = microscope_driver_class()
 camera = camera_driver_class()
 
-VOLTAGE = 6.3
-APERTURE = 3
+VOLTAGE = 8
+APERTURE = 6
 EXPOSURE = 0.05
-GAIN = 100
+GAIN = 0
 WHITE_BALANCE = (127, 64, 90)
 GAMMA = 100
-CALIBRATION_TARGET_GRAY_VALUE = 213
 
 MAG_KEYS = {
     1: "2.5x",
@@ -97,7 +96,7 @@ while True:
 
         picture_path = os.path.join(
             file_path,
-            f"{VOLTAGE:.1f}_{APERTURE:.1f}_{EXPOSURE:.2f}_{GAIN:.0f}_{int(time.time())}.png",
+            f"live_viewer_images/{VOLTAGE:.1f}_{APERTURE:.1f}_{EXPOSURE:.2f}_{GAIN:.0f}_{int(time.time())}.png",
         )
         cv2.imwrite(picture_path, img)
 
@@ -108,56 +107,15 @@ while True:
         curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]
         cv2.setWindowTitle("Live Viewer Window", f"Live Viewer Window: {curr_mag}")
 
-    elif key == ord("c"):
-        time.sleep(0.5)
-        current_iteration = 0
-        max_iter = 40
-
-        # get an image and check the current Gray Value
-        new_img = camera.get_image()
-        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-        mean_gray_value = round(cv2.mean(value_img)[0], 0)
-
-        while (
-            mean_gray_value != CALIBRATION_TARGET_GRAY_VALUE
-            and current_iteration < max_iter
-        ):
-            current_iteration += 1
-            delta_gray = round(CALIBRATION_TARGET_GRAY_VALUE - mean_gray_value, 0)
-            print(
-                f"\r\x1b[KThe current graydelta is {delta_gray} after {current_iteration} steps",
-                end="",
-            )
-
-            # Scale the steps acording to the delta of the target and the current values
-            # This leads to an incremental approach
-            EXPOSURE += 0.0001 * delta_gray  # * (1.1 - current_iteration / max_iter)
-            camera.set_properties(exposure=EXPOSURE)
-            time.sleep(0.5)
-
-            new_img = camera.get_image()
-            value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-            mean_gray_value = round(cv2.mean(value_img)[0], 0)
-
-        print(f"\r\x1b[KFinished | Calibrated Exposure: {round(EXPOSURE,4)}s")
-
     elif key == ord("o"):
-        EXPOSURE += 0.01
-        camera.set_properties(exposure=EXPOSURE)
-        time.sleep(0.5)
-        new_img = camera.get_image()
-        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-        mean = cv2.mean(value_img)
-        print(mean)
+        VOLTAGE += 0.2
+        microscope.set_lamp_voltage(VOLTAGE)
+        print(VOLTAGE)
 
     elif key == ord("l"):
-        EXPOSURE -= 0.01
-        camera.set_properties(exposure=EXPOSURE)
-        time.sleep(0.5)
-        new_img = camera.get_image()
-        value_img = cv2.cvtColor(new_img, cv2.COLOR_BGR2HSV)[:, :, 2]
-        mean = cv2.mean(value_img)
-        print(mean)
+        VOLTAGE -= 0.2
+        microscope.set_lamp_voltage(VOLTAGE)
+        print(VOLTAGE)
 
     elif key == ord("r"):
         microscope.rotate_nosepiece_backward()

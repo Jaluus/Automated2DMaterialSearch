@@ -7,7 +7,6 @@ node_modules
 Pictures
 Meta
 
-
 # Motor Driver ignores
 tango_dll_errlog.txt
 
@@ -30,3 +29,5 @@ main.toc
 *.log
 *.blg
 *.bbl
+
+Flakefinder/live_viewer_images/*.png
