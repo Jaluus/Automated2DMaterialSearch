@@ -1,6 +1,6 @@
 {
     "1": {
-        "exposure": 0.08,
+        "exposure": 0.05,
         "gain": 0,
         "white_balance": [
             127,
@@ -10,7 +10,7 @@
         "gamma": 100
     },
     "2": {
-        "exposure": 0.09,
+        "exposure": 0.05,
         "gain": 0,
         "white_balance": [
             127,
@@ -20,7 +20,7 @@
         "gamma": 100
     },
     "3": {
-        "exposure": 0.1,
+        "exposure": 0.05,
         "gain": 0,
         "white_balance": [
             127,
@@ -30,7 +30,7 @@
         "gamma": 100
     },
     "4": {
-        "exposure": 0.09,
+        "exposure": 0.05,
         "gain": 0,
         "white_balance": [
             127,
