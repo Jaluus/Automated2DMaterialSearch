@@ -74,8 +74,8 @@ class detector_class:
         self.sharpen_kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
         # 70nm SiO2 Upper Threshold = 220
         # Lower Threshold = 130
-        self.upper_thresh_canny = 220
-        self.lower_thresh_canny = 130
+        self.upper_thresh_canny = 150
+        self.lower_thresh_canny = 40
         self.median_blur_kernel_size = 3
         self.min_candidate_size = 100
         self.max_candidate_brightness = 255
