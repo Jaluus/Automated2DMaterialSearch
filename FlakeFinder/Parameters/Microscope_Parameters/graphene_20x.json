@@ -1,14 +1,14 @@
 {
   "1": {
     "light_voltage": 8,
-    "aperture": 6
+    "aperture": 4
   },
   "2": {
     "light_voltage": 6,
     "aperture": 4
   },
   "3": {
-    "light_voltage": 6,
+    "light_voltage": 7,
     "aperture": 4
   },
   "4": {
