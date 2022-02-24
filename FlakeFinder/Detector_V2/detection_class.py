@@ -141,17 +141,16 @@ class detector_class:
         self,
         candidate,
         image,
-        image_preprocessed,
         mean_background_values,
         detected_flakes,
     ):
 
         # get the mask of the candidate
-        candidate_mask = np.zeros(image_preprocessed.shape[:-1], dtype=np.uint8)
+        candidate_mask = np.zeros(image.shape[:-1], dtype=np.uint8)
         cv2.drawContours(candidate_mask, [candidate], -1, 255, -1)
 
         # Extract the mean color of the candidate
-        color = cv2.mean(image_preprocessed, candidate_mask)[:-1]
+        color = cv2.mean(image, candidate_mask)[:-1]
 
         # dont check the candidate if it is too bright
         if np.sum(color) / 3 > self.max_candidate_brightness:
@@ -201,9 +200,7 @@ class detector_class:
             #### Calculate the Contrast of the Flakes
             mean_contrast = list(contrast)
 
-            color_mean, color_stddev = cv2.meanStdDev(
-                image_preprocessed, candidate_mask
-            )
+            color_mean, color_stddev = cv2.meanStdDev(image, candidate_mask)
             stddev_contrast = list(color_stddev[:, 0].tolist() / mean_background_values)
 
             #### count the number of pixels belonging to the flake
@@ -362,12 +359,17 @@ class detector_class:
         else:
             mean_background_values = self.custom_background_values
 
+        # Extract the channel with the highest contrast to aid the edge detection
+        image_strong_channel = image[:, :, 1]
+
         # Testing showed that its better to first median filter the image the then sharpen it
         # This is better at keepiing fine details and removing noise
 
         # getting rid of noise
         # 200 ms impact for the 5x5 filter!
-        image_denoised = cv2.medianBlur(image, self.median_blur_kernel_size)
+        image_denoised = cv2.medianBlur(
+            image_strong_channel, self.median_blur_kernel_size
+        )
 
         # filtering takes negligible time
         image_preprocessed = cv2.filter2D(image_denoised, -1, self.sharpen_kernel)
@@ -409,7 +411,6 @@ class detector_class:
             self.evaluate_candidate(
                 candidate,
                 image,
-                image_preprocessed,
                 mean_background_values,
                 detected_flakes,
             )
