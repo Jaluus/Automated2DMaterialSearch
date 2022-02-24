@@ -276,6 +276,9 @@ class detector_class:
                 self.flat_field,
             )
 
+        # Removing some noise by median blurring
+        image = cv2.medianBlur(image, 3)
+
         # Conversion to the right format, internaly im working with Pixel thresholds
         # The Conversion in the 20x scope is 1 px = 0.15 μm²
         pixel_threshold = self.size_thresh // (MICROMETER_PER_PIXEL ** 2)

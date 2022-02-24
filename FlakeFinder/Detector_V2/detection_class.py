@@ -374,6 +374,10 @@ class detector_class:
         # filtering takes negligible time
         image_preprocessed = cv2.filter2D(image_denoised, -1, self.sharpen_kernel)
 
+        image_preprocessed = cv2.medianBlur(
+            image_preprocessed, self.median_blur_kernel_size
+        )
+
         # Finding edges in the image
         # about 10 - 20 ms
         edges = cv2.Canny(
