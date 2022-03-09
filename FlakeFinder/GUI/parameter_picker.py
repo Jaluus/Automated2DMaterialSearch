@@ -8,34 +8,29 @@ class parameter_picker_class:
     def __init__(self):
         self.MAGNIFICATIONS = [
             20,
-            50,
         ]
 
         self.MATERIALS = [
-            "Graphene",
-            "hBN",
-            "WS2",
-            "WSe2",
+            "graphene",
         ]
 
         self.CHIP_THICKNESSES = [
-            "80nm",
             "90nm",
-            "100nm",
-            "110nm",
         ]
 
         # Keeps track if the user closed the application, cant raise exeption in tkinter
         self.user_closed = False
 
-        self.image_dir = None
+        self.image_dir = (
+            r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\automatic_search"
+        )
         self.serverURL = "http://134.61.6.112:5000/upload"
         self.scan_name = None
         self.scan_user = None
         self.scan_exfoliated_material = self.MATERIALS[0]
         self.scan_exfoliation_method = "unspecified"
-        self.scan_magnification = self.MAGNIFICATIONS[1]
-        self.chip_thickness = self.CHIP_THICKNESSES[1]
+        self.scan_magnification = self.MAGNIFICATIONS[0]
+        self.chip_thickness = self.CHIP_THICKNESSES[0]
         self.entropy_threshold = "2.4"
         self.size_threshold = "200"
         self.sigma_threshold = "50"
@@ -65,25 +60,19 @@ class parameter_picker_class:
         self.chosen_material = StringVar()
         self.chosen_material.set(self.scan_exfoliated_material)
         self.Scan_exfoliated_material_dropdown = OptionMenu(
-            self.parameter_picker,
-            self.chosen_material,
-            *self.MATERIALS,
+            self.parameter_picker, self.chosen_material, *self.MATERIALS,
         )
 
         self.chosen_chip_thicknesses = StringVar()
         self.chosen_chip_thicknesses.set(self.chip_thickness)
         self.chip_thickness_dropdown = OptionMenu(
-            self.parameter_picker,
-            self.chosen_chip_thicknesses,
-            *self.CHIP_THICKNESSES,
+            self.parameter_picker, self.chosen_chip_thicknesses, *self.CHIP_THICKNESSES,
         )
 
         self.chosen_scan_magnification = StringVar()
         self.chosen_scan_magnification.set(self.scan_magnification)
         self.scan_magnification_dropdown = OptionMenu(
-            self.parameter_picker,
-            self.chosen_scan_magnification,
-            *self.MAGNIFICATIONS,
+            self.parameter_picker, self.chosen_scan_magnification, *self.MAGNIFICATIONS,
         )
 
         self.Scan_parameters_label = Label(
@@ -216,13 +205,13 @@ class parameter_picker_class:
         )
         i += 1
 
-        self.Directory_label.grid(row=i, column=0, padx=10)
-        self.Directory_button.grid(row=i, column=1, sticky="ew", padx=10)
-        i += 1
+        # self.Directory_label.grid(row=i, column=0, padx=10)
+        # self.Directory_button.grid(row=i, column=1, sticky="ew", padx=10)
+        # i += 1
 
-        self.ServerURL_label.grid(row=i, column=0, padx=10)
-        self.ServerURL_input.grid(row=i, column=1, padx=10)
-        i += 1
+        # self.ServerURL_label.grid(row=i, column=0, padx=10)
+        # self.ServerURL_input.grid(row=i, column=1, padx=10)
+        # i += 1
 
         self.Exfoliation_method_label.grid(row=i, column=0, padx=10)
         self.Exfoliation_method_input.grid(row=i, column=1, padx=10)

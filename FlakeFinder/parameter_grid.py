@@ -2,14 +2,12 @@ import os
 import cv2
 import time
 
-from Detector_V2.detector_functions import remove_vignette
-
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
 
-file_path = r"C:\Users\Transfersystem User\Desktop\Image_parameter_calibration"  # os.path.dirname(os.path.abspath(__file__))
+file_path = r"C:\Users\Transfersystem User\Desktop\Image_calibration"  # os.path.dirname(os.path.abspath(__file__))
 
 microscope = microscope_driver_class()
 camera = camera_driver_class()
@@ -17,9 +15,8 @@ camera = camera_driver_class()
 GAIN = 0
 WHITE_BALANCE = (127, 64, 90)
 GAMMA = 100
-CALIBRATION_TARGET_GRAY_VALUE = 213
 
-APERTURE_RANGE = [1.2, 2, 2.3, 3, 4, 5, 6, 7, 8, 8.5]
+APERTURE_RANGE = [1.2, 2, 2.5, 3, 4, 5, 6, 7, 8, 8.5]
 EXPOSURE_RANGE = [0.01 * n for n in range(1, 16)]
 VOLTAGE_RANGE = [n for n in range(4, 11)]
 

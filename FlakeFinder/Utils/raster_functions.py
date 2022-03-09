@@ -6,8 +6,8 @@ import time
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from Detector_V2.detection_class import detector_class
-from Detector_V2.detector_functions import remove_vignette
+from Detector.detection_class import detector_class
+from Detector.detector_functions import remove_vignette
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
@@ -360,7 +360,7 @@ def search_scan_area_map(
     camera_driver: camera_driver_class,
     camera_settings: dict,
     microscope_settings: dict,
-    detector: detector_class,
+    detector,
     magnification_idx: int,
     view_field_x: float,
     view_field_y: float,

@@ -7,7 +7,7 @@ import os
 import re
 import sys
 import time
-from Detector_V2.detector_functions import remove_vignette
+from Detector.detector_functions import remove_vignette
 
 import cv2
 import matplotlib.pyplot as plt
@@ -206,6 +206,7 @@ def calibrate_scope(
             ]
             cv2.destroyWindow("ROI Selector, press SPACE or ENTER to end selection")
             new_background_values = cv2.mean(roi_cropped)[:-1]
+            new_background_values = [int(value) for value in new_background_values]
 
         # Press E to reotate the Nosepiece and readjust the microscope and Camera params
         elif key == ord("e"):
@@ -238,7 +239,7 @@ def calibrate_scope(
                 )
 
     cv2.destroyAllWindows()
-    return new_flatfield, new_background_values
+    return new_flatfield, np.array(new_background_values, dtype=np.uint8)
 
 
 def get_chip_directorys(scan_directory):

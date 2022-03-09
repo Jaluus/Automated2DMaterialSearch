@@ -7,8 +7,8 @@ import numpy as np
 
 from skimage.morphology import disk
 
-from Detector_V2.detection_class import detector_class
-from Detector_V2.detector_functions import remove_vignette
+from Detector.detection_class import detector_class
+from Detector.detector_functions import remove_vignette
 from Utils.etc_functions import *
 from Utils.marker_functions import *
 
