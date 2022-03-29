@@ -206,7 +206,9 @@ def calibrate_scope(
             ]
             cv2.destroyWindow("ROI Selector, press SPACE or ENTER to end selection")
             new_background_values = cv2.mean(roi_cropped)[:-1]
-            new_background_values = [int(value) for value in new_background_values]
+            new_background_values = np.array(
+                [int(value) for value in new_background_values], dtype=np.uint8
+            )
 
         # Press E to reotate the Nosepiece and readjust the microscope and Camera params
         elif key == ord("e"):
@@ -239,7 +241,7 @@ def calibrate_scope(
                 )
 
     cv2.destroyAllWindows()
-    return new_flatfield, np.array(new_background_values, dtype=np.uint8)
+    return new_flatfield, new_background_values
 
 
 def get_chip_directorys(scan_directory):
