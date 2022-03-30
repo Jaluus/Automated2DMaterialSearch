@@ -273,10 +273,13 @@ class detector_class:
             image_background, background_mask = self.mask_background(image)
 
             # find the mean b g r values of the background ~2 ms
-            mean_background_values = cv2.mean(
-                image_background,
-                mask=background_mask,
-            )[:-1]
+            mean_background_values = np.array(
+                cv2.mean(
+                    image_background,
+                    mask=background_mask,
+                )[:-1],
+                dtype=np.uint8,
+            )
         else:
             mean_background_values = self.custom_background_values
 
