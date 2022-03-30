@@ -5,9 +5,6 @@ from skimage.morphology import disk
 import copy
 
 
-from Detector_V2.detector_functions import remove_vignette
-
-
 class detector_class:
     """
     A Detection Class
@@ -26,7 +23,6 @@ class detector_class:
     def __init__(
         self,
         contrast_dict: dict,
-        flat_field=None,
         custom_background_values=None,
         size_threshold: int = 0,
         entropy_threshold: float = np.inf,
@@ -37,7 +33,6 @@ class detector_class:
 
         Args:
             contrast_dict (dict): A Dictionary with the Keys "layers" and "color_radius"
-            flat_field (NxMx1 Array, optional): The background Image, if none is given doesnt correct the Vignette, HIGHLY RECOMMENDED. Defaults to None.
             size_treshold (int, optional): The minimum size of a detected Flake, in nm. Defaults to 0.
             entropy_threshold (float, optional): The maxmimum Entropy of a detected Flake, good values are about 2.4. Defaults to Infinity.
             sigma_treshold (float, optional): The maximum Sigma, aka the proximity values of a detected Flake good values aber abot 30 to 50. Defaults to Infinity.
@@ -52,11 +47,6 @@ class detector_class:
             50: 0.1538,
             100: 0.0769,
         }
-
-        if flat_field is not None:
-            self.flat_field = flat_field.copy()
-        else:
-            self.flat_field = None
 
         if custom_background_values is not None:
             self.custom_background_values = np.array(custom_background_values.copy())
@@ -332,13 +322,6 @@ class detector_class:
         """
         # Define some Default Vars
         detected_flakes = []
-
-        # Removing the Vignette from the Image
-        if self.flat_field is not None:
-            image = remove_vignette(
-                image,
-                self.flat_field,
-            )
 
         # Conversion to the right format, internaly im working with Pixel thresholds
         # The Conversion in the 20x scope is 1 px = 0.15 μm²

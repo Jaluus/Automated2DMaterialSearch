@@ -5,9 +5,7 @@ import functools
 import json
 import os
 import re
-import sys
 import time
-from Detector.detector_functions import remove_vignette
 
 import cv2
 import matplotlib.pyplot as plt
@@ -15,6 +13,8 @@ import numpy as np
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
+
+from Utils.preprocessor_functions import remove_vignette
 
 
 def sorted_alphanumeric(data):

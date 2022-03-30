@@ -8,7 +8,7 @@ import numpy as np
 from skimage.morphology import disk
 
 from Detector.detection_class import detector_class
-from Detector.detector_functions import remove_vignette
+from Utils.preprocessor_functions import remove_vignette
 from Utils.etc_functions import *
 from Utils.marker_functions import *
 
@@ -22,16 +22,16 @@ def convert(o):
 
 # Constants
 IMAGE_DIRECTORY = r"E:\Datasets"
-SCAN_NAME = "Jan_70nm_Initial_scan"
+SCAN_NAME = "WSe2-2022-03-17"
 EXFOLIATED_MATERIAL = "wse2"
 CHIP_THICKNESS = "70nm"
-MAGNIFICATION = 50
-CUSTOM_BACKGROUND_VALUES = [151, 151, 169]  # can be [B,G,R] or None
+MAGNIFICATION = 20
+CUSTOM_BACKGROUND_VALUES = [125, 115, 132]  # can be [B,G,R] or None
 
 
 # Some Threshold parameters
-ENTROPY_THRESHOLD = 4
-SIZE_THRESHOLD = 5
+ENTROPY_THRESHOLD = 50
+SIZE_THRESHOLD = 20
 SIGMA_THRESHOLD = 500
 
 # -1 if you want to analyse all images
@@ -98,7 +98,6 @@ if __name__ == "__main__":
     # Detector Init
     myDetector = detector_class(
         contrast_dict=contrast_params,
-        flat_field=flat_field,
         custom_background_values=CUSTOM_BACKGROUND_VALUES,
         entropy_threshold=ENTROPY_THRESHOLD,
         size_threshold=SIZE_THRESHOLD,
@@ -118,6 +117,9 @@ if __name__ == "__main__":
         # just read the image ~37ms
         image_path = os.path.join(image_dir, image_name)
         image = cv2.imread(image_path)
+
+        # Removing the vignette from the image
+        image = remove_vignette(image, flat_field)
 
         # ~120ms
         detected_flakes = myDetector.detect_flakes(image)

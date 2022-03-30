@@ -2,7 +2,7 @@ import os
 import cv2
 import time
 
-from Detector.detector_functions import remove_vignette
+from Utils.preprocessor_functions import remove_vignette
 
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class

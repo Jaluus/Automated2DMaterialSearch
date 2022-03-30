@@ -118,7 +118,6 @@ microscope_driver = microscope_driver_class()
 # Detector Initialization
 myDetector = detector_class(
     contrast_dict=contrast_params,
-    flat_field=flat_field,
     size_threshold=SIZE_THRESHOLD,
     entropy_threshold=ENTROPY_THRESHOLD,
     sigma_treshold=SIGMA_THRESHOLD,
@@ -182,7 +181,7 @@ new_flatfield, new_background_values = calibrate_scope(
 
 # Assigning the new flatfield and Background Values if they were used
 if new_flatfield is not None:
-    myDetector.flat_field = new_flatfield.copy()
+    flat_field = new_flatfield.copy()
 if new_background_values is not None:
     myDetector.custom_background_values = new_background_values
 
@@ -195,6 +194,7 @@ raster.search_scan_area_map(
     microscope_driver=microscope_driver,
     camera_driver=camera_driver,
     detector=myDetector,
+    flat_field=flat_field,
     magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
     overview=overview_image_compressed,
     camera_settings=camera_settings,

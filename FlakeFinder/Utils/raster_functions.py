@@ -4,17 +4,14 @@ import sys
 import time
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from Detector.detection_class import detector_class
-from Detector.detector_functions import remove_vignette
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
-from skimage.morphology import disk
 
 from Utils.etc_functions import get_flake_directorys, set_microscope_and_camera_settings
 from Utils.marker_functions import *
+from Utils.preprocessor_functions import remove_vignette
 
 
 def _create_folder_structure(
@@ -364,6 +361,7 @@ def search_scan_area_map(
     magnification_idx: int,
     view_field_x: float,
     view_field_y: float,
+    flat_field=None,
     overview=None,
     wait_time: float = 0.2,
     **kwargs,
@@ -415,6 +413,9 @@ def search_scan_area_map(
         # Happends when its the first image take as we first need to move to the right position
         if image is None:
             continue
+
+        if flat_field is not None:
+            image = remove_vignette(image, flat_field=flat_field)
 
         # run the Detection Algorithm
         detected_flakes = detector.detect_flakes(image)

@@ -4,11 +4,10 @@ A collection of helper functions to stitch a collection of images together
 import os
 
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 from skimage import measure
 
-from Utils.etc_functions import *
+from Utils.etc_functions import sorted_alphanumeric
 
 
 def compress_images(
