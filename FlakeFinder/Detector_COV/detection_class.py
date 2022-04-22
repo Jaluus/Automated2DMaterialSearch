@@ -6,6 +6,7 @@ from numba import jit
 from skimage import measure
 from skimage.filters.rank import entropy
 from skimage.morphology import disk
+import time
 
 
 class detector_class:
@@ -31,6 +32,9 @@ class detector_class:
         entropy_threshold: float = np.inf,
         sigma_treshold: float = np.inf,
         magnification: float = 20,
+        standard_deviation_threshold: float = 2,
+        used_channels: list = [0, 1, 2],
+        covariance_scaling_factors: list = [1, 1, 1],
     ):
         """Create the Detection Class
 
@@ -62,6 +66,52 @@ class detector_class:
         self.entropy_thresh = entropy_threshold
         self.sigma_thresh = sigma_treshold
         self.magnification = magnification
+        self.standard_deviation_threshold = standard_deviation_threshold
+
+        # Conversion to the right format, internaly im working with Pixel thresholds
+        # The Conversion in the 20x scope is 1 px = 0.15 μm²
+        self.pixel_threshold = self.size_thresh // (
+            self.micrometer_per_pixel[self.magnification] ** 2
+        )
+
+        # define the used channels
+        self.used_channels = used_channels
+
+        # add some more keys to the contrast_dict
+        # the inverse of the cholesky decomposition of the covariance matrix in order to speed up the calculation of the distance
+        # and the mean of the contrast to make it easier to handle
+        # also handle the values of mean etc.. internally differently
+
+        scaling_matrix = np.sqrt(np.diag(covariance_scaling_factors))
+
+        self.means = []
+        self.inv_cholesky_matrices = []
+        self.layer_indexes = {}
+
+        for idx, layer in enumerate(self.contrast_dict.keys()):
+
+            # scaling the covariance matrix for example, stretch the blue dimension
+            covariance_matrix = np.array(self.contrast_dict[layer]["covariance_matrix"])
+            covariance_matrix = scaling_matrix @ covariance_matrix @ scaling_matrix
+
+            contrast_mean = np.array(
+                [
+                    self.contrast_dict[layer]["contrast"]["b"],
+                    self.contrast_dict[layer]["contrast"]["g"],
+                    self.contrast_dict[layer]["contrast"]["r"],
+                ]
+            )
+            cholesky = np.linalg.inv(np.linalg.cholesky(covariance_matrix))
+
+            self.contrast_dict[layer]["inv_cholesky_decomposition"] = cholesky
+            self.contrast_dict[layer]["contrast_mean"] = contrast_mean
+
+            self.means.append(contrast_mean)
+            self.inv_cholesky_matrices.append(cholesky)
+            self.layer_indexes[layer] = idx + 1
+
+        self.means = np.array(self.means)
+        self.inv_cholesky_matrices = np.array(self.inv_cholesky_matrices)
 
     def set_searched_layers(
         self,
@@ -76,7 +126,7 @@ class detector_class:
         # Check for layers
         self.searched_layers = which_layers
 
-    def mask_background(self, img, radius=3):
+    def mask_background(self, img, radius=4):
         """
         Maskes the Background\n
         The Values are standard values of 90nm SiO Chips with removed Vignette\n
@@ -124,86 +174,111 @@ class detector_class:
         contrasts = image / mean_background_values - 1
         return contrasts
 
-    def mask_contrasted_image_rectangle(
-        self,
+    @staticmethod
+    @jit(nopython=True)
+    def mask_contrasted_image_ellipsoid(
         contrasts,
-        current_layer,
+        mean,
+        inv_cholesky,
+        standard_deviations,
     ):
+        max_dist = standard_deviations ** 2
+        dist = 0
+        tmp = 0
+        mask = np.zeros(shape=(contrasts.shape[0], contrasts.shape[1]), dtype=np.uint8)
+        for i in range(mask.shape[0]):
+            for j in range(mask.shape[1]):
+                # calculate the Mahalanobis distance by utilizing the speedup of the inverse Cholesky decomposition
+                ###################
+                # tmp_1 = inv_cholesky[0, 0] * diff[0]
+                # tmp_2 = inv_cholesky[1, 0] * diff[0] + inv_cholesky[1, 1] * diff[1]
+                # tmp_3 = inv_cholesky[2, 0] * diff[0] + inv_cholesky[2, 1] * diff[1] + inv_cholesky[2, 2] * diff[2]
+                # dist = tmp_1 **2 + tmp_2 **2 + tmp_3 **2
+                ###################
 
-        ## Threshing the contrasted Images only for Mono ~30ms
-        contrast_b_threshed = cv2.inRange(
-            contrasts[:, :, 0],
-            current_layer["contrast"]["b"] - current_layer["color_radius"]["b"],
-            current_layer["contrast"]["b"] + current_layer["color_radius"]["b"],
-        )
-        contrast_g_threshed = cv2.inRange(
-            contrasts[:, :, 1],
-            current_layer["contrast"]["g"] - current_layer["color_radius"]["g"],
-            current_layer["contrast"]["g"] + current_layer["color_radius"]["g"],
-        )
-        contrast_r_threshed = cv2.inRange(
-            contrasts[:, :, 2],
-            current_layer["contrast"]["r"] - current_layer["color_radius"]["r"],
-            current_layer["contrast"]["r"] + current_layer["color_radius"]["r"],
-        )
+                # init the distance to 0
+                dist = 0
 
-        # finding the intersection of the Masks (mask_a ∩ mask_b ∩ mask_c)
-        mask = cv2.bitwise_and(contrast_r_threshed, contrast_g_threshed)
-        mask = cv2.bitwise_and(mask, contrast_b_threshed)
+                # assume the pixel is part of the ellipsoid
+                mask[i, j] = 255
+
+                # run this loop for each channel
+                for k in range(contrasts.shape[2]):
+
+                    # calculate the distance for the current channel
+                    tmp = 0
+                    for h in range(k + 1):
+                        tmp += (mean[h] - contrasts[i, j][h]) * inv_cholesky[k, h]
+                    dist += tmp ** 2
+
+                    # if the distance is bigger then the max distance, stop
+                    # we dont need to calculate the rest of the distances
+                    # as we already know that the pixel is not part of the ellipsoid
+                    if dist > max_dist:
+                        mask[i, j] = 0
+                        break
         return mask
 
     @staticmethod
     @jit(nopython=True)
-    def mask_contrasted_image_new_inner(
+    def mask_contrasted_image_ellipsoid_MULTI(
         contrasts,
-        contrast_r,
-        contrast_g,
-        contrast_b,
-        radius_r,
-        radius_g,
-        radius_b,
+        means,
+        inv_choleskys,
+        standard_deviations,
     ):
+        max_dist = standard_deviations ** 2
+        tmp = 0
+        smallest_distance = -1
+        current_closest_layer = 0
         mask = np.zeros(shape=(contrasts.shape[0], contrasts.shape[1]), dtype=np.uint8)
         for i in range(mask.shape[0]):
             for j in range(mask.shape[1]):
-                pixel = contrasts[i, j]
+                # calculate the Mahalanobis distance by utilizing the speedup of the inverse Cholesky decomposition
+                ###################
+                # tmp_1 = inv_cholesky[0, 0] * diff[0]
+                # tmp_2 = inv_cholesky[1, 0] * diff[0] + inv_cholesky[1, 1] * diff[1]
+                # tmp_3 = inv_cholesky[2, 0] * diff[0] + inv_cholesky[2, 1] * diff[1] + inv_cholesky[2, 2] * diff[2]
+                # dist = tmp_1 **2 + tmp_2 **2 + tmp_3 **2
+                ###################
 
-                dist_b = ((pixel[0] - contrast_b) / radius_b) ** 2
-                dist_g = ((pixel[1] - contrast_g) / radius_g) ** 2
-                dist_r = ((pixel[2] - contrast_r) / radius_r) ** 2
+                # use -1 as a standin for infinity
+                smallest_distance = -1
+                current_closest_layer = 0
 
-                if (dist_b + dist_g + dist_r) <= 1:
-                    mask[i, j] = 255
+                # calculate the distance for each thickness and select the one with the smallest distance
+                for thickness_index in range(means.shape[0]):
 
-        return mask
+                    # init the distance to 0
+                    distance_from_ellipsoid = 0
 
-    def mask_contrasted_image_ellipsoid(
-        self,
-        contrasts: np.ndarray,
-        current_layer: dict,
-    ):
-        """Findes contrasts of pixels within a ellipsoid around the given contrast values
+                    # run this loop to calculate the distance
+                    for k in range(contrasts.shape[2]):
+                        # calculate the distance for the current channel
+                        tmp = 0
+                        for h in range(k + 1):
+                            tmp += (
+                                means[thickness_index, h] - contrasts[i, j, h]
+                            ) * inv_choleskys[thickness_index, k, h]
+                        distance_from_ellipsoid += tmp ** 2
 
-        Args:
-            contrasts (XxYx3 Array): The contrast of each pixel, in BGR
-            current_layer (Dict): A Dict with the Keys "contrast" and "color_radius", each with a Dict with the Keys "r", "g", "b"
+                    # check if the smallest distance was already set
+                    # if not set it
+                    # this is dont to circumvent the use of infinity
+                    if smallest_distance == -1 and distance_from_ellipsoid < max_dist:
+                        smallest_distance = distance_from_ellipsoid
+                        current_closest_layer = thickness_index + 1
+                        continue
 
-        Returns:
-            XxY Array : a mask of pixels with the threshold
-        """
-        # for more information
-        # https://math.stackexchange.com/questions/76457/check-if-a-point-is-within-an-ellipse
+                    # Set the current layer as the closest layer if the distance is smaller than the current smallest distance
+                    if (
+                        distance_from_ellipsoid < max_dist
+                        and distance_from_ellipsoid < smallest_distance
+                    ):
+                        smallest_distance = distance_from_ellipsoid
+                        current_closest_layer = thickness_index + 1
 
-        ## we had to write this wrapper function to not give jit the dict, it cant handle dicts
-        mask = detector_class.mask_contrasted_image_new_inner(
-            contrasts,
-            current_layer["contrast"]["r"],
-            current_layer["contrast"]["g"],
-            current_layer["contrast"]["b"],
-            current_layer["color_radius"]["r"],
-            current_layer["color_radius"]["g"],
-            current_layer["color_radius"]["b"],
-        )
+                mask[i, j] = current_closest_layer
 
         return mask
 
@@ -245,17 +320,11 @@ class detector_class:
             - 'size_micro' (float): The Size of the Flake in μm²
         """
         # Define some Default Vars
-        masks = {}
-        num_pixels = {}
         detected_flakes = []
-        MICROMETER_PER_PIXEL = self.micrometer_per_pixel[self.magnification]
 
-        # Removing some noise by median blurring
-        image = cv2.medianBlur(image, 3)
-
-        # Conversion to the right format, internaly im working with Pixel thresholds
-        # The Conversion in the 20x scope is 1 px = 0.15 μm²
-        pixel_threshold = self.size_thresh // (MICROMETER_PER_PIXEL ** 2)
+        # Removing some noise by Gaussian Filtering
+        # image = cv2.GaussianBlur(image, (9, 9), 2)
+        image = cv2.medianBlur(image, 5)
 
         # Check if we already supplied pre-calculated background values
         if self.custom_background_values is None:
@@ -276,64 +345,60 @@ class detector_class:
         # calculate the contrast ~50ms with numba
         contrasts = self.calc_contrast(image, mean_background_values)
 
-        # go through all the layers we selected
-        for layer_name in self.searched_layers:
-
-            # Set the current layer by getting the value using the key 'layer'
-            current_layer = self.contrast_dict[layer_name]
-
-            # masks the contrasted Image, it marks all the parts of the image within a certain RGB contrast range
-            mask = self.mask_contrasted_image_ellipsoid(
-                contrasts=contrasts,
-                current_layer=current_layer,
-            )
-
-            # a bit of cleanup
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, disk(2), iterations=1)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, disk(2), iterations=1)
-
-            # counting the number of pixels and saving the masks only if it has more Pixels
-            num_pixels = cv2.countNonZero(mask)
-
-            if num_pixels > pixel_threshold:
-                masks[layer_name] = mask
-            #### to here
-
-        # Return empty array when you found no masks
-        if len(masks.keys()) == 0:
-            # This array is Empty
-            return np.array(detected_flakes)
+        full_layer_mask = detector_class.mask_contrasted_image_ellipsoid_MULTI(
+            contrasts[:, :, self.used_channels],
+            self.means[:, self.used_channels],
+            self.inv_cholesky_matrices[:, self.used_channels, :][
+                :, :, self.used_channels
+            ],
+            self.standard_deviation_threshold,
+        )
+        full_layer_mask = cv2.morphologyEx(full_layer_mask, cv2.MORPH_OPEN, disk(2))
 
         # iterate over all Masks and Label them
-        for layer_name in masks.keys():
+        for layer_name in self.searched_layers:
+            # get the Mask for the current layer
+            layer_index = self.layer_indexes[layer_name]
+            layer_mask = cv2.inRange(full_layer_mask, layer_index, layer_index)
+
+            if cv2.countNonZero(layer_mask) < self.pixel_threshold:
+                continue
 
             # label each connected 'blob' on the mask with an individual number
-            labeled_mask = measure.label(
-                masks[layer_name],
-                background=0,
-                connectivity=2,
+            num_labels, labeled_mask = cv2.connectedComponents(
+                layer_mask, connectivity=4
             )
 
             # iterate over all flake, values, 0 is the Background, dont look at that
-            for i in range(1, np.max(labeled_mask) + 1):
+            for i in range(1, num_labels + 1):
 
                 # mask out only the pixels of certain flakes, quite fast ~1ms
                 masked_flake = cv2.inRange(labeled_mask, i, i)
                 flake_pixel_number = cv2.countNonZero(masked_flake)
 
                 # if the flake has less pixel than the Threshold take the next one
-                if flake_pixel_number < pixel_threshold:
+                if flake_pixel_number < self.pixel_threshold:
                     continue
 
-                # Start with a bit hole filling if there are some
-                # maybe do this later with Countour finding?
-                masked_flake = cv2.morphologyEx(
-                    masked_flake, cv2.MORPH_CLOSE, disk(4), iterations=3
+                # extract the toplevel contour
+                contours, hierarchy = cv2.findContours(
+                    image=masked_flake,
+                    mode=cv2.RETR_TREE,
+                    method=cv2.CHAIN_APPROX_NONE,
+                )
+
+                top_level_contour = [
+                    contours[i]
+                    for i in range(len(contours))
+                    if hierarchy[0, i, 3] == -1
+                ]
+
+                # Fill all the holes in the contour
+                masked_flake = cv2.drawContours(
+                    masked_flake, top_level_contour, -1, 255, -1
                 )
 
                 # now we characterize the Flake
-                # You can do a lot of stuff here, like filter for Entropy or other metrics
-                # im just gonna call it a day for now and just do basic stuff
                 #################
 
                 #### Calculate the Contrast of the Flakes
@@ -343,19 +408,20 @@ class detector_class:
                 mean_contrast = mean_contrast[:, 0].tolist()
                 stddev_contrast = stddev_contrast[:, 0].tolist()
 
+                #### Skip the flake if the convex hull is way bigger than the normal contour
+                convex_hull = cv2.convexHull(top_level_contour[0])
+                convex_hull_area = cv2.contourArea(convex_hull)
+                contour_area = cv2.contourArea(top_level_contour[0])
+
+                if convex_hull_area > 5 * contour_area:
+                    continue
+
                 #### Calculate a Bounding Box
-
-                contour, _ = cv2.findContours(
-                    image=masked_flake,
-                    mode=cv2.RETR_TREE,
-                    method=cv2.CHAIN_APPROX_NONE,
-                )
-
-                x, y, w, h = cv2.boundingRect(contour[0])
+                x, y, w, h = cv2.boundingRect(top_level_contour[0])
 
                 # add this later
                 ((center_x, center_y), (width_r, height_r), rotation) = cv2.minAreaRect(
-                    contour[0]
+                    top_level_contour[0]
                 )
 
                 aspect_ratio = round(max(width_r / height_r, height_r / width_r), 2)
@@ -379,7 +445,7 @@ class detector_class:
 
                 # Erode the mask to not accidentally have the Edges in the mean
                 cut_out_flake_mask = cv2.erode(
-                    cut_out_flake_mask, disk(2), iterations=2
+                    cut_out_flake_mask, disk(1), iterations=1
                 )
 
                 # go to Gray as we only need the gray Entropy
@@ -393,17 +459,14 @@ class detector_class:
                 )
 
                 # Get the max entropy of the flake, maybe use a different Metric -> Not so good for big flakes
-                # flake_entropy = np.max(
-                #     entropied_image_area,
-                # )
                 flake_entropy = cv2.mean(
                     entropied_image_area,
                     mask=cut_out_flake_mask,
                 )[0]
 
                 # Filter High entropy Flakes, aka dirt
-                if flake_entropy > self.entropy_thresh:
-                    continue
+                # if flake_entropy > self.entropy_thresh:
+                #    continue
 
                 #### Find the Close Proximity of the Flake
 
@@ -426,7 +489,9 @@ class detector_class:
                     "layer": layer_name,
                     "num_pixels": flake_pixel_number,
                     "size_micro": round(
-                        flake_pixel_number * (MICROMETER_PER_PIXEL ** 2), 1
+                        flake_pixel_number
+                        * (self.micrometer_per_pixel[self.magnification] ** 2),
+                        1,
                     ),
                     "mean_contrast": [round(c, 3) for c in mean_contrast],
                     "stddev_contrast": [round(c, 3) for c in stddev_contrast],
@@ -440,8 +505,12 @@ class detector_class:
                     "rotation": round(rotation, 3),
                     "aspect_ratio": round(aspect_ratio, 2),
                     "position_micro": (
-                        round(center_x * MICROMETER_PER_PIXEL, 0),
-                        round(center_y * MICROMETER_PER_PIXEL, 0),
+                        round(
+                            center_x * self.micrometer_per_pixel[self.magnification], 0
+                        ),
+                        round(
+                            center_y * self.micrometer_per_pixel[self.magnification], 0
+                        ),
                     ),
                     "proximity_stddev": round(proximity_stddev[0][0], 2),
                     "entropy": round(flake_entropy, 2),

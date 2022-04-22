@@ -9,7 +9,7 @@ import cv2
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 import Utils.upload_functions as uploader
-from Detector.detection_class import detector_class
+from Detector_COV.detection_class import detector_class
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
@@ -35,10 +35,12 @@ EXFOLIATED_MATERIAL = parameter_dict["scan_exfoliated_material"]
 CHIP_THICKNESS = parameter_dict["chip_thickness"]
 MAGNIFICATION = parameter_dict["scan_magnification"]
 
+USED_CHANNELS = [0, 1, 2]
+COVARIANCE_SCALING_FACTORS = [2, 1, 1]
+STANDARD_DEVIATION_THRESHOLD = 5
+
 # Filter Parameter
-ENTROPY_THRESHOLD = parameter_dict["entropy_threshold"]
 SIZE_THRESHOLD = parameter_dict["size_threshold"]
-SIGMA_THRESHOLD = parameter_dict["sigma_threshold"]
 
 # Created Metadict
 META_DICT = {
@@ -105,6 +107,7 @@ with open(magnification_params_path) as f:
 
 # Read the flat field
 flat_field = cv2.imread(flat_field_path)
+cv2.imwrite(os.path.join(scan_directory, "flat_field.png"), flat_field)
 
 # Creating Directories for the Scan
 if not os.path.exists(scan_directory):
@@ -123,9 +126,10 @@ microscope_driver = microscope_driver_class()
 myDetector = detector_class(
     contrast_dict=contrast_params,
     size_threshold=SIZE_THRESHOLD,
-    entropy_threshold=ENTROPY_THRESHOLD,
-    sigma_treshold=SIGMA_THRESHOLD,
     magnification=MAGNIFICATION,
+    standard_deviation_threshold=STANDARD_DEVIATION_THRESHOLD,
+    used_channels=USED_CHANNELS,
+    covariance_scaling_factors=COVARIANCE_SCALING_FACTORS,
 )
 
 print("Starting to raster in 2.5x...")
@@ -230,12 +234,6 @@ print(
 
 print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
 microscope_driver.lamp_off()
-
-print("Creating Histograms...")
-try:
-    create_metahistograms(scan_directory)
-except:
-    print("error during hist creation, continuing")
 
 print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)

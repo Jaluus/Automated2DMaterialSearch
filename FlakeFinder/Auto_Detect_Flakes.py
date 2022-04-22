@@ -1,18 +1,19 @@
-import os
-import cv2
-import time
 import json
+import os
 import shutil
-import sys
+import time
+
+import cv2
+
+import Utils.raster_functions as raster
+import Utils.stitcher_functions as stitcher
+import Utils.upload_functions as uploader
+from Detector_COV.detection_class import detector_class
 
 # Custom imports
 from Drivers.Camera_Driver.camera_class import camera_driver_class
 from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Detector.detection_class import detector_class
-import Utils.raster_functions as raster
-import Utils.stitcher_functions as stitcher
-import Utils.upload_functions as uploader
 from Utils.etc_functions import *
 
 START_TIME = time.time()
@@ -28,18 +29,30 @@ EXFOLIATED_MATERIAL = "Graphene"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 20
 
+# B = 0, G = 1, R = 2
+# Dont use the Blue Channel if you have a lot of tape residue on the chips
+USED_CHANNELS = [0, 1, 2]
+COVARIANCE_SCALING_FACTORS = [2, 1, 1]
+
+# The "Radius" which is used to still classify the flakes as a certain thickness
+STANDARD_DEVIATION_THRESHOLD = 5
+
 # Filter Parameter
-ENTROPY_THRESHOLD = 2.4
 SIZE_THRESHOLD = 200
-SIGMA_THRESHOLD = 50
 
 # Created Metadict
 META_DICT = {
-    "scan_user": SCAN_USER,
+    "server_url": SERVER_URL,
+    "standard_deviation_threshold": STANDARD_DEVIATION_THRESHOLD,
+    "image_directory": IMAGE_DIRECTORY,
     "scan_name": SCAN_NAME,
+    "scan_user": SCAN_USER,
     "scan_exfoliated_material": EXFOLIATED_MATERIAL,
-    "scan_time": START_TIME,
     "chip_thickness": CHIP_THICKNESS,
+    "scan_magnification": MAGNIFICATION,
+    "chip_thickness": CHIP_THICKNESS,
+    "size_threshold": SIZE_THRESHOLD,
+    "scan_time": START_TIME,
 }
 
 # Convert to Magnification index
@@ -99,8 +112,9 @@ with open(microscope_settings_path) as f:
 with open(magnification_params_path) as f:
     magnification_params = json.load(f)
 
-# Read the flat field
+# Read the flat field and save it in the scan directory for later use
 flat_field = cv2.imread(flat_field_path)
+cv2.imwrite(os.path.join(scan_directory, "flat_field.png"), flat_field)
 
 # Creating Directories for the Scan
 if not os.path.exists(scan_directory):
@@ -116,13 +130,16 @@ camera_driver = camera_driver_class()
 microscope_driver = microscope_driver_class()
 
 # Detector Initialization
+# Detector Init
 myDetector = detector_class(
     contrast_dict=contrast_params,
     size_threshold=SIZE_THRESHOLD,
-    entropy_threshold=ENTROPY_THRESHOLD,
-    sigma_treshold=SIGMA_THRESHOLD,
     magnification=MAGNIFICATION,
+    standard_deviation_threshold=STANDARD_DEVIATION_THRESHOLD,
+    used_channels=USED_CHANNELS,
+    covariance_scaling_factors=COVARIANCE_SCALING_FACTORS,
 )
+
 
 print("Starting to raster in 2.5x...")
 image_2_directory, meta_2_directory = raster.raster_plate(
@@ -227,12 +244,6 @@ print(
 
 print("Turning off the Lamp on the Microscope to conserve the Lifetime...")
 microscope_driver.lamp_off()
-
-print("Creating Histograms...")
-try:
-    create_metahistograms(scan_directory)
-except:
-    print("error during hist creation, continuing")
 
 print("Uploading the Scan Directory...")
 uploader.upload_directory(scan_directory, SERVER_URL)

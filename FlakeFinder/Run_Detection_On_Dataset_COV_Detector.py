@@ -6,7 +6,6 @@ import numpy as np
 
 from skimage.morphology import disk
 
-from Detector.detection_class import detector_class
 from Utils.preprocessor_functions import remove_vignette
 from Utils.etc_functions import *
 from Utils.marker_functions import *
@@ -21,20 +20,41 @@ def convert(o):
 
 # Constants
 IMAGE_DIRECTORY = r"E:\Datasets"
-SCAN_NAME = "Graphene-Phillip-14-04-2022"
+SCAN_NAME = "Graphene-Sunaja-20-04-2022"
 EXFOLIATED_MATERIAL = "graphene"
 CHIP_THICKNESS = "90nm"
 MAGNIFICATION = 20
-CUSTOM_BACKGROUND_VALUES = None  #  [125, 115, 132]  # can be [B,G,R] or None
+CUSTOM_BACKGROUND_VALUES = None  # [125, 115, 132]  # can be [B,G,R] or None
 
+#### Detector Parameters ####
+
+# Which kind of detector to use
+USED_DETECTOR = "COV"  # "COV" or "LEGACY"
+
+
+#### COV Detector Parameters ####
+# B = 0, G = 1, R = 2
+# Dont use the Blue Channel if you have a lot of tape residue on the chips
+# This would look like USED_CHANNELs = [1, 2] if you only want to use the Red and Green Channel
+USED_CHANNELS = [0, 1, 2]
+
+# How much the ellipse is stretched in the Blue green and red channel
+# Its advised to scale the blue channel up if you have a lot of tape residue on the chips and still want to use it
+COVARIANCE_SCALING_FACTORS = [2, 2, 1]
+
+# The "Radius" which is used to still classify the flakes as a certain thickness
+STANDARD_DEVIATION_THRESHOLD = 6
+
+
+#### General Detector Parameters ####
 
 # Some Threshold parameters
-ENTROPY_THRESHOLD = 50
-SIZE_THRESHOLD = 100
-SIGMA_THRESHOLD = 500
+SIZE_THRESHOLD = 200
 
-# -1 if you want to analyse all images
-NUM_ANALYSED_IMAGES = -1
+
+#### Detection Parameters ####
+NUM_ANALYSED_IMAGES = -1  # -1 means all images
+START_IMAGE = 0
 
 # Directory Paths
 file_path = os.path.dirname(os.path.abspath(__file__))
@@ -69,8 +89,10 @@ contrasts_path = os.path.join(
     f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}.json",
 )
 
-image_names = sorted_alphanumeric(os.listdir(image_dir))[:NUM_ANALYSED_IMAGES]
-meta_names = sorted_alphanumeric(os.listdir(meta_dir))[:NUM_ANALYSED_IMAGES]
+image_names = sorted_alphanumeric(os.listdir(image_dir))[
+    START_IMAGE:NUM_ANALYSED_IMAGES
+]
+meta_names = sorted_alphanumeric(os.listdir(meta_dir))[START_IMAGE:NUM_ANALYSED_IMAGES]
 num_images = len(image_names)
 
 # Load the Overview Image
@@ -94,13 +116,32 @@ current_image_number = 0
 # For multiprocessing puroposes
 if __name__ == "__main__":
 
-    # Detector Init
-    myDetector = detector_class(
-        contrast_dict=contrast_params,
-        custom_background_values=CUSTOM_BACKGROUND_VALUES,
-        size_threshold=SIZE_THRESHOLD,
-        magnification=MAGNIFICATION,
-    )
+    # detector init
+    if USED_DETECTOR == "COV":
+        from Detector_COV.detection_class import detector_class
+
+        myDetector = detector_class(
+            contrast_dict=contrast_params,
+            custom_background_values=CUSTOM_BACKGROUND_VALUES,
+            size_threshold=SIZE_THRESHOLD,
+            magnification=MAGNIFICATION,
+            standard_deviation_threshold=STANDARD_DEVIATION_THRESHOLD,
+            used_channels=USED_CHANNELS,
+            covariance_scaling_factors=COVARIANCE_SCALING_FACTORS,
+        )
+
+    elif USED_DETECTOR == "LEGACY":
+        from Detector.detection_class import detector_class
+
+        myDetector = detector_class(
+            contrast_dict=contrast_params,
+            custom_background_values=CUSTOM_BACKGROUND_VALUES,
+            size_threshold=SIZE_THRESHOLD,
+            magnification=MAGNIFICATION,
+        )
+
+    else:
+        raise ValueError("USED_DETECTOR must be either 'COV' or 'LEGACY'")
 
     for idx, (image_name, meta_name) in enumerate(zip(image_names, meta_names)):
 
@@ -174,7 +215,7 @@ if __name__ == "__main__":
                     f"{flake['layer']}",
                     (x, y),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    thickness=2,
+                    thickness=1,
                     fontScale=1,
                     color=(0, 0, 0),
                 )
