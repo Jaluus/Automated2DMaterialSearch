@@ -7,9 +7,7 @@ import json
 
 # Custom imports
 from Drivers.Camera_Driver.camera_class import camera_driver_class
-from Drivers.Microscope_Driver.microscope_class import (
-    microscope_driver_class,
-)
+from Drivers.Microscope_Driver.microscope_class import microscope_driver_class
 from Drivers.Motor_Driver.tango_class import motor_driver_class
 from Utils.etc_functions import calibrate_scope
 import Utils.raster_functions as raster
@@ -17,10 +15,10 @@ import Utils.stitcher_functions as stitcher
 
 # Constants
 IMAGE_DIRECTORY = r"C:\Users\Transfersystem User\Pictures\01_FlakeFinder\dataset"
-EXFOLIATED_MATERIAL = "hbnml"
-SCAN_NAME = "Jans_test_set"
+EXFOLIATED_MATERIAL = "Graphene"
+SCAN_NAME = "Graphene-Jan_LegacyScan70-24-02-2022"
 CHIP_THICKNESS = "90nm"
-SCAN_USER = "David"
+SCAN_USER = "Jan"
 EXFOLIATION_METHOD = "unspecified"
 # Possibilities  20 , 50 , 100 , 5
 MAGNIFICATION = 20
@@ -55,15 +53,9 @@ mask_path = os.path.join(scan_directory, "mask.png")
 scan_area_path = os.path.join(scan_directory, "scan_area_map.png")
 parameter_directory = os.path.join(file_path, "Parameters")
 
-flat_field_path = os.path.join(
-    parameter_directory,
-    "Flatfields",
-    f"{EXFOLIATED_MATERIAL.lower()}_{CHIP_THICKNESS}_{MAGNIFICATION}x.png",
-)
+
 magnification_params_path = os.path.join(
-    parameter_directory,
-    "Scan_Magnification",
-    f"{MAGNIFICATION}x.json",
+    parameter_directory, "Scan_Magnification", f"{MAGNIFICATION}x.json",
 )
 camera_settings_path = os.path.join(
     parameter_directory,
@@ -91,9 +83,6 @@ if not os.path.exists(scan_directory):
 # Dump the meta data
 with open(scan_meta_path, "w") as f:
     json.dump(META_DICT, f, sort_keys=True, indent=4)
-
-# Read the flat field
-flat_field = cv2.imread(flat_field_path)
 
 # Init the drivers
 motor_driver = motor_driver_class()
@@ -131,14 +120,11 @@ cv2.imwrite(mask_path, masked_overview)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    masked_overview,
-    erode_iterations=1,
-    **magnification_params,
+    masked_overview, erode_iterations=1, **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
-new_flatfield, _ = calibrate_scope(
-    current_flatfield=flat_field,
+calibrate_scope(
     motor=motor_driver,
     microscope=microscope_driver,
     camera=camera_driver,
@@ -146,10 +132,6 @@ new_flatfield, _ = calibrate_scope(
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,
 )
-
-# Assigning the new flatfield and Background Values if they were used
-if new_flatfield is not None:
-    flat_field = new_flatfield.copy()
 
 start = time.time()
 
@@ -163,7 +145,6 @@ raster.raster_scan_area_map(
     magnification=MAGNIFICATION,
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,
-    flat_field=flat_field,
     **magnification_params,
 )
 

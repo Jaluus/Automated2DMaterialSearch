@@ -98,11 +98,11 @@ def set_microscope_and_camera_settings(
 
 
 def calibrate_scope(
-    current_flatfield,
     motor: motor_driver_class,
     microscope: microscope_driver_class,
     camera: camera_driver_class,
     needed_magnification_idx: int,
+    current_flatfield = None,
     camera_settings=None,
     microscope_settings=None,
 ):

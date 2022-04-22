@@ -97,9 +97,7 @@ microscope_settings_path = os.path.join(
     f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
 )
 magnification_params_path = os.path.join(
-    parameter_directory,
-    "Scan_Magnification",
-    f"{MAGNIFICATION}x.json",
+    parameter_directory, "Scan_Magnification", f"{MAGNIFICATION}x.json",
 )
 
 # Open the Jsons and get the needed Data
@@ -114,7 +112,7 @@ with open(magnification_params_path) as f:
 
 # Read the flat field and save it in the scan directory for later use
 flat_field = cv2.imread(flat_field_path)
-cv2.imwrite(os.path.join(scan_directory, "flat_field.png"), flat_field)
+cv2.imwrite(os.path.join(scan_directory, "flatfield.png"), flat_field)
 
 # Creating Directories for the Scan
 if not os.path.exists(scan_directory):
@@ -172,9 +170,7 @@ cv2.imwrite(mask_path, masked_overview)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    masked_overview,
-    erode_iterations=1,
-    **magnification_params,
+    masked_overview, erode_iterations=1, **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
