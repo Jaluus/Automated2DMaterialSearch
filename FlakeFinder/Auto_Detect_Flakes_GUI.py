@@ -36,7 +36,7 @@ CHIP_THICKNESS = parameter_dict["chip_thickness"]
 MAGNIFICATION = parameter_dict["scan_magnification"]
 
 USED_CHANNELS = parameter_dict["used_channels"]
-COVARIANCE_SCALING_FACTORS = [2, 1, 1]
+COVARIANCE_SCALING_FACTORS = [1.3, 1, 1]
 STANDARD_DEVIATION_THRESHOLD = parameter_dict["standard_deviation_threshold"]
 
 # Filter Parameter
@@ -90,7 +90,9 @@ microscope_settings_path = os.path.join(
     f"{EXFOLIATED_MATERIAL.lower()}_{MAGNIFICATION}x.json",
 )
 magnification_params_path = os.path.join(
-    parameter_directory, "Scan_Magnification", f"{MAGNIFICATION}x.json",
+    parameter_directory,
+    "Scan_Magnification",
+    f"{MAGNIFICATION}x.json",
 )
 
 # Open the Jsons and get the needed Data
@@ -161,7 +163,9 @@ cv2.imwrite(mask_path, masked_overview)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    masked_overview, erode_iterations=1, **magnification_params,
+    masked_overview,
+    erode_iterations=1,
+    **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
