@@ -110,13 +110,13 @@ with open(microscope_settings_path) as f:
 with open(magnification_params_path) as f:
     magnification_params = json.load(f)
 
-# Read the flat field and save it in the scan directory for later use
-flat_field = cv2.imread(flat_field_path)
-cv2.imwrite(os.path.join(scan_directory, "flatfield.png"), flat_field)
-
 # Creating Directories for the Scan
 if not os.path.exists(scan_directory):
     os.makedirs(scan_directory)
+
+# Read the flat field and save it in the scan directory for later use
+flat_field = cv2.imread(flat_field_path)
+cv2.imwrite(os.path.join(scan_directory, "flatfield.png"), flat_field)
 
 # Dump the Scan Metadata into the folder
 with open(scan_meta_path, "w") as fp:
