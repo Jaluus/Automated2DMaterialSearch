@@ -3,9 +3,6 @@ from tkinter import filedialog
 from tkinter.messagebox import askyesno, showwarning
 from idlelib.tooltip import Hovertip
 import sys
-from pyrsistent import s
-
-from sqlalchemy import true
 
 
 class Checkbar(Frame):
@@ -30,10 +27,12 @@ class parameter_picker_class:
 
         self.MATERIALS = [
             "graphene",
+            "wse2",
         ]
 
         self.CHIP_THICKNESSES = [
             "90nm",
+            "70nm",
         ]
 
         # Keeps track if the user closed the application, cant raise exeption in tkinter
