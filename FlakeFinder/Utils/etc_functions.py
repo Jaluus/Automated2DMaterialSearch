@@ -59,7 +59,7 @@ def set_microscope_and_camera_settings(
     Args:
         microscope_settings_dict (dict): The settings for the microscope as a dict
         camera_settings_dict (dict): The settings for the camera as a dict
-        magnification (int): The magnification of the Microscope as the Index\n
+        magnification_idx (int): The magnification of the Microscope as the Index\n
         1: 2,5x, 2: 5x, 3: 20x, 4: 50x, 5: 100x
         camera_driver (camera_driver_class): The camera driver
         microscope_driver (microscope_driver_class): The microscope driver
@@ -67,11 +67,11 @@ def set_microscope_and_camera_settings(
 
     # First sets the right Magnification
     microscope_driver.set_mag(magnification_idx)
-    time.sleep(1)
+    time.sleep(0.5)
 
     # Now set the Camera Settings
     camera_driver.set_properties(**camera_settings_dict[str(magnification_idx)])
-    time.sleep(1)
+    time.sleep(0.5)
 
     # Now set the Microscope Settings
     microscope_driver.set_lamp_voltage(
@@ -80,7 +80,7 @@ def set_microscope_and_camera_settings(
     microscope_driver.set_lamp_aperture_stop(
         microscope_settings_dict[str(magnification_idx)]["aperture"]
     )
-    time.sleep(1)
+    time.sleep(0.5)
 
     microscope_props = microscope_driver.get_properties()
     camera_props = camera_driver.get_properties()
@@ -102,9 +102,13 @@ def calibrate_scope(
     microscope: microscope_driver_class,
     camera: camera_driver_class,
     needed_magnification_idx: int,
-    current_flatfield = None,
+    current_flatfield=None,
     camera_settings=None,
     microscope_settings=None,
+    view_field_x: float = None,
+    view_field_y: float = None,
+    scan_area_map: np.ndarray = None,
+    **kwargs,
 ):
     """Starts the scope calibration process
 
@@ -125,7 +129,38 @@ def calibrate_scope(
         5: "100x",
     }
 
-    if camera_settings is not None and microscope_settings is not None:
+    new_flatfield = None
+    new_background_values = None
+
+    # if a scan area map is given, drive to a location where there is a chip
+    if (
+        camera_settings is not None
+        and microscope_settings is not None
+        and scan_area_map is not None
+    ):
+        xy_coords = np.column_stack(np.where(scan_area_map >= 0))
+
+        # pick a random spot
+        xy = xy_coords[np.random.randint(0, len(xy_coords))]
+
+        x_pos = xy[0] * view_field_x
+        y_pos = xy[1] * view_field_y
+
+        motor.abs_move(x=x_pos, y=y_pos)
+
+        set_microscope_and_camera_settings(
+            microscope_settings_dict=microscope_settings,
+            camera_settings_dict=camera_settings,
+            magnification_idx=needed_magnification_idx,
+            camera_driver=camera,
+            microscope_driver=microscope,
+        )
+
+    if (
+        camera_settings is not None
+        and microscope_settings is not None
+        and scan_area_map is None
+    ):
         # Sets the initial Camera and microscpoe Settings
         set_microscope_and_camera_settings(
             microscope_settings_dict=microscope_settings,
@@ -135,21 +170,16 @@ def calibrate_scope(
             microscope_driver=microscope,
         )
 
-    new_flatfield = None
-    new_background_values = None
-
-    print("----------------------------")
-    print(f"Please calibrate the {MAG_KEYS[needed_magnification_idx]} scope")
-    print("Use E and R to swap the scopes")
-    print("Use Q to finish the calibration")
     print(
-        "Use F to select a new Flatfield image, if none is selected the default is used"
+        f"""----------------------------\n
+Please calibrate the {MAG_KEYS[needed_magnification_idx]} scope\n
+Use E and R to swap the scopes\n
+Use Q to finish the calibration\n
+Use F to select a new Flatfield image, if none is selected the default is used\n
+Use B to select an area to use as a background reference\n
+Make sure to end the calibration when in the {MAG_KEYS[needed_magnification_idx]} scope\n
+----------------------------"""
     )
-    print("Use B to select an area to use as a background reference")
-    print(
-        f"Make sure to end the calibration when in the {MAG_KEYS[needed_magnification_idx]} scope"
-    )
-    print("----------------------------")
 
     cv2.namedWindow("Calibration Window")
     curr_mag = MAG_KEYS[microscope.get_properties()["nosepiece"]]

@@ -185,6 +185,8 @@ new_flatfield, new_background_values = calibrate_scope(
     needed_magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,
+    scan_area_map=labeled_scan_area,
+    **magnification_params,
 )
 
 # Assigning the new flatfield and Background Values if they were used

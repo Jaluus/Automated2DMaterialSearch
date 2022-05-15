@@ -55,7 +55,9 @@ parameter_directory = os.path.join(file_path, "Parameters")
 
 
 magnification_params_path = os.path.join(
-    parameter_directory, "Scan_Magnification", f"{MAGNIFICATION}x.json",
+    parameter_directory,
+    "Scan_Magnification",
+    f"{MAGNIFICATION}x.json",
 )
 camera_settings_path = os.path.join(
     parameter_directory,
@@ -120,7 +122,9 @@ cv2.imwrite(mask_path, masked_overview)
 
 print("Creating scan area mask...")
 labeled_scan_area = stitcher.create_scan_area_map_from_mask(
-    masked_overview, erode_iterations=1, **magnification_params,
+    masked_overview,
+    erode_iterations=1,
+    **magnification_params,
 )
 cv2.imwrite(scan_area_path, labeled_scan_area)
 
@@ -131,6 +135,8 @@ calibrate_scope(
     needed_magnification_idx=MAG_IDX_DICT[MAGNIFICATION],
     camera_settings=camera_settings,
     microscope_settings=microscope_settings,
+    scan_area_map=labeled_scan_area,
+    **magnification_params,
 )
 
 start = time.time()

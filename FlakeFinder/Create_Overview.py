@@ -1,8 +1,5 @@
-import sys
 import os
 import cv2
-import time
-import matplotlib.pyplot as plt
 import json
 
 # Custom imports
@@ -11,7 +8,6 @@ from Drivers.Microscope_Driver.microscope_class import (
     microscope_driver_class,
 )
 from Drivers.Motor_Driver.tango_class import motor_driver_class
-from Utils.etc_functions import calibrate_scope
 import Utils.raster_functions as raster
 import Utils.stitcher_functions as stitcher
 
