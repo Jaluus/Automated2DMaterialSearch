@@ -49,7 +49,7 @@ class parameter_picker_class:
         self.scan_magnification = self.MAGNIFICATIONS[0]
         self.chip_thickness = self.CHIP_THICKNESSES[0]
         self.entropy_threshold = "5"
-        self.size_threshold = "100"
+        self.size_threshold = "400"
         self.sigma_threshold = "50"
         self.standard_deviation_threshold = "5"
         self.used_channels = [True, True, True]
