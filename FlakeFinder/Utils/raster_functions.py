@@ -405,6 +405,7 @@ def search_scan_area_map(
 
     # Autoincrementing Flake ID
     flake_id = {}
+    original_image = None
 
     # 1. Scan the entire Area for flakes and save them in their respective folders
     for image, prop_dict in image_gen:
@@ -415,6 +416,7 @@ def search_scan_area_map(
             continue
 
         if flat_field is not None:
+            original_image = image.copy()
             image = remove_vignette(image, flat_field=flat_field)
 
         # run the Detection Algorithm
@@ -453,7 +455,7 @@ def search_scan_area_map(
                         overview, prop_dict["motor_pos"], flake_id[chip_id]
                     )
                     overview_marked_path = os.path.join(
-                        flake_directory, f"overview_marked.jpg"
+                        flake_directory, "overview_marked.jpg"
                     )
                     cv2.imwrite(overview_marked_path, overview_marked)
 
@@ -467,15 +469,20 @@ def search_scan_area_map(
                 with open(meta_path, "w") as fp:
                     json.dump(flake_meta_data, fp, sort_keys=True, indent=4)
 
+                # mark the flake on the image
+                marked_image = mark_flake_2(flake, image, image_path)
+
                 # Save the original Flake Mask
-                mask_path = os.path.join(flake_directory, f"flake_mask.png")
+                mask_path = os.path.join(flake_directory, "flake_mask.png")
                 cv2.imwrite(mask_path, flake_mask)
+
+                # save a raw copy of the image
+                raw_image_path = os.path.join(flake_directory, "raw_img.png")
+                cv2.imwrite(raw_image_path, original_image)
 
                 # Save the Original eval Image
                 image_path = os.path.join(flake_directory, "eval_img.jpg")
-                raw_image_path = os.path.join(flake_directory, "raw_img.png")
-                cv2.imwrite(raw_image_path, image)
-                mark_flake_2(flake, image, image_path)
+                cv2.imwrite(image_path, marked_image)
 
 
 def read_meta_and_center_flakes(

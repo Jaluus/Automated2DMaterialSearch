@@ -89,4 +89,4 @@ def mark_flake_2(flake, image, image_path):
 
     marked_image[outline_flake != 0] = [0, 0, 255]
 
-    cv2.imwrite(image_path, marked_image)
+    return marked_image
