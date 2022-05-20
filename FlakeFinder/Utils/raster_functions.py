@@ -470,7 +470,7 @@ def search_scan_area_map(
                     json.dump(flake_meta_data, fp, sort_keys=True, indent=4)
 
                 # mark the flake on the image
-                marked_image = mark_flake_2(flake, image, image_path)
+                marked_image = mark_flake_2(flake, image)
 
                 # Save the original Flake Mask
                 mask_path = os.path.join(flake_directory, "flake_mask.png")

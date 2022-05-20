@@ -71,7 +71,7 @@ def mark_flake(flake, image, image_path):
     plt.clf()
 
 
-def mark_flake_2(flake, image, image_path):
+def mark_flake_2(flake, image):
     marked_image = image.copy()
     (x, y) = flake["position_bbox"]
     w = flake["width_bbox"]
